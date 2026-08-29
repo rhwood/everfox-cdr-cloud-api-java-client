@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:cdr.everfox.com)",
+      "WebFetch(domain:nifi.apache.org)",
+      "WebFetch(domain:cwiki.apache.org)",
+      "Bash(mvn test:*)"
+    ]
+  }
+}
