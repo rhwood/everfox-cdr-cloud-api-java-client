@@ -39,7 +39,7 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
       - name: Build and analyze
-        run: ./mvn -B verify
+        run: mvn -B verify
       # - name: Upload coverage to Codecov
       #   uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
       #   if: matrix.java == '21'
