@@ -54,12 +54,7 @@ class IntegrationTest {
         String apiKey = System.getenv(API_KEY_ENV);
         assertNotNull(apiKey, "CDR_API_KEY environment variable must be set");
 
-        InstantApiConfig config = InstantApiConfig.builder()
-                .apiKey(apiKey)
-                .region(InstantApiConfig.Region.US_WEST_2)
-                .connectTimeoutSeconds(10)
-                .requestTimeoutSeconds(60)
-                .build();
+        InstantApiConfig config = new InstantApiConfig(apiKey, InstantApiConfig.Region.US_WEST_2);
 
         return new InstantApiClient(config);
     }
@@ -138,10 +133,7 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadToRegion() throws IOException, InterruptedException, InstantApiException {
         String apiKey = System.getenv(API_KEY_ENV);
-        InstantApiConfig config = InstantApiConfig.builder()
-                .apiKey(apiKey)
-                .region(InstantApiConfig.Region.US_WEST_2)
-                .build();
+        InstantApiConfig config = new InstantApiConfig(apiKey, InstantApiConfig.Region.US_WEST_2);
 
         try (InstantApiClient client = new InstantApiClient(config)) {
             InstantApiRequest request = new InstantApiRequest(
@@ -159,10 +151,7 @@ class IntegrationTest {
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testInvalidApiKey() {
-        InstantApiConfig config = InstantApiConfig.builder()
-                .apiKey("invalid-api-key-12345")
-                .region(InstantApiConfig.Region.US_WEST_2)
-                .build();
+        InstantApiConfig config = new InstantApiConfig("invalid-api-key-12345", InstantApiConfig.Region.US_WEST_2);
 
         try (InstantApiClient client = new InstantApiClient(config)) {
             InstantApiRequest request = new InstantApiRequest(
@@ -234,12 +223,7 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testCustomTimeouts() throws IOException, InterruptedException, InstantApiException {
         String apiKey = System.getenv(API_KEY_ENV);
-        InstantApiConfig config = InstantApiConfig.builder()
-                .apiKey(apiKey)
-                .region(InstantApiConfig.Region.US_WEST_2)
-                .connectTimeoutSeconds(5)
-                .requestTimeoutSeconds(120)  // Longer timeout for large files
-                .build();
+        InstantApiConfig config = new InstantApiConfig(apiKey, InstantApiConfig.Region.US_WEST_2, 5, 120); // Custom timeouts
 
         try (InstantApiClient client = new InstantApiClient(config)) {
             InstantApiRequest request = new InstantApiRequest(

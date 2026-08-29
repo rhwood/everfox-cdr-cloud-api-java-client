@@ -51,18 +51,38 @@ public class InstantApiRequest {
         this.options = options;
     }
 
+    /**
+     * Returns the file data.
+     *
+     * @return the file data
+     */
     public byte[] getFileData() {
         return fileData;
     }
 
+    /**
+     * Returns the MIME type of the file.
+     *
+     * @return the MIME type
+     */
     public String getContentType() {
         return contentType;
     }
 
+    /**
+     * Returns the desired MIME type of the processed file.
+     *
+     * @return the desired MIME type
+     */
     public String getAcceptType() {
         return acceptType;
     }
 
+    /**
+     * Returns the additional processing options.
+     *
+     * @return the processing options
+     */
     public RequestOptions getOptions() {
         return options;
     }

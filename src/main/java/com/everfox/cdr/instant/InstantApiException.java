@@ -18,6 +18,9 @@ package com.everfox.cdr.instant;
  */
 public class InstantApiException extends Exception {
 
+    /**
+     * The HTTP status code returned by the API.
+     */
     private final int statusCode;
 
     /**

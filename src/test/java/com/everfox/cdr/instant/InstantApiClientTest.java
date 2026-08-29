@@ -17,30 +17,24 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.net.URI;
+
 class InstantApiClientTest {
 
     @Test
-    void testConfigBuilder() {
-        InstantApiConfig config = InstantApiConfig.builder()
-                .apiKey("test-key")
-                .region(InstantApiConfig.Region.US_WEST_2)
-                .build();
+    void testConfigWithRegion() {
+        InstantApiConfig config = new InstantApiConfig("test-key", InstantApiConfig.Region.US_WEST_2);
 
         assertEquals("test-key", config.getApiKey());
-        assertEquals("https://us-west-2.aws.instant.cdr.everfox.com/v1", config.getBaseUrl());
+        assertEquals("https://us-west-2.aws.instant.cdr.everfox.com/v1", config.getBaseUrl().toString());
     }
 
     @Test
-    void testConfigBuilderWithCustomUrl() {
-        InstantApiConfig config = InstantApiConfig.builder()
-                .apiKey("test-key")
-                .baseUrl("https://custom.example.com")
-                .connectTimeoutSeconds(5)
-                .requestTimeoutSeconds(30)
-                .build();
+    void testConfigWithCustomUrl() {
+        InstantApiConfig config = new InstantApiConfig("test-key", URI.create("https://custom.example.com"), 5, 30);
 
         assertEquals("test-key", config.getApiKey());
-        assertEquals("https://custom.example.com", config.getBaseUrl());
+        assertEquals("https://custom.example.com", config.getBaseUrl().toString());
         assertEquals(5, config.getConnectTimeoutSeconds());
         assertEquals(30, config.getRequestTimeoutSeconds());
     }
