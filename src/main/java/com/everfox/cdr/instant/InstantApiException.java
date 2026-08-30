@@ -13,33 +13,112 @@
  */
 package com.everfox.cdr.instant;
 
+import java.util.Map;
+
+import tools.jackson.databind.ObjectMapper;
+
 /**
  * Exception thrown when the Instant API returns an error response.
  */
 public class InstantApiException extends Exception {
 
-    /**
-     * The HTTP status code returned by the API.
-     */
-    private final int statusCode;
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     /**
-     * Creates a new exception with the specified status code and message.
-     *
-     * @param statusCode the HTTP status code
-     * @param message the error message
+     * The API status code returned by the API. This is -1 is the API did not return a valid error response. 
      */
-    public InstantApiException(int statusCode, String message) {
+    private final int apiStatusCode;
+    /**
+     * The HTTP status code returned by the server.
+     */
+    private final int httpStatusCode;
+    /**
+     * The name of the error returned by the API. This is "Unknown" if the API did not return a valid error response.
+     */
+    private final String name;
+    /**
+     * The type of the error returned by the API. This is "Unknown" if the API did not return a valid error response.
+     */
+    private final String type;
+
+    /**
+     * Creates a new exception from the JSON error response returned by the API.
+     * 
+     * @param body the JSON error response body
+     */
+    // This is private because the constructor must call super() first, so we can't parse the body in the constructor
+    private InstantApiException(int apiStatusCode, int httpStatusCode, String message, String name, String type) {
         super(message);
-        this.statusCode = statusCode;
+        this.apiStatusCode = apiStatusCode;
+        this.httpStatusCode = httpStatusCode;
+        this.name = name;
+        this.type = type;
+    }
+
+    /**
+     * Returns the API status code.
+     *
+     * @return the status code
+     */
+    public int getApiStatusCode() {
+        return apiStatusCode;
     }
 
     /**
      * Returns the HTTP status code.
      *
-     * @return the status code
+     * @return the HTTP status code
      */
-    public int getStatusCode() {
-        return statusCode;
+    public int getHttpStatusCode() {
+        return httpStatusCode;
+    }
+
+    /**
+     * Returns the name of the error.
+     *
+     * @return the error name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Returns the type of the error.
+     *
+     * @return the error type
+     */
+    public String getType() {
+        return type;
+    }
+
+    /**
+     * Creates an InstantApiException from the HTTP status code and response body.
+     *
+     * @param httpStatusCode the HTTP status code
+     * @param body the response body
+     * @return an InstantApiException representing the error
+     */
+    // This is needed because the constructor must call super() first, so we can't parse the body in the constructor
+    public static InstantApiException create(int httpStatusCode, byte[] body) {
+        try {
+            if (body != null && body.length > 0) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> bodyObj = MAPPER.readValue(body, Map.class);
+                if (bodyObj.containsKey("error")) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> errorObj = (Map<String, Object>) bodyObj.get("error");
+                    return new InstantApiException(
+                            (int) errorObj.get("code"),
+                            httpStatusCode,
+                            (String) errorObj.get("message"),
+                            (String) errorObj.get("name"),
+                            (String) errorObj.get("type")
+                    );
+                }
+            }
+        } catch (Exception e) {
+            // Fall through to default execption creation
+        }
+        return new InstantApiException(-1, httpStatusCode, "Unknown error", "Unknown", "Unknown");
     }
 }

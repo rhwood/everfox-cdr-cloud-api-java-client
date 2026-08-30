@@ -13,8 +13,6 @@
  */
 package com.everfox.cdr.instant;
 
-import tools.jackson.databind.ObjectMapper;
-
 import java.net.http.HttpResponse;
 import java.util.Map;
 
@@ -22,8 +20,6 @@ import java.util.Map;
  * Response from the Instant API.
  */
 public class InstantApiResponse {
-
-    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final int statusCode;
     private final byte[] body;
@@ -60,26 +56,10 @@ public class InstantApiResponse {
         String report = headers.get("X-Report");
 
         if (statusCode >= 400) {
-            String errorMessage = parseErrorMessage(body, statusCode);
-            throw new InstantApiException(statusCode, errorMessage);
+            throw InstantApiException.create(statusCode, body);
         }
 
         return new InstantApiResponse(statusCode, body, headers, risksTaken, report);
-    }
-
-    private static String parseErrorMessage(byte[] body, int statusCode) {
-        try {
-            if (body != null && body.length > 0) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> errorObj = MAPPER.readValue(body, Map.class);
-                if (errorObj.containsKey("error")) {
-                    return errorObj.get("error").toString();
-                }
-            }
-        } catch (Exception e) {
-            // Fall through to default message
-        }
-        return "HTTP " + statusCode + " error";
     }
 
     /**

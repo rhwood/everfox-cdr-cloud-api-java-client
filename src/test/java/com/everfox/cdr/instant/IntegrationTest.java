@@ -16,6 +16,7 @@ package com.everfox.cdr.instant;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
+import com.everfox.cdr.MediaType;
 import com.everfox.cdr.Region;
 
 import java.io.ByteArrayInputStream;
@@ -48,6 +49,8 @@ class IntegrationTest {
             "xref\n0 5\n0000000000 65535 f\n0000000009 00000 n\n0000000056 00000 n\n" +
             "0000000115 00000 n\n0000000214 00000 n\ntrailer<</Size 5/Root 1 0 R>>\n" +
             "startxref\n307\n%%EOF").getBytes();
+    // Minimal JSON content for testing
+    private static final byte[] JSON_TEST_DATA = "[]".getBytes();
 
     /**
      * Creates a client configured for testing.
@@ -78,6 +81,30 @@ class IntegrationTest {
             assertEquals(200, response.getStatusCode());
             assertNotNull(response.getBody());
             assertTrue(response.getBody().length > 0);
+        }
+    }
+
+    @Test
+    @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
+    void testUploadJsonFileNoOptions() throws IOException, InterruptedException, InstantApiException {
+        try (InstantApiClient client = createClient()) {
+            InstantApiRequest request = new InstantApiRequest(
+                    JSON_TEST_DATA,
+                    MediaType.JSON,
+                    MediaType.JSON
+            );
+
+            InstantApiException exception = assertThrows(
+                    InstantApiException.class,
+                    () -> client.upload(request),
+                    "Should throw InstantApiException for invalid API key"
+            );
+
+            assertEquals(400, exception.getHttpStatusCode());
+            assertEquals(1110, exception.getApiStatusCode());
+            assertEquals("The following risks are associated with this file and need to be explicitly allowed:- poly/text/json, structured/no-schema/json", exception.getMessage());
+            assertEquals("RISK_NOT_ALLOWED", exception.getName());
+            assertEquals("BadRequest", exception.getType());
         }
     }
 
@@ -168,8 +195,11 @@ class IntegrationTest {
                     "Should throw InstantApiException for invalid API key"
             );
 
-            assertTrue(exception.getStatusCode() >= 400);
-            assertNotNull(exception.getMessage());
+            assertEquals(403, exception.getHttpStatusCode());
+            assertEquals(6070, exception.getApiStatusCode());
+            assertEquals("Forbidden", exception.getMessage());
+            assertEquals("APIGATEWAY_INVALID_API_KEY", exception.getName());
+            assertEquals("BadRequest", exception.getType());
         }
     }
 
@@ -191,7 +221,11 @@ class IntegrationTest {
                     "Should throw InstantApiException for oversized file"
             );
 
-            assertTrue(exception.getStatusCode() >= 400);
+            assertEquals(413, exception.getHttpStatusCode());
+            assertEquals(6050, exception.getApiStatusCode());
+            assertEquals("Request Too Long", exception.getMessage());
+            assertEquals("APIGATEWAY_INTEGRATION_FAILURE", exception.getName());
+            assertEquals("InternalServerError", exception.getType());
         }
     }
 
