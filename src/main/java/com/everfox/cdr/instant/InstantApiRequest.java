@@ -15,6 +15,8 @@ package com.everfox.cdr.instant;
 
 import java.util.Objects;
 
+import com.everfox.cdr.MimeType;
+
 /**
  * Represents a request to upload and process a file through the Instant API.
  */
@@ -32,8 +34,31 @@ public class InstantApiRequest {
      * @param contentType the MIME type of the file
      * @param acceptType the desired MIME type of the processed file
      */
+    public InstantApiRequest(byte[] fileData, MimeType contentType, MimeType acceptType) {
+        this(fileData, contentType, acceptType, null);
+    }
+
+    /**
+     * Creates a new request with the specified file data and content types.
+     *
+     * @param fileData the file data (max 4.5 MB)
+     * @param contentType the MIME type of the file
+     * @param acceptType the desired MIME type of the processed file
+     */
     public InstantApiRequest(byte[] fileData, String contentType, String acceptType) {
         this(fileData, contentType, acceptType, null);
+    }
+
+    /**
+     * Creates a new request with the specified file data, content types, and options.
+     *
+     * @param fileData the file data (max 4.5 MB)
+     * @param contentType the MIME type of the file
+     * @param acceptType the desired MIME type of the processed file
+     * @param options additional processing options
+     */
+    public InstantApiRequest(byte[] fileData, MimeType contentType, MimeType acceptType, RequestOptions options) {
+        this(fileData, contentType.getMimeType(), acceptType.getMimeType(), options);
     }
 
     /**

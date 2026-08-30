@@ -15,6 +15,7 @@ package com.everfox.cdr.instant;
 
 import org.junit.jupiter.api.Test;
 
+import com.everfox.cdr.MimeType;
 import com.everfox.cdr.Region;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,8 +47,8 @@ class InstantApiClientTest {
         byte[] data = "test data".getBytes();
         InstantApiRequest request = new InstantApiRequest(
                 data,
-                "application/pdf",
-                "application/pdf"
+                MimeType.PDF,
+                MimeType.PDF
         );
 
         assertArrayEquals(data, request.getFileData());

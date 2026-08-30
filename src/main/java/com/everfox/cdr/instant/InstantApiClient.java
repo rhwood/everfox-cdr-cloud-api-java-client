@@ -22,6 +22,8 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Objects;
 
+import com.everfox.cdr.MimeType;
+
 import java.util.Arrays;
 import java.util.HashSet;
 
@@ -61,14 +63,15 @@ public class InstantApiClient implements AutoCloseable {
         Objects.requireNonNull(request, "request cannot be null");
 
         String endpoint = config.getBaseUrl() + "/upload";
+        HashSet<String> acceptTypes = new HashSet<>(Arrays.asList(request.getAcceptType().split(",")));
+        acceptTypes.add(MimeType.JSON.getMimeType());
 
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(endpoint))
                 .timeout(Duration.ofSeconds(config.getRequestTimeoutSeconds()))
                 .header("x-api-key", config.getApiKey())
                 .header("Content-Type", request.getContentType())
-                .header("Accept", "application/json, ".concat(request.getAcceptType()))
-                // .header("Accept", request.getAcceptType())
+                .header("Accept", String.join(", ", acceptTypes))
                 .POST(HttpRequest.BodyPublishers.ofByteArray(request.getFileData()));
 
         if (request.getOptions() != null) {
