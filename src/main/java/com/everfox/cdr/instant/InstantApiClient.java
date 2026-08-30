@@ -22,6 +22,9 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Objects;
 
+import java.util.Arrays;
+import java.util.HashSet;
+
 /**
  * Client for interacting with the Everfox CDR Instant API.
  *

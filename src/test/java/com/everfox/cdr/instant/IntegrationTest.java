@@ -16,6 +16,8 @@ package com.everfox.cdr.instant;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
+import com.everfox.cdr.Region;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
@@ -54,7 +56,7 @@ class IntegrationTest {
         String apiKey = System.getenv(API_KEY_ENV);
         assertNotNull(apiKey, "CDR_API_KEY environment variable must be set");
 
-        InstantApiConfig config = new InstantApiConfig(apiKey, InstantApiConfig.Region.US_WEST_2);
+        InstantApiConfig config = new InstantApiConfig(apiKey, Region.US_WEST_2);
 
         return new InstantApiClient(config);
     }
@@ -133,7 +135,7 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadToRegion() throws IOException, InterruptedException, InstantApiException {
         String apiKey = System.getenv(API_KEY_ENV);
-        InstantApiConfig config = new InstantApiConfig(apiKey, InstantApiConfig.Region.US_WEST_2);
+        InstantApiConfig config = new InstantApiConfig(apiKey, Region.US_WEST_2);
 
         try (InstantApiClient client = new InstantApiClient(config)) {
             InstantApiRequest request = new InstantApiRequest(
@@ -151,7 +153,7 @@ class IntegrationTest {
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testInvalidApiKey() {
-        InstantApiConfig config = new InstantApiConfig("invalid-api-key-12345", InstantApiConfig.Region.US_WEST_2);
+        InstantApiConfig config = new InstantApiConfig("invalid-api-key-12345", Region.US_WEST_2);
 
         try (InstantApiClient client = new InstantApiClient(config)) {
             InstantApiRequest request = new InstantApiRequest(
@@ -223,7 +225,7 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testCustomTimeouts() throws IOException, InterruptedException, InstantApiException {
         String apiKey = System.getenv(API_KEY_ENV);
-        InstantApiConfig config = new InstantApiConfig(apiKey, InstantApiConfig.Region.US_WEST_2, 5, 120); // Custom timeouts
+        InstantApiConfig config = new InstantApiConfig(apiKey, Region.US_WEST_2, 5, 120); // Custom timeouts
 
         try (InstantApiClient client = new InstantApiClient(config)) {
             InstantApiRequest request = new InstantApiRequest(

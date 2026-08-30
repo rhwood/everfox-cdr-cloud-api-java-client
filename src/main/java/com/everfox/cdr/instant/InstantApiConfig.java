@@ -16,6 +16,8 @@ package com.everfox.cdr.instant;
 import java.net.URI;
 import java.util.Objects;
 
+import com.everfox.cdr.Region;
+
 /**
  * Configuration for the Instant API client.
  */
@@ -29,39 +31,6 @@ public class InstantApiConfig {
      * Default request timeout in seconds.
      */
     public static final int DEFAULT_REQUEST_TIMEOUT_SECONDS = 60;
-
-    /**
-     * Available API regions.
-     */
-    public enum Region {
-        /**
-         * EU West (Ireland) region.
-         */
-        EU_WEST_1("https://eu-west-1.aws.instant.cdr.everfox.com/v1"),
-        /**
-         * EU West (London) region.
-         */
-        EU_WEST_2("https://eu-west-2.aws.instant.cdr.everfox.com/v1"),
-        /**
-         * US West (Oregon) region.
-         */
-        US_WEST_2("https://us-west-2.aws.instant.cdr.everfox.com/v1");
-
-        private final URI baseUrl;
-
-        Region(String baseUrl) {
-            this.baseUrl = URI.create(baseUrl);
-        }
-
-        /**
-         * Returns the base URL for the region.
-         *
-         * @return the base URL
-         */
-        public URI getBaseUrl() {
-            return baseUrl;
-        }
-    }
 
     private final String apiKey;
     private final URI baseUrl;

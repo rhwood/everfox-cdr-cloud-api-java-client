@@ -15,6 +15,8 @@ package com.everfox.cdr.instant;
 
 import org.junit.jupiter.api.Test;
 
+import com.everfox.cdr.Region;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.net.URI;
@@ -23,7 +25,7 @@ class InstantApiClientTest {
 
     @Test
     void testConfigWithRegion() {
-        InstantApiConfig config = new InstantApiConfig("test-key", InstantApiConfig.Region.US_WEST_2);
+        InstantApiConfig config = new InstantApiConfig("test-key", Region.US_WEST_2);
 
         assertEquals("test-key", config.getApiKey());
         assertEquals("https://us-west-2.aws.instant.cdr.everfox.com/v1", config.getBaseUrl().toString());
