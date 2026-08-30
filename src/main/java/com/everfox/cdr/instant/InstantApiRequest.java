@@ -15,7 +15,7 @@ package com.everfox.cdr.instant;
 
 import java.util.Objects;
 
-import com.everfox.cdr.MimeType;
+import com.everfox.cdr.MediaType;
 
 /**
  * Represents a request to upload and process a file through the Instant API.
@@ -31,10 +31,10 @@ public class InstantApiRequest {
      * Creates a new request with the specified file data and content types.
      *
      * @param fileData the file data (max 4.5 MB)
-     * @param contentType the MIME type of the file
-     * @param acceptType the desired MIME type of the processed file
+     * @param contentType the media type of the file
+     * @param acceptType the desired media type of the processed file
      */
-    public InstantApiRequest(byte[] fileData, MimeType contentType, MimeType acceptType) {
+    public InstantApiRequest(byte[] fileData, MediaType contentType, MediaType acceptType) {
         this(fileData, contentType, acceptType, null);
     }
 
@@ -42,8 +42,8 @@ public class InstantApiRequest {
      * Creates a new request with the specified file data and content types.
      *
      * @param fileData the file data (max 4.5 MB)
-     * @param contentType the MIME type of the file
-     * @param acceptType the desired MIME type of the processed file
+     * @param contentType the media type of the file
+     * @param acceptType the desired media type of the processed file
      */
     public InstantApiRequest(byte[] fileData, String contentType, String acceptType) {
         this(fileData, contentType, acceptType, null);
@@ -53,20 +53,20 @@ public class InstantApiRequest {
      * Creates a new request with the specified file data, content types, and options.
      *
      * @param fileData the file data (max 4.5 MB)
-     * @param contentType the MIME type of the file
-     * @param acceptType the desired MIME type of the processed file
+     * @param contentType the media type of the file
+     * @param acceptType the desired media type of the processed file
      * @param options additional processing options
      */
-    public InstantApiRequest(byte[] fileData, MimeType contentType, MimeType acceptType, RequestOptions options) {
-        this(fileData, contentType.getMimeType(), acceptType.getMimeType(), options);
+    public InstantApiRequest(byte[] fileData, MediaType contentType, MediaType acceptType, RequestOptions options) {
+        this(fileData, contentType.getMediaType(), acceptType.getMediaType(), options);
     }
 
     /**
      * Creates a new request with the specified file data, content types, and options.
      *
      * @param fileData the file data (max 4.5 MB)
-     * @param contentType the MIME type of the file
-     * @param acceptType the desired MIME type of the processed file
+     * @param contentType the media type of the file
+     * @param acceptType the desired media type of the processed file
      * @param options additional processing options
      */
     public InstantApiRequest(byte[] fileData, String contentType, String acceptType, RequestOptions options) {
@@ -86,18 +86,18 @@ public class InstantApiRequest {
     }
 
     /**
-     * Returns the MIME type of the file.
+     * Returns the media type of the file.
      *
-     * @return the MIME type
+     * @return the media type
      */
     public String getContentType() {
         return contentType;
     }
 
     /**
-     * Returns the desired MIME type of the processed file.
+     * Returns the desired media type of the processed file.
      *
-     * @return the desired MIME type
+     * @return the desired media type
      */
     public String getAcceptType() {
         return acceptType;

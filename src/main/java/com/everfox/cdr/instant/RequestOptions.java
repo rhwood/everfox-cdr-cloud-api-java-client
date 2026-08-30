@@ -13,6 +13,7 @@
  */
 package com.everfox.cdr.instant;
 
+import com.everfox.cdr.MediaType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
@@ -267,18 +268,27 @@ public class RequestOptions {
         }
 
         /**
-         * Returns the source MIME type for conversion.
+         * Returns the source media type for conversion.
          *
-         * @return source MIME type
+         * @return source media type
          */
         public String getSourceMimeType() {
             return sourceMimeType;
         }
 
         /**
-         * Sets the source MIME type for conversion.
+         * Sets the source media type for conversion.
          *
-         * @param sourceMimeType source MIME type
+         * @param sourceMimeType source media type
+         */
+        public void setSourceMimeType(MediaType sourceMimeType) {
+            setSourceMimeType(sourceMimeType.getMediaType());
+        }
+
+        /**
+         * Sets the source media type for conversion.
+         *
+         * @param sourceMimeType source media type
          */
         public void setSourceMimeType(String sourceMimeType) {
             this.sourceMimeType = sourceMimeType;

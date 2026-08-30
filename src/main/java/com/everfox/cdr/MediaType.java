@@ -16,7 +16,7 @@ package com.everfox.cdr;
 /**
  * Available content types for file uploads and downloads.
  */
-public enum MimeType {
+public enum MediaType {
     /**
      * Content type for Adobe Illustrator files.
      */
@@ -250,10 +250,10 @@ public enum MimeType {
      */
     ALL("*/*");
 
-    private final String mimeType;
+    private final String mediaType;
 
-    MimeType(String mimeType) {
-        this.mimeType = mimeType;
+    MediaType(String mediaType) {
+        this.mediaType = mediaType;
     }
 
     /**
@@ -261,7 +261,7 @@ public enum MimeType {
      *
      * @return the content type as a string
      */
-    public String getMimeType() {
-        return mimeType;
+    public String getMediaType() {
+        return mediaType;
     }
 }

@@ -22,7 +22,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Objects;
 
-import com.everfox.cdr.MimeType;
+import com.everfox.cdr.MediaType;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -64,7 +64,7 @@ public class InstantApiClient implements AutoCloseable {
 
         String endpoint = config.getBaseUrl() + "/upload";
         HashSet<String> acceptTypes = new HashSet<>(Arrays.asList(request.getAcceptType().split(",")));
-        acceptTypes.add(MimeType.JSON.getMimeType());
+        acceptTypes.add(MediaType.JSON.getMediaType());
 
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(endpoint))
@@ -88,8 +88,8 @@ public class InstantApiClient implements AutoCloseable {
      * Uploads and processes a file from an input stream.
      *
      * @param inputStream the input stream containing the file data
-     * @param contentType the MIME type of the file
-     * @param acceptType the desired MIME type of the processed file
+     * @param contentType the media type of the file
+     * @param acceptType the desired media type of the processed file
      * @return the response containing the processed file
      * @throws IOException if an I/O error occurs
      * @throws InterruptedException if the operation is interrupted
