@@ -18,6 +18,7 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
 import com.everfox.cdr.MediaType;
 import com.everfox.cdr.Region;
+import com.everfox.cdr.Risk;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -129,11 +130,6 @@ class IntegrationTest {
         try (InstantApiClient client = createClient()) {
             RequestOptions options = new RequestOptions();
             options.setReporting(RequestOptions.ReportFormat.FULL);
-
-            RequestOptions.RiskOptions risks = new RequestOptions.RiskOptions();
-            risks.setAllowMacros(false);
-            risks.setAllowExecutables(false);
-            options.setRisks(risks);
 
             InstantApiRequest request = new InstantApiRequest(
                     PDF_TEST_DATA,
@@ -280,14 +276,7 @@ class IntegrationTest {
     void testAllRequestOptions() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
             RequestOptions options = new RequestOptions();
-
-            // Configure risk options
-            RequestOptions.RiskOptions risks = new RequestOptions.RiskOptions();
-            risks.setAllowMacros(false);
-            risks.setAllowExecutables(false);
-            risks.setAllowSteganography(false);
-            risks.setAllowPolymorphicContent(false);
-            options.setRisks(risks);
+            options.allowRisks(Risk.EXE, Risk.EXE_MACRO, Risk.STEG, Risk.POLY);
 
             // Configure reporting
             options.setReporting(RequestOptions.ReportFormat.FULL);
@@ -312,7 +301,7 @@ class IntegrationTest {
 
             // Verify options were serialized to JSON
             assertNotNull(options.toJson());
-            assertTrue(options.toJson().contains("allowMacros"));
+            assertTrue(options.toJson().contains("exe/macro"));
         }
     }
 }

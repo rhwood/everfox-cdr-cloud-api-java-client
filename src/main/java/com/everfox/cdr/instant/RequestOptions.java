@@ -13,7 +13,13 @@
  */
 package com.everfox.cdr.instant;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import com.everfox.cdr.MediaType;
+import com.everfox.cdr.Risk;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
@@ -26,11 +32,12 @@ public class RequestOptions {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private RiskOptions risks;
     private ReportFormat reporting;
     private ConversionOptions conversion;
     private ImageQualityOptions imageQuality;
     private RedactionOptions redactions;
+    private Set<String> allowedRisks = new HashSet<>();
+    private Set<String> deniedRisks = new HashSet<>();
 
     /**
      * Default constructor.
@@ -39,21 +46,83 @@ public class RequestOptions {
     }
 
     /**
-     * Returns the risk management options.
+     * Allow the specified risks.
      *
-     * @return risk options
+     * @param risks the risks to allow
      */
-    public RiskOptions getRisks() {
-        return risks;
+    public void allowRisks(Risk... risks) {
+        for (Risk risk : risks) {
+            allowRisk(risk);
+        }
     }
 
     /**
-     * Sets the risk management options.
+     * Deny the specified risks.
      *
-     * @param risks risk options
+     * @param risks the risks to deny
      */
-    public void setRisks(RiskOptions risks) {
-        this.risks = risks;
+    public void denyRisks(Risk... risks) {
+        for (Risk risk : risks) {
+            denyRisk(risk);
+        }
+    }
+
+    /**
+     * Allow the specified risk.
+     *
+     * @param risk the risk to allow
+     */
+    public void allowRisk(Risk risk) {
+        allowRisk(risk.getRisk());
+    }
+
+    /**
+     * Deny the specified risk.
+     *
+     * @param risk the risk to deny
+     */
+    public void denyRisk(Risk risk) {
+        denyRisk(risk.getRisk());
+    }
+
+    /**
+     * Allow the specified risk.
+     *
+     * @param risk the risk to allow
+     */
+    public void allowRisk(String risk) {
+        allowedRisks.add(risk);
+        deniedRisks.remove(risk);
+    }
+
+    /**
+     * Deny the specified risk.
+     *
+     * @param risk the risk to deny
+     */
+    public void denyRisk(String risk) {
+        deniedRisks.add(risk);
+        allowedRisks.remove(risk);
+    }
+
+    /**
+     * Returns the allowed and denied risks as a map.
+     *
+     * @return a map with "allow" and/or "deny" keys, or null if no risks are specified
+     */
+    public Map<String, Set<String>> getRisks() {
+        if (allowedRisks.isEmpty() && deniedRisks.isEmpty()) {
+            return null;
+        } else if (deniedRisks.isEmpty()) {
+            return Map.of("allow", allowedRisks);
+        } else if (allowedRisks.isEmpty()) {
+            return Map.of("deny", deniedRisks);
+        } else {
+            return Map.of(
+                    "allow", allowedRisks,
+                    "deny", deniedRisks
+            );
+        }
     }
 
     /**
@@ -142,114 +211,45 @@ public class RequestOptions {
     }
 
     /**
-     * Risk management options for allowing or denying specific threat categories.
-     */
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public static class RiskOptions {
-        private Boolean allowMacros;
-        private Boolean allowExecutables;
-        private Boolean allowSteganography;
-        private Boolean allowPolymorphicContent;
-
-        /**
-         * Default constructor.
-         */
-        public RiskOptions() {
-        }
-
-        /**
-         * Returns whether macros are allowed.
-         *
-         * @return true if allowed, false if denied, null if not specified
-         */
-        public Boolean getAllowMacros() {
-            return allowMacros;
-        }
-
-        /**
-         * Sets whether macros are allowed.
-         *
-         * @param allowMacros true to allow, false to deny, null to not specify
-         */
-        public void setAllowMacros(Boolean allowMacros) {
-            this.allowMacros = allowMacros;
-        }
-
-        /**
-         * Returns whether executables are allowed.
-         *
-         * @return true if allowed, false if denied, null if not specified
-         */
-        public Boolean getAllowExecutables() {
-            return allowExecutables;
-        }
-
-        /**
-         * Sets whether executables are allowed.
-         *
-         * @param allowExecutables true to allow, false to deny, null to not specify
-         */
-        public void setAllowExecutables(Boolean allowExecutables) {
-            this.allowExecutables = allowExecutables;
-        }
-
-        /**
-         * Returns whether steganography is allowed.
-         *
-         * @return true if allowed, false if denied, null if not specified
-         */
-        public Boolean getAllowSteganography() {
-            return allowSteganography;
-        }
-
-        /**
-         * Sets whether steganography is allowed.
-         *
-         * @param allowSteganography true to allow, false to deny, null to not specify
-         */
-        public void setAllowSteganography(Boolean allowSteganography) {
-            this.allowSteganography = allowSteganography;
-        }
-
-        /**
-         * Returns whether polymorphic content is allowed.
-         *
-         * @return true if allowed, false if denied, null if not specified
-         */
-        public Boolean getAllowPolymorphicContent() {
-            return allowPolymorphicContent;
-        }
-
-        /**
-         * Sets whether polymorphic content is allowed.
-         *
-         * @param allowPolymorphicContent true to allow, false to deny, null to not specify
-         */
-        public void setAllowPolymorphicContent(Boolean allowPolymorphicContent) {
-            this.allowPolymorphicContent = allowPolymorphicContent;
-        }
-    }
-
-    /**
      * Report format options. See https://cdr.everfox.com/documentation/report for details.
      */
     public enum ReportFormat {
         /**
          * Reports on data that has had a notable change.
          */
-        CHANGED,
+        CHANGED("changed"),
         /**
          * The current default behavior is @{@link #CHANGED}.
          */
-        DEFAULT,
+        DEFAULT("default"),
         /**
          * Reports everything about the data, including information on data that hasn't been transformed. These reports can be big!
          */
-        FULL,
+        FULL("full"),
         /**
          * A report will not be generated. Use this if you don't need the report.
          */
-        NONE
+        NONE("none");
+
+        private final String format;
+
+        ReportFormat(String format) {
+            this.format = format;
+        }
+
+        /**
+         * Returns the string representation of the report format.
+         *
+         * @return the report format as a string
+         */
+        public String getFormat() {
+            return format;
+        }
+
+        @Override
+        public String toString() {
+            return getFormat();
+        }
     }
 
     /**

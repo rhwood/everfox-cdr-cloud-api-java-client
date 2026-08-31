@@ -264,4 +264,9 @@ public enum MediaType {
     public String getMediaType() {
         return mediaType;
     }
+
+    @Override
+    public String toString() {
+        return getMediaType();
+    }
 }

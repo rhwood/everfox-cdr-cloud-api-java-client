@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import com.everfox.cdr.MediaType;
 import com.everfox.cdr.Region;
+import com.everfox.cdr.Risk;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -60,16 +61,23 @@ class InstantApiClientTest {
     @Test
     void testRequestOptionsJson() {
         RequestOptions options = new RequestOptions();
+        options.allowRisk(Risk.EXE_MACRO);
+        options.denyRisk(Risk.STEG);
         options.setReporting(RequestOptions.ReportFormat.FULL);
-
-        RequestOptions.RiskOptions risks = new RequestOptions.RiskOptions();
-        risks.setAllowMacros(false);
-        risks.setAllowExecutables(false);
-        options.setRisks(risks);
 
         String json = options.toJson();
         assertNotNull(json);
-        assertTrue(json.contains("FULL"));
-        assertTrue(json.contains("allowMacros"));
+        assertTrue(json.contains("full"));
+        assertTrue(json.contains("exe/macro"));
+    }
+
+    @Test
+    void testRequestOptionsAllowGifStenography() {
+        RequestOptions options = new RequestOptions();
+        options.allowRisk(Risk.STEG_IMAGE_GIF);
+
+        String json = options.toJson();
+        assertNotNull(json);
+        assertEquals("{\"risks\":{\"allow\":[\"steg/image/gif\"]}}", json);
     }
 }
