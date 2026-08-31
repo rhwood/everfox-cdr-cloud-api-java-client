@@ -15,7 +15,9 @@ package com.everfox.cdr;
 
 /**
  * Represents the risks allowed to be taken by the CDR Cloud API when processing
- * a file. These risks are used to determine how a file is processed. See
+ * a file. These risks are used to determine how a file is processed and can be
+ * explicitly allowed or denied. Certain risks must be allowed for some file
+ * types to be processed. See
  * <a href="https://cdr.everfox.com/documentation/risks">Managing Risks</a> for
  * more information.
  */

@@ -117,7 +117,7 @@ Choose the region closest to your deployment:
 ## Building
 
 ```bash
-# Build and run tests
+# Build and run local tests
 mvn clean test
 
 # Package library
@@ -125,6 +125,13 @@ mvn clean package
 
 # Install to local repository
 mvn clean install
+```
+
+Integration tests can be run against a live server with an API key
+```bash
+# Build and run integration tests
+export CDR_API_KEY=your-api-key-here
+mvn clean test
 ```
 
 ## License

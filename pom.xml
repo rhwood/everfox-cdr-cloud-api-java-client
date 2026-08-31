@@ -38,6 +38,7 @@ limitations under the License.
         <dependency>
             <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
+            <!-- Use only LTS versions -->
             <version>3.1.6</version>
         </dependency>
 
