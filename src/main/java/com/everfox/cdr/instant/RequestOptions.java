@@ -31,7 +31,7 @@ public class RequestOptions {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private ReportFormat reporting;
+    private ReportOptions report;
     private ConversionOptions conversion;
     private ImageQualityOptions imageQuality;
     private RedactionOptions redactions;
@@ -129,17 +129,17 @@ public class RequestOptions {
      *
      * @return report format
      */
-    public ReportFormat getReporting() {
-        return reporting;
+    public ReportOptions getReport() {
+        return report;
     }
 
     /**
-     * Sets the report format options.
+     * Set the report options.
      *
-     * @param reporting report format
+     * @param format report format
      */
-    public void setReporting(ReportFormat reporting) {
-        this.reporting = reporting;
+    public void setReport(ReportFormat format) {
+        this.report = new ReportOptions(format);
     }
 
     /**
@@ -431,4 +431,31 @@ public class RequestOptions {
             this.replacementText = replacementText;
         }
     }
+
+    /**
+     * Report options.
+     */
+    // public for JSON serialization
+    public static class ReportOptions {
+        private final ReportFormat format;
+
+        /**
+         * Create a set of repport options.
+         *
+         * @param format the preferred format of the report
+         */
+        public ReportOptions(ReportFormat format) {
+            this.format = format;
+        }
+
+        /**
+         * The preferred format of the report
+         *
+         * @return the format
+         */
+        public ReportFormat getFormat() {
+            return format;
+        }
+    }
+
 }

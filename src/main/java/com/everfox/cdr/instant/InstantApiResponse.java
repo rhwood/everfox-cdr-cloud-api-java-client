@@ -52,8 +52,8 @@ public class InstantApiResponse {
                         e -> String.join(", ", e.getValue())
                 ));
 
-        String risksTaken = headers.get("X-Risks-Taken");
-        String report = headers.get("X-Report");
+        String risksTaken = headers.get("x-risks-taken");
+        String report = headers.get("x-report");
 
         if (statusCode >= 400) {
             throw InstantApiException.create(statusCode, body);

@@ -59,16 +59,22 @@ class InstantApiClientTest {
     }
 
     @Test
-    void testRequestOptionsJson() {
+    void testNoRequestOptions() {
         RequestOptions options = new RequestOptions();
-        options.allowRisk(Risk.EXE_MACRO);
-        options.denyRisk(Risk.STEG);
-        options.setReporting(RequestOptions.ReportFormat.FULL);
 
         String json = options.toJson();
         assertNotNull(json);
-        assertTrue(json.contains("full"));
-        assertTrue(json.contains("exe/macro"));
+        assertEquals("{}", json);
+    }
+
+    @Test
+    void testRequestOptionsFullReport() {
+        RequestOptions options = new RequestOptions();
+        options.setReport(RequestOptions.ReportFormat.FULL);
+
+        String json = options.toJson();
+        assertNotNull(json);
+        assertEquals("{\"report\":{\"format\":\"full\"}}", json);
     }
 
     @Test

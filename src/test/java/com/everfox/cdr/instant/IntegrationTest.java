@@ -20,6 +20,9 @@ import com.everfox.cdr.MediaType;
 import com.everfox.cdr.Region;
 import com.everfox.cdr.Risk;
 
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
@@ -28,8 +31,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Integration tests for the Everfox CDR Instant API client.
  *
- * These tests require a valid API key set in the CDR_API_KEY environment variable.
- * To run: export CDR_API_KEY=your-api-key-here && mvn test -Dtest=IntegrationTest
+ * These tests require a valid API key set in the CDR_INSTANT_API_KEY environment variable.
+ * To run: export CDR_INSTANT_API_KEY=your-api-key-here && mvn test -Dtest=IntegrationTest
  *
  * Tests are disabled by default if the environment variable is not set.
  *
@@ -38,7 +41,8 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class IntegrationTest {
 
-    private static final String API_KEY_ENV = "CDR_API_KEY";
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final String API_KEY_ENV = "CDR_INSTANT_API_KEY";
     // Simple PDF content for testing (minimal valid PDF)
     private static final byte[] PDF_TEST_DATA = ("%PDF-1.4\n" +
             "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n" +
@@ -60,7 +64,7 @@ class IntegrationTest {
      */
     private InstantApiClient createClient() {
         String apiKey = System.getenv(API_KEY_ENV);
-        assertNotNull(apiKey, "CDR_API_KEY environment variable must be set");
+        assertNotNull(apiKey, "CDR_INSTANT_API_KEY environment variable must be set");
 
         InstantApiConfig config = new InstantApiConfig(apiKey, Region.US_WEST_2);
 
@@ -208,7 +212,7 @@ class IntegrationTest {
     void testUploadWithOptions() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
             RequestOptions options = new RequestOptions();
-            options.setReporting(RequestOptions.ReportFormat.FULL);
+            options.setReport(RequestOptions.ReportFormat.FULL);
 
             InstantApiRequest request = new InstantApiRequest(
                     PDF_TEST_DATA,
@@ -358,7 +362,7 @@ class IntegrationTest {
             options.allowRisks(Risk.EXE, Risk.EXE_MACRO, Risk.STEG, Risk.POLY);
 
             // Configure reporting
-            options.setReporting(RequestOptions.ReportFormat.FULL);
+            options.setReport(RequestOptions.ReportFormat.FULL);
 
             // Configure image quality
             RequestOptions.ImageQualityOptions imageQuality = new RequestOptions.ImageQualityOptions();
@@ -378,9 +382,13 @@ class IntegrationTest {
             assertNotNull(response);
             assertTrue(response.isSuccess());
 
-            // Verify options were serialized to JSON
-            assertNotNull(options.toJson());
-            assertTrue(options.toJson().contains("exe/macro"));
+            assertNotNull(response.getReport());
+            JsonNode report = MAPPER.readTree(response.getReport());
+            assertEquals(2, report.size());
+            assertEquals(RequestOptions.ReportFormat.FULL.getFormat(), report.get("settings").get("format").asString());
+            JsonNode structure = report.get("structure").asArray();
+            assertEquals(1, structure.size());
+            assertEquals(MediaType.PDF.getMediaType(), structure.get(0).get("details").get("type").asString());
         }
     }
 }

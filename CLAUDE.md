@@ -107,7 +107,7 @@ When using this library in Apache NiFi 2.0.0+ custom processors:
 - Integration tests should use mock HTTP responses to avoid API calls
 - For real API testing, use environment variables for API keys:
   ```bash
-  export CDR_API_KEY=your-api-key-here
+  export CDR_INSTANT_API_KEY=your-api-key-here
   mvn test -Dtest=IntegrationTest
   ```
 

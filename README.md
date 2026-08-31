@@ -13,6 +13,8 @@ This library provides a simple, type-safe interface for uploading files to the E
 
 ## Installation
 
+⚠️ Publication location is TBD ⚠️
+
 Add to your `pom.xml`:
 
 ```xml
@@ -130,7 +132,7 @@ mvn clean install
 Integration tests can be run against a live server with an API key
 ```bash
 # Build and run integration tests
-export CDR_API_KEY=your-api-key-here
+export CDR_INSTANT_API_KEY=your-api-key-here
 mvn clean test
 ```
 
