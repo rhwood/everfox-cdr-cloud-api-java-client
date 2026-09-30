@@ -365,10 +365,8 @@ class IntegrationTest {
             options.setReport(RequestOptions.ReportFormat.FULL);
 
             // Configure image quality
-            RequestOptions.ImageQualityOptions imageQuality = new RequestOptions.ImageQualityOptions();
-            imageQuality.setPreserveJpeg(true);
-            imageQuality.setPreservePng(true);
-            options.setImageQuality(imageQuality);
+            RequestOptions.ImagesOptions images = new RequestOptions.ImagesOptions(MediaType.IMAGE_JPEG, MediaType.IMAGE_PNG);
+            options.setImages(images);
 
             InstantApiRequest request = new InstantApiRequest(
                     PDF_TEST_DATA,

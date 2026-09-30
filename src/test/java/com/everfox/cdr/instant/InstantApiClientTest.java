@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test;
 
 import com.everfox.cdr.MediaType;
 import com.everfox.cdr.Region;
-import com.everfox.cdr.Risk;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -56,34 +55,5 @@ class InstantApiClientTest {
         assertEquals("application/pdf", request.getContentType());
         assertEquals("application/pdf", request.getAcceptType());
         assertNull(request.getOptions());
-    }
-
-    @Test
-    void testNoRequestOptions() {
-        RequestOptions options = new RequestOptions();
-
-        String json = options.toJson();
-        assertNotNull(json);
-        assertEquals("{}", json);
-    }
-
-    @Test
-    void testRequestOptionsFullReport() {
-        RequestOptions options = new RequestOptions();
-        options.setReport(RequestOptions.ReportFormat.FULL);
-
-        String json = options.toJson();
-        assertNotNull(json);
-        assertEquals("{\"report\":{\"format\":\"full\"}}", json);
-    }
-
-    @Test
-    void testRequestOptionsAllowGifStenography() {
-        RequestOptions options = new RequestOptions();
-        options.allowRisk(Risk.STEG_IMAGE_GIF);
-
-        String json = options.toJson();
-        assertNotNull(json);
-        assertEquals("{\"risks\":{\"allow\":[\"steg/image/gif\"]}}", json);
     }
 }

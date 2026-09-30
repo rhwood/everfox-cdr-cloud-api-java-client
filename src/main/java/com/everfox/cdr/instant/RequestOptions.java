@@ -33,7 +33,7 @@ public class RequestOptions {
 
     private ReportOptions report;
     private ConversionOptions conversion;
-    private ImageQualityOptions imageQuality;
+    private ImagesOptions images;
     private RedactionOptions redactions;
     private Set<String> allowedRisks = new HashSet<>();
     private Set<String> deniedRisks = new HashSet<>();
@@ -104,6 +104,15 @@ public class RequestOptions {
         allowedRisks.remove(risk);
     }
 
+    public void setImages(ImagesOptions images) {
+        this.images = images;
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public ImagesOptions getImages() {
+        return images;
+    }
+
     /**
      * Returns the allowed and denied risks as a map.
      *
@@ -158,24 +167,6 @@ public class RequestOptions {
      */
     public void setConversion(ConversionOptions conversion) {
         this.conversion = conversion;
-    }
-
-    /**
-     * Returns the image quality options.
-     *
-     * @return image quality options
-     */
-    public ImageQualityOptions getImageQuality() {
-        return imageQuality;
-    }
-
-    /**
-     * Sets the image quality options.
-     *
-     * @param imageQuality image quality options
-     */
-    public void setImageQuality(ImageQualityOptions imageQuality) {
-        this.imageQuality = imageQuality;
     }
 
     /**
@@ -430,6 +421,37 @@ public class RequestOptions {
         public void setReplacementText(String replacementText) {
             this.replacementText = replacementText;
         }
+    }
+
+    public static class ImagesOptions {
+
+        private final Set<String> preservationFormats = new HashSet<>();
+
+        public ImagesOptions(MediaType... preservationFormats) {
+            if (preservationFormats != null) {
+                for (MediaType format : preservationFormats) {
+                    this.preservationFormats.add(format.getMediaType());
+                }
+            }
+        }
+
+        public ImagesOptions(String... preservationFormats) {
+            if (preservationFormats != null) {
+                for (String format : preservationFormats) {
+                    this.preservationFormats.add(format);
+                }
+            }
+        }
+
+        @JsonInclude (JsonInclude.Include.NON_NULL)
+        public Map<String, Set<String>> getQuality() {
+            if (preservationFormats.isEmpty()) {
+                return null;
+            } else {
+                return Map.of("preserve", preservationFormats);
+            }
+        }
+
     }
 
     /**
