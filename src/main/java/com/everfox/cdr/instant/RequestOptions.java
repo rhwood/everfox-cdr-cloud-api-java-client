@@ -423,10 +423,18 @@ public class RequestOptions {
         }
     }
 
+    /**
+     * Options for handling images.
+     */
     public static class ImagesOptions {
 
         private final Set<String> preservationFormats = new HashSet<>();
 
+        /**
+         * Create a set of image options with the specified preservation formats.
+         *
+         * @param preservationFormats the media types to preserve
+         */
         public ImagesOptions(MediaType... preservationFormats) {
             if (preservationFormats != null) {
                 for (MediaType format : preservationFormats) {
@@ -435,6 +443,11 @@ public class RequestOptions {
             }
         }
 
+        /**
+         * Create a set of image options with the specified preservation formats.
+         *
+         * @param preservationFormats the media types to preserve
+         */
         public ImagesOptions(String... preservationFormats) {
             if (preservationFormats != null) {
                 for (String format : preservationFormats) {
@@ -443,6 +456,11 @@ public class RequestOptions {
             }
         }
 
+        /**
+         * Returns the preservation formats as a map for JSON serialization.
+         *
+         * @return a map with "preserve" key and the set of preservation formats, or null if no formats are specified
+         */
         @JsonInclude (JsonInclude.Include.NON_NULL)
         public Map<String, Set<String>> getQuality() {
             if (preservationFormats.isEmpty()) {
