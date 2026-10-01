@@ -32,9 +32,9 @@ public class RequestOptions {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private ReportOptions report;
-    private ConversionOptions conversion;
+    // private ConversionOptions conversion; // not yet implemented
     private ImagesOptions images;
-    private RedactionOptions redactions;
+    // private RedactionOptions redactions; // not yet implemented
     private Set<String> allowedRisks = new HashSet<>();
     private Set<String> deniedRisks = new HashSet<>();
 
@@ -152,42 +152,6 @@ public class RequestOptions {
     }
 
     /**
-     * Returns the conversion options.
-     *
-     * @return conversion options
-     */
-    public ConversionOptions getConversion() {
-        return conversion;
-    }
-
-    /**
-     * Sets the conversion options.
-     *
-     * @param conversion conversion options
-     */
-    public void setConversion(ConversionOptions conversion) {
-        this.conversion = conversion;
-    }
-
-    /**
-     * Returns the redaction options.
-     *
-     * @return redaction options
-     */
-    public RedactionOptions getRedactions() {
-        return redactions;
-    }
-
-    /**
-     * Sets the redaction options.
-     *
-     * @param redactions redaction options
-     */
-    public void setRedactions(RedactionOptions redactions) {
-        this.redactions = redactions;
-    }
-
-    /**
      * Converts these options to a JSON string for the X-Options header.
      *
      * @return JSON representation
@@ -239,117 +203,6 @@ public class RequestOptions {
         @Override
         public String toString() {
             return getFormat();
-        }
-    }
-
-    /**
-     * Conversion options.
-     */
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public static class ConversionOptions {
-        private String sourceMimeType;
-        private Boolean enableLibreOffice;
-        private Boolean enableTextExtraction;
-
-        /**
-         * Default constructor.
-         */
-        public ConversionOptions() {
-        }
-
-        /**
-         * Returns the source media type for conversion.
-         *
-         * @return source media type
-         */
-        public String getSourceMimeType() {
-            return sourceMimeType;
-        }
-
-        /**
-         * Sets the source media type for conversion.
-         *
-         * @param sourceMimeType source media type
-         */
-        public void setSourceMimeType(MediaType sourceMimeType) {
-            setSourceMimeType(sourceMimeType.getMediaType());
-        }
-
-        /**
-         * Sets the source media type for conversion.
-         *
-         * @param sourceMimeType source media type
-         */
-        public void setSourceMimeType(String sourceMimeType) {
-            this.sourceMimeType = sourceMimeType;
-        }
-
-        /**
-         * Returns whether LibreOffice conversion is enabled.
-         *
-         * @return true if enabled, false if disabled, null if not specified
-         */
-        public Boolean getEnableLibreOffice() {
-            return enableLibreOffice;
-        }
-
-        /**
-         * Sets whether LibreOffice conversion is enabled.
-         *
-         * @param enableLibreOffice true to enable, false to disable, null to not specify
-         */
-        public void setEnableLibreOffice(Boolean enableLibreOffice) {
-            this.enableLibreOffice = enableLibreOffice;
-        }
-
-        /**
-         * Returns whether text extraction is enabled.
-         *
-         * @return true if enabled, false if disabled, null if not specified
-         */
-        public Boolean getEnableTextExtraction() {
-            return enableTextExtraction;
-        }
-
-        /**
-         * Sets whether text extraction is enabled.
-         *
-         * @param enableTextExtraction true to enable, false to disable, null to not specify
-         */
-        public void setEnableTextExtraction(Boolean enableTextExtraction) {
-            this.enableTextExtraction = enableTextExtraction;
-        }
-    }
-
-    /**
-     * Redaction options.
-     */
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public static class RedactionOptions {
-        private String replacementText;
-
-        /**
-         * Default constructor.
-         */
-        public RedactionOptions() {
-        }
-
-        /**
-         * Returns the text to use as a replacement for redacted content.
-         *
-         * @return the replacement text
-         */
-        public String getReplacementText() {
-            return replacementText;
-        }
-
-        /**
-         * Sets the text to use as a replacement for redacted content.
-         *
-         * @param replacementText the replacement text
-         */
-        public void setReplacementText(String replacementText) {
-            this.replacementText = replacementText;
         }
     }
 
