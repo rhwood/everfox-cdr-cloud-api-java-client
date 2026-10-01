@@ -46,4 +46,20 @@ public enum Region {
     public URI getBaseUrl() {
         return baseUrl;
     }
+
+    /**
+     * Returns the Region enum corresponding to the given string.
+     *
+     * @param region the region string (case-insensitive)
+     * @return the corresponding Region enum
+     * @throws IllegalArgumentException if the region string does not match any known region
+     */
+    public static Region fromString(String region) {
+        for (Region r : Region.values()) {
+            if (r.name().equalsIgnoreCase(region)) {
+                return r;
+            }
+        }
+        throw new IllegalArgumentException("Unknown region: " + region);
+    }
 }

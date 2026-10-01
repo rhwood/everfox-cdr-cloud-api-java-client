@@ -25,6 +25,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.URI;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -34,6 +35,15 @@ import static org.junit.jupiter.api.Assertions.*;
  * These tests require a valid API key set in the CDR_INSTANT_API_KEY environment variable.
  * To run: export CDR_INSTANT_API_KEY=your-api-key-here && mvn test -Dtest=IntegrationTest
  *
+ * The US_WEST_2 region is used for testing, but you can change the region by setting the
+ * CDR_INSTANT_API_URL environment variable. Note that the API URL must be a valid URI,
+ * e.g., "https://us-west-2.aws.instant.cdr.everfox.com/v1" and not the name of a region.
+ * 
+ * If you want to use a different region, you can set the CDR_INSTANT_API_REGION environment
+ * variable to one of the supported region names (case-insensitive), e.g., "eu_west_1" or
+ * "us_west_2". If both CDR_INSTANT_API_URL and CDR_INSTANT_API_REGION are set, the region will
+ * take precedence.
+ * 
  * Tests are disabled by default if the environment variable is not set.
  *
  * NOTE: The API has specific requirements for Accept headers that may vary by content type.
@@ -43,6 +53,8 @@ class IntegrationTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final String API_KEY_ENV = "CDR_INSTANT_API_KEY";
+    private static final String API_URL_ENV = "CDR_INSTANT_API_URL";
+    private static final String API_REGION_ENV = "CDR_INSTANT_API_REGION";
     // Simple PDF content for testing (minimal valid PDF)
     private static final byte[] PDF_TEST_DATA = ("%PDF-1.4\n" +
             "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n" +
@@ -60,13 +72,25 @@ class IntegrationTest {
     private static final byte[] INVALID_JSON_TEST_DATA = "[}".getBytes();
 
     /**
-     * Creates a client configured for testing.
+     * Creates a client configured for testing using the API key and optional API URL from environment variables.
+     * 
+     * @return a configured Instant API client
      */
     private InstantApiClient createClient() {
+        URI apiUri = Region.US_WEST_2.getBaseUrl();
         String apiKey = System.getenv(API_KEY_ENV);
         assertNotNull(apiKey, "CDR_INSTANT_API_KEY environment variable must be set");
 
-        InstantApiConfig config = new InstantApiConfig(apiKey, Region.US_WEST_2);
+        String apiUrl = System.getenv(API_URL_ENV);
+        if (apiUrl != null && !apiUrl.isEmpty()) {
+            apiUri = assertDoesNotThrow(() -> new URI(apiUrl), "Invalid API URL");
+        }
+        String apiRegion = System.getenv(API_REGION_ENV);
+        if (apiRegion != null && !apiRegion.isEmpty()) {
+            Region region = Region.fromString(apiRegion);
+            apiUri = region.getBaseUrl();
+        }
+        InstantApiConfig config = new InstantApiConfig(apiKey, apiUri);
 
         return new InstantApiClient(config);
     }
@@ -237,11 +261,27 @@ class IntegrationTest {
         }
     }
 
+    /**
+     * Tests uploading a file to the Instant API using the configured region and API key.
+     * 
+     * Note that this test ignores the API URL environment variable and uses the
+     * {@link Region.US_WEST_2} region for testing unless the {@code CDR_INSTANT_API_REGION}
+     * environment variable is set.
+     * 
+     * @throws IOException
+     * @throws InterruptedException
+     * @throws InstantApiException
+     */
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadToRegion() throws IOException, InterruptedException, InstantApiException {
+        Region region = Region.US_WEST_2;
         String apiKey = System.getenv(API_KEY_ENV);
-        InstantApiConfig config = new InstantApiConfig(apiKey, Region.US_WEST_2);
+        String regionEnv = System.getenv(API_REGION_ENV);
+        if (regionEnv != null && !regionEnv.isEmpty()) {
+            region = Region.fromString(regionEnv);
+        }
+        InstantApiConfig config = new InstantApiConfig(apiKey, region);
 
         try (InstantApiClient client = new InstantApiClient(config)) {
             InstantApiRequest request = new InstantApiRequest(
@@ -259,7 +299,7 @@ class IntegrationTest {
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testInvalidApiKey() {
-        InstantApiConfig config = new InstantApiConfig("invalid-api-key-12345", Region.US_WEST_2);
+        InstantApiConfig config = new InstantApiConfig("invalid-api-key-12345", this.createClient().getConfig().getBaseUrl());
 
         try (InstantApiClient client = new InstantApiClient(config)) {
             InstantApiRequest request = new InstantApiRequest(
