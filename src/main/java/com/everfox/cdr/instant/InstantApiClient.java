@@ -102,6 +102,15 @@ public class InstantApiClient implements AutoCloseable {
         return upload(request);
     }
 
+    /**
+     * Returns the configuration used by this client.
+     *
+     * @return the API configuration
+     */
+    public InstantApiConfig getConfig() {
+        return config;
+    }
+
     @Override
     public void close() {
         // HttpClient does not require explicit cleanup

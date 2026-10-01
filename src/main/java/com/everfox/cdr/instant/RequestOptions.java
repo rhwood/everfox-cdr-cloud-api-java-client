@@ -13,6 +13,7 @@
  */
 package com.everfox.cdr.instant;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -32,9 +33,9 @@ public class RequestOptions {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private ReportOptions report;
-    private ConversionOptions conversion;
-    private ImageQualityOptions imageQuality;
-    private RedactionOptions redactions;
+    // private ConversionOptions conversion; // not yet implemented
+    private ImagesOptions images;
+    // private RedactionOptions redactions; // not yet implemented
     private Set<String> allowedRisks = new HashSet<>();
     private Set<String> deniedRisks = new HashSet<>();
 
@@ -105,6 +106,25 @@ public class RequestOptions {
     }
 
     /**
+     * Set the image options.
+     *
+     * @param images the image options
+     */
+    public void setImages(ImagesOptions images) {
+        this.images = images;
+    }
+
+    /**
+     * Returns the image options.
+     *
+     * @return the image options
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public ImagesOptions getImages() {
+        return images;
+    }
+
+    /**
      * Returns the allowed and denied risks as a map.
      *
      * @return a map with "allow" and/or "deny" keys, or null if no risks are specified
@@ -129,6 +149,7 @@ public class RequestOptions {
      *
      * @return report format
      */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public ReportOptions getReport() {
         return report;
     }
@@ -140,60 +161,6 @@ public class RequestOptions {
      */
     public void setReport(ReportFormat format) {
         this.report = new ReportOptions(format);
-    }
-
-    /**
-     * Returns the conversion options.
-     *
-     * @return conversion options
-     */
-    public ConversionOptions getConversion() {
-        return conversion;
-    }
-
-    /**
-     * Sets the conversion options.
-     *
-     * @param conversion conversion options
-     */
-    public void setConversion(ConversionOptions conversion) {
-        this.conversion = conversion;
-    }
-
-    /**
-     * Returns the image quality options.
-     *
-     * @return image quality options
-     */
-    public ImageQualityOptions getImageQuality() {
-        return imageQuality;
-    }
-
-    /**
-     * Sets the image quality options.
-     *
-     * @param imageQuality image quality options
-     */
-    public void setImageQuality(ImageQualityOptions imageQuality) {
-        this.imageQuality = imageQuality;
-    }
-
-    /**
-     * Returns the redaction options.
-     *
-     * @return redaction options
-     */
-    public RedactionOptions getRedactions() {
-        return redactions;
-    }
-
-    /**
-     * Sets the redaction options.
-     *
-     * @param redactions redaction options
-     */
-    public void setRedactions(RedactionOptions redactions) {
-        this.redactions = redactions;
     }
 
     /**
@@ -252,184 +219,48 @@ public class RequestOptions {
     }
 
     /**
-     * Conversion options.
+     * Options for handling images.
      */
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public static class ConversionOptions {
-        private String sourceMimeType;
-        private Boolean enableLibreOffice;
-        private Boolean enableTextExtraction;
+    public static class ImagesOptions {
+
+        // this is a set and not an arrat to avoid duplicates and to make it easier to check for existence
+        private final Set<String> preservationFormats;
 
         /**
-         * Default constructor.
-         */
-        public ConversionOptions() {
-        }
-
-        /**
-         * Returns the source media type for conversion.
+         * Create a set of image options with the specified preservation formats.
          *
-         * @return source media type
+         * @param preservationFormats the media types to preserve
          */
-        public String getSourceMimeType() {
-            return sourceMimeType;
+        public ImagesOptions(MediaType... preservationFormats) {
+            this.preservationFormats = new HashSet<>(Arrays
+                .stream(preservationFormats)
+                .map(MediaType::toString)
+                .toList());
         }
 
         /**
-         * Sets the source media type for conversion.
+         * Create a set of image options with the specified preservation formats.
          *
-         * @param sourceMimeType source media type
+         * @param preservationFormats the media types to preserve
          */
-        public void setSourceMimeType(MediaType sourceMimeType) {
-            setSourceMimeType(sourceMimeType.getMediaType());
+        public ImagesOptions(String... preservationFormats) {
+            this.preservationFormats = new HashSet<>(Arrays.asList(preservationFormats));
         }
 
         /**
-         * Sets the source media type for conversion.
+         * Returns the preservation formats as a map for JSON serialization.
          *
-         * @param sourceMimeType source media type
+         * @return a map with "preserve" key and the set of preservation formats, or null if no formats are specified
          */
-        public void setSourceMimeType(String sourceMimeType) {
-            this.sourceMimeType = sourceMimeType;
+        @JsonInclude (JsonInclude.Include.NON_NULL)
+        public Map<String, Set<String>> getQuality() {
+            if (preservationFormats.isEmpty()) {
+                return null;
+            } else {
+                return Map.of("preserve", preservationFormats);
+            }
         }
 
-        /**
-         * Returns whether LibreOffice conversion is enabled.
-         *
-         * @return true if enabled, false if disabled, null if not specified
-         */
-        public Boolean getEnableLibreOffice() {
-            return enableLibreOffice;
-        }
-
-        /**
-         * Sets whether LibreOffice conversion is enabled.
-         *
-         * @param enableLibreOffice true to enable, false to disable, null to not specify
-         */
-        public void setEnableLibreOffice(Boolean enableLibreOffice) {
-            this.enableLibreOffice = enableLibreOffice;
-        }
-
-        /**
-         * Returns whether text extraction is enabled.
-         *
-         * @return true if enabled, false if disabled, null if not specified
-         */
-        public Boolean getEnableTextExtraction() {
-            return enableTextExtraction;
-        }
-
-        /**
-         * Sets whether text extraction is enabled.
-         *
-         * @param enableTextExtraction true to enable, false to disable, null to not specify
-         */
-        public void setEnableTextExtraction(Boolean enableTextExtraction) {
-            this.enableTextExtraction = enableTextExtraction;
-        }
-    }
-
-    /**
-     * Image quality preservation options.
-     */
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public static class ImageQualityOptions {
-        private Boolean preserveJpeg;
-        private Boolean preservePng;
-        private Boolean preserveGif;
-
-        /**
-         * Default constructor.
-         */
-        public ImageQualityOptions() {
-        }
-
-        /**
-         * Returns whether JPEG images are preserved.
-         *
-         * @return true if preserved, false if not, null if not specified
-         */
-        public Boolean getPreserveJpeg() {
-            return preserveJpeg;
-        }
-
-        /**
-         * Sets whether JPEG images are preserved.
-         *
-         * @param preserveJpeg true to preserve, false to not preserve, null to not specify
-         */
-        public void setPreserveJpeg(Boolean preserveJpeg) {
-            this.preserveJpeg = preserveJpeg;
-        }
-
-        /**
-         * Returns whether PNG images are preserved.
-         *
-         * @return true if preserved, false if not, null if not specified
-         */
-        public Boolean getPreservePng() {
-            return preservePng;
-        }
-
-        /**
-         * Sets whether PNG images are preserved.
-         *
-         * @param preservePng true to preserve, false to not preserve, null to not specify
-         */
-        public void setPreservePng(Boolean preservePng) {
-            this.preservePng = preservePng;
-        }
-
-        /**
-         * Returns whether GIF images are preserved.
-         *
-         * @return true if preserved, false if not, null if not specified
-         */
-        public Boolean getPreserveGif() {
-            return preserveGif;
-        }
-
-        /**
-         * Sets whether GIF images are preserved.
-         *
-         * @param preserveGif true to preserve, false to not preserve, null to not specify
-         */
-        public void setPreserveGif(Boolean preserveGif) {
-            this.preserveGif = preserveGif;
-        }
-    }
-
-    /**
-     * Redaction options.
-     */
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public static class RedactionOptions {
-        private String replacementText;
-
-        /**
-         * Default constructor.
-         */
-        public RedactionOptions() {
-        }
-
-        /**
-         * Returns the text to use as a replacement for redacted content.
-         *
-         * @return the replacement text
-         */
-        public String getReplacementText() {
-            return replacementText;
-        }
-
-        /**
-         * Sets the text to use as a replacement for redacted content.
-         *
-         * @param replacementText the replacement text
-         */
-        public void setReplacementText(String replacementText) {
-            this.replacementText = replacementText;
-        }
     }
 
     /**
