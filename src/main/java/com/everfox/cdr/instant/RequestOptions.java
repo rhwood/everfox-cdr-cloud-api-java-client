@@ -13,6 +13,7 @@
  */
 package com.everfox.cdr.instant;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -148,6 +149,7 @@ public class RequestOptions {
      *
      * @return report format
      */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public ReportOptions getReport() {
         return report;
     }
@@ -221,7 +223,8 @@ public class RequestOptions {
      */
     public static class ImagesOptions {
 
-        private final Set<String> preservationFormats = new HashSet<>();
+        // this is a set and not an arrat to avoid duplicates and to make it easier to check for existence
+        private final Set<String> preservationFormats;
 
         /**
          * Create a set of image options with the specified preservation formats.
@@ -229,9 +232,10 @@ public class RequestOptions {
          * @param preservationFormats the media types to preserve
          */
         public ImagesOptions(MediaType... preservationFormats) {
-            for (MediaType format : preservationFormats) {
-                this.preservationFormats.add(format.getMediaType());
-            }
+            this.preservationFormats = new HashSet<>(Arrays
+                .stream(preservationFormats)
+                .map(MediaType::toString)
+                .toList());
         }
 
         /**
@@ -240,9 +244,7 @@ public class RequestOptions {
          * @param preservationFormats the media types to preserve
          */
         public ImagesOptions(String... preservationFormats) {
-            for (String format : preservationFormats) {
-                this.preservationFormats.add(format);
-            }
+            this.preservationFormats = new HashSet<>(Arrays.asList(preservationFormats));
         }
 
         /**
