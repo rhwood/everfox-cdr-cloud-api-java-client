@@ -366,10 +366,8 @@ public class RequestOptions {
          * @param preservationFormats the media types to preserve
          */
         public ImagesOptions(MediaType... preservationFormats) {
-            if (preservationFormats != null) {
-                for (MediaType format : preservationFormats) {
-                    this.preservationFormats.add(format.getMediaType());
-                }
+            for (MediaType format : preservationFormats) {
+                this.preservationFormats.add(format.getMediaType());
             }
         }
 
@@ -379,10 +377,8 @@ public class RequestOptions {
          * @param preservationFormats the media types to preserve
          */
         public ImagesOptions(String... preservationFormats) {
-            if (preservationFormats != null) {
-                for (String format : preservationFormats) {
-                    this.preservationFormats.add(format);
-                }
+            for (String format : preservationFormats) {
+                this.preservationFormats.add(format);
             }
         }
 
