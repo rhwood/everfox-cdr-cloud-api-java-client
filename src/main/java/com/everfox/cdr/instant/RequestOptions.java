@@ -104,10 +104,20 @@ public class RequestOptions {
         allowedRisks.remove(risk);
     }
 
+    /**
+     * Set the image options.
+     *
+     * @param images the image options
+     */
     public void setImages(ImagesOptions images) {
         this.images = images;
     }
 
+    /**
+     * Returns the image options.
+     *
+     * @return the image options
+     */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public ImagesOptions getImages() {
         return images;
