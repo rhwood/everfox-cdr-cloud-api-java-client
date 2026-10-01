@@ -133,7 +133,7 @@ class IntegrationTest {
 
             assertEquals(400, exception.getHttpStatusCode());
             assertEquals(1110, exception.getApiStatusCode());
-            assertEquals("The following risks are associated with this file and need to be explicitly allowed:- poly/text/json, structured/no-schema/json", exception.getMessage());
+            assertEquals("The following risks are associated with this file and need to be explicitly allowed:- poly/text/json, structured/no-schema/json", exception.getApiMessage());
             assertEquals("RISK_NOT_ALLOWED", exception.getName());
             assertEquals("BadRequest", exception.getType());
         }
@@ -160,7 +160,7 @@ class IntegrationTest {
 
             assertEquals(400, exception.getHttpStatusCode());
             assertEquals(1110, exception.getApiStatusCode());
-            assertEquals("The following risks are associated with this file and need to be explicitly allowed:- structured/no-schema/json", exception.getMessage());
+            assertEquals("The following risks are associated with this file and need to be explicitly allowed:- structured/no-schema/json", exception.getApiMessage());
             assertEquals("RISK_NOT_ALLOWED", exception.getName());
             assertEquals("BadRequest", exception.getType());
         }
@@ -210,7 +210,7 @@ class IntegrationTest {
 
             assertEquals(400, exception.getHttpStatusCode());
             assertEquals(3020, exception.getApiStatusCode());
-            assertEquals("This file could not be processed: the file content isn't recognised as 'application/json'", exception.getMessage());
+            assertEquals("This file could not be processed: the file content isn't recognised as 'application/json'", exception.getApiMessage());
             assertEquals("PROCESSING_NOT_RECOGNISED", exception.getName());
             assertEquals("BadRequest", exception.getType());
         }
@@ -316,7 +316,7 @@ class IntegrationTest {
 
             assertEquals(403, exception.getHttpStatusCode());
             assertEquals(6070, exception.getApiStatusCode());
-            assertEquals("Forbidden", exception.getMessage());
+            assertEquals("Forbidden", exception.getApiMessage());
             assertEquals("APIGATEWAY_INVALID_API_KEY", exception.getName());
             assertEquals("BadRequest", exception.getType());
         }
@@ -342,7 +342,7 @@ class IntegrationTest {
 
             assertEquals(413, exception.getHttpStatusCode());
             assertEquals(6050, exception.getApiStatusCode());
-            assertEquals("Request Too Long", exception.getMessage());
+            assertEquals("Request Too Long", exception.getApiMessage());
             assertEquals("APIGATEWAY_INTEGRATION_FAILURE", exception.getName());
             assertEquals("InternalServerError", exception.getType());
         }
