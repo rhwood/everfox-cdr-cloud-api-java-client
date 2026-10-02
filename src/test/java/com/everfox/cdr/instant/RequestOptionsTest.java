@@ -20,12 +20,10 @@ import com.everfox.cdr.Risk;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.ArrayNode;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
-import java.util.Set;
 
 class RequestOptionsTest {
 
