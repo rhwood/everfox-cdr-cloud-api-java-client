@@ -18,11 +18,18 @@ import org.junit.jupiter.api.Test;
 import com.everfox.cdr.MediaType;
 import com.everfox.cdr.Risk;
 
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.List;
 import java.util.Set;
 
 class RequestOptionsTest {
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Test
     void testNoRequestOptions() {
@@ -44,7 +51,9 @@ class RequestOptionsTest {
 
     @Test
     void testRequestOptionsAllowGifStenography() {
-        RequestOptions options = new RequestOptions(null, null, Set.of(Risk.STEG_IMAGE_GIF), null);
+        RequestOptions options = new RequestOptions.Builder()
+            .allowRisks(Risk.STEG_IMAGE_GIF)
+            .build();
 
         String json = options.toJson();
         assertNotNull(json);
@@ -53,9 +62,8 @@ class RequestOptionsTest {
 
     @Test
     void testRequestOptionsNoImagesOptions() {
-        RequestOptions options = new RequestOptions();
         RequestOptions.ImagesOptions images = new RequestOptions.ImagesOptions(new String[0]);
-        options.setImages(images);
+        RequestOptions options = new RequestOptions(null, images, null, null);
 
         String json = options.toJson();
         assertNotNull(json);
@@ -64,9 +72,8 @@ class RequestOptionsTest {
 
     @Test
     void testRequestOptionsPreserveJpegAndPngMediaTypes() {
-        RequestOptions options = new RequestOptions();
         RequestOptions.ImagesOptions images = new RequestOptions.ImagesOptions(MediaType.IMAGE_JPEG, MediaType.IMAGE_PNG);
-        options.setImages(images);
+        RequestOptions options = new RequestOptions(null, images, null, null);
 
         String json = options.toJson();
         assertNotNull(json);
@@ -75,12 +82,34 @@ class RequestOptionsTest {
 
     @Test
     void testRequestOptionsPreserveJpegAndPngStrings() {
-        RequestOptions options = new RequestOptions();
         RequestOptions.ImagesOptions images = new RequestOptions.ImagesOptions("image/jpeg", "image/png");
-        options.setImages(images);
+        RequestOptions options = new RequestOptions(null, images, null, null);
 
         String json = options.toJson();
         assertNotNull(json);
         assertEquals("{\"images\":{\"quality\":{\"preserve\":[\"image/png\",\"image/jpeg\"]}}}", json);
+    }
+
+    @Test
+    void testRisksAreExclusive() {
+        RequestOptions options = new RequestOptions.Builder()
+            .allowRisks(Risk.EXE, Risk.POLY)
+            .denyRisks(Risk.POLY, Risk.STEG)
+            .build();
+
+        JsonNode json = MAPPER.readTree(options.toJson());
+
+        assertNotNull(json);
+        JsonNode risks = json.get("risks");
+        assertTrue(risks.get("allow").isArray());
+        assertTrue(risks.get("deny").isArray());
+        List<String> allow = MAPPER.readerForListOf(String.class).readValue(risks.get("allow"));
+        List<String> deny = MAPPER.readerForListOf(String.class).readValue(risks.get("deny"));
+        assertTrue(allow.contains("exe"));
+        assertFalse(allow.contains("poly"));
+        assertFalse(allow.contains("steg"));
+        assertFalse(deny.contains("exe"));
+        assertTrue(deny.contains("poly"));
+        assertTrue(deny.contains("steg"));
     }
 }
