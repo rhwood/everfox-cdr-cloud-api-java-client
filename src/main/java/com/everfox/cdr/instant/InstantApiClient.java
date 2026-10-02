@@ -117,6 +117,12 @@ public class InstantApiClient implements AutoCloseable {
         // HttpClient does not require explicit cleanup
     }
 
+    /**
+     * Creates a new instance of the InstantApiClient with the specified configuration.
+     *
+     * @param config the API configuration
+     * @return a new instance of InstantApiClient
+     */
     public static InstantApiClient create(InstantApiConfig config) {
         Objects.requireNonNull(config, "config cannot be null");
         return new InstantApiClient(config);

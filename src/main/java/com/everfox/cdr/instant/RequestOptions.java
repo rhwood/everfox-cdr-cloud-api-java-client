@@ -229,6 +229,9 @@ public class RequestOptions {
         }
     }
 
+    /**
+     * Builder for creating {@link RequestOptions} instances.
+     */
     public static class Builder {
 
         private Set<String> allowedRisks = new HashSet<>();
@@ -236,29 +239,61 @@ public class RequestOptions {
         private ReportFormat reportFormat;
         private ImagesOptions imagesOptions;
 
+        /**
+         * Creates a new instance of the Builder.
+         */
         public Builder() {
         }
 
+        /**
+         * Sets the report format for the request options.
+         *
+         * @param format the report format
+         * @return the builder instance
+         */
         public Builder reportFormat(ReportFormat format) {
             this.reportFormat = format;
             return this;
         }
 
+        /**
+         * Sets the image options for the request options.
+         *
+         * @param imagesOptions the image options
+         * @return the builder instance
+         */
         public Builder imagesOptions(ImagesOptions imagesOptions) {
             this.imagesOptions = imagesOptions;
             return this;
         }
 
+        /**
+         * Adds allowed risks to the request options.
+         *
+         * @param allowedRisks the risks to allow
+         * @return the builder instance
+         */
         public Builder allowRisks(Risk... allowedRisks) {
             this.allowedRisks = Arrays.stream(allowedRisks).map(Risk::getRisk).collect(Collectors.toSet());
             return this;
         }
 
+        /**
+         * Adds denied risks to the request options.
+         *
+         * @param deniedRisks the risks to deny
+         * @return the builder instance
+         */
         public Builder denyRisks(Risk... deniedRisks) {
             this.deniedRisks = Arrays.stream(deniedRisks).map(Risk::getRisk).collect(Collectors.toSet());
             return this;
         }
 
+        /**
+         * Builds the {@link RequestOptions} instance with the specified configurations.
+         *
+         * @return a new instance of RequestOptions
+         */
         public RequestOptions build() {
             return new RequestOptions(reportFormat, imagesOptions, allowedRisks, deniedRisks);
         }
