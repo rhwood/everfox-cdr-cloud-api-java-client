@@ -189,16 +189,16 @@ class IntegrationTest {
             Region region = Region.fromString(apiRegion);
             apiUri = region.getBaseUrl();
         }
-        InstantApiConfig config = new InstantApiConfig(apiKey, apiUri);
+        InstantApiConfig config = InstantApiConfig.create(apiKey, apiUri);
 
-        return new InstantApiClient(config);
+        return InstantApiClient.create(config);
     }
 
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadPdfFile() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            InstantApiRequest request = new InstantApiRequest(
+            InstantApiRequest request = InstantApiRequest.create(
                     PDF_TEST_DATA,
                     "application/pdf",
                     "application/pdf"
@@ -218,7 +218,7 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadJsonFileNoOptions() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            InstantApiRequest request = new InstantApiRequest(
+            InstantApiRequest request = InstantApiRequest.create(
                     JSON_TEST_DATA,
                     MediaType.JSON,
                     MediaType.JSON
@@ -244,7 +244,7 @@ class IntegrationTest {
         try (InstantApiClient client = createClient()) {
             RequestOptions options = new RequestOptions();
             options.allowRisks(Risk.POLY_TEXT_JSON);
-            InstantApiRequest request = new InstantApiRequest(
+            InstantApiRequest request = InstantApiRequest.create(
                     JSON_TEST_DATA,
                     MediaType.JSON,
                     MediaType.JSON,
@@ -271,7 +271,7 @@ class IntegrationTest {
         try (InstantApiClient client = createClient()) {
             RequestOptions options = new RequestOptions();
             options.allowRisks(Risk.POLY_TEXT_JSON, Risk.STRUCTURED_NO_SCHEMA_JSON);
-            InstantApiRequest request = new InstantApiRequest(
+            InstantApiRequest request = InstantApiRequest.create(
                     JSON_TEST_DATA,
                     MediaType.JSON,
                     MediaType.JSON,
@@ -294,7 +294,7 @@ class IntegrationTest {
         try (InstantApiClient client = createClient()) {
             RequestOptions options = new RequestOptions();
             options.allowRisks(Risk.POLY_TEXT_JSON, Risk.STRUCTURED_NO_SCHEMA_JSON);
-            InstantApiRequest request = new InstantApiRequest(
+            InstantApiRequest request = InstantApiRequest.create(
                     INVALID_JSON_TEST_DATA,
                     MediaType.JSON,
                     MediaType.JSON,
@@ -337,7 +337,7 @@ class IntegrationTest {
             RequestOptions options = new RequestOptions();
             options.setReport(RequestOptions.ReportFormat.FULL);
 
-            InstantApiRequest request = new InstantApiRequest(
+            InstantApiRequest request = InstantApiRequest.create(
                     PDF_TEST_DATA,
                     "application/pdf",
                     "application/pdf",
@@ -369,7 +369,7 @@ class IntegrationTest {
             options.setImages(imagesOptions);
             options.allowRisk(Risk.STEG_IMAGE_JPEG);
 
-            InstantApiRequest request = new InstantApiRequest(
+            InstantApiRequest request = InstantApiRequest.create(
                     JPEG_TEST_DATA,
                     MediaType.IMAGE_JPEG,
                     MediaType.IMAGE_JPEG,
@@ -393,7 +393,7 @@ class IntegrationTest {
             RequestOptions.ImagesOptions imagesOptions = new RequestOptions.ImagesOptions(new String[0]);
             options.setImages(imagesOptions);
 
-            InstantApiRequest request = new InstantApiRequest(
+            InstantApiRequest request = InstantApiRequest.create(
                     JPEG_TEST_DATA,
                     MediaType.IMAGE_JPEG,
                     MediaType.IMAGE_JPEG,
@@ -429,10 +429,10 @@ class IntegrationTest {
         if (regionEnv != null && !regionEnv.isEmpty()) {
             region = Region.fromString(regionEnv);
         }
-        InstantApiConfig config = new InstantApiConfig(apiKey, region);
+        InstantApiConfig config = InstantApiConfig.create(apiKey, region);
 
-        try (InstantApiClient client = new InstantApiClient(config)) {
-            InstantApiRequest request = new InstantApiRequest(
+        try (InstantApiClient client = InstantApiClient.create(config)) {
+            InstantApiRequest request = InstantApiRequest.create(
                     PDF_TEST_DATA,
                     "application/pdf",
                     "application/pdf"
@@ -447,10 +447,10 @@ class IntegrationTest {
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testInvalidApiKey() {
-        InstantApiConfig config = new InstantApiConfig("invalid-api-key-12345", this.createClient().getConfig().getBaseUrl());
+        InstantApiConfig config = InstantApiConfig.create("invalid-api-key-12345", this.createClient().getConfig().getBaseUrl());
 
-        try (InstantApiClient client = new InstantApiClient(config)) {
-            InstantApiRequest request = new InstantApiRequest(
+        try (InstantApiClient client = InstantApiClient.create(config)) {
+            InstantApiRequest request = InstantApiRequest.create(
                     PDF_TEST_DATA,
                     "application/pdf",
                     "application/pdf"
@@ -476,7 +476,7 @@ class IntegrationTest {
         try (InstantApiClient client = createClient()) {
             // Create a file larger than 4.5 MB
             byte[] largeFile = new byte[5 * 1024 * 1024]; // 5 MB
-            InstantApiRequest request = new InstantApiRequest(
+            InstantApiRequest request = InstantApiRequest.create(
                     largeFile,
                     "application/octet-stream",
                     "application/octet-stream"
@@ -500,7 +500,7 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testResponseHeaders() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            InstantApiRequest request = new InstantApiRequest(
+            InstantApiRequest request = InstantApiRequest.create(
                     PDF_TEST_DATA,
                     "application/pdf",
                     "application/pdf"
@@ -526,10 +526,10 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testCustomTimeouts() throws IOException, InterruptedException, InstantApiException {
         String apiKey = System.getenv(API_KEY_ENV);
-        InstantApiConfig config = new InstantApiConfig(apiKey, Region.US_WEST_2, 5, 120); // Custom timeouts
+        InstantApiConfig config = InstantApiConfig.create(apiKey, Region.US_WEST_2, 5, 120); // Custom timeouts
 
-        try (InstantApiClient client = new InstantApiClient(config)) {
-            InstantApiRequest request = new InstantApiRequest(
+        try (InstantApiClient client = InstantApiClient.create(config)) {
+            InstantApiRequest request = InstantApiRequest.create(
                     PDF_TEST_DATA,
                     "application/pdf",
                     "application/pdf"
@@ -556,7 +556,7 @@ class IntegrationTest {
             RequestOptions.ImagesOptions images = new RequestOptions.ImagesOptions(MediaType.IMAGE_JPEG, MediaType.IMAGE_PNG);
             options.setImages(images);
 
-            InstantApiRequest request = new InstantApiRequest(
+            InstantApiRequest request = InstantApiRequest.create(
                     PDF_TEST_DATA,
                     "application/pdf",
                     "application/pdf",

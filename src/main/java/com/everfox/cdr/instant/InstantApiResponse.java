@@ -77,7 +77,7 @@ public class InstantApiResponse {
      * @return the body bytes
      */
     public byte[] getBody() {
-        return body;
+        return body.clone();
     }
 
     /**
@@ -86,7 +86,7 @@ public class InstantApiResponse {
      * @return the headers map
      */
     public Map<String, String> getHeaders() {
-        return headers;
+        return Map.copyOf(headers);
     }
 
     /**

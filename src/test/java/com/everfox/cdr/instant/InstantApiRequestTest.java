@@ -15,24 +15,24 @@ package com.everfox.cdr.instant;
 
 import org.junit.jupiter.api.Test;
 
-import com.everfox.cdr.Region;
+import com.everfox.cdr.MediaType;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class InstantApiClientTest {
+class InstantApiRequestTest {
 
     @Test
-    void testClientWithNullConfig() {
-        assertThrows(NullPointerException.class, () -> {
-            InstantApiClient.create(null);
-        });
-    }
+    void testRequestCreation() {
+        byte[] data = "test data".getBytes();
+        InstantApiRequest request = InstantApiRequest.create(
+                data,
+                MediaType.PDF,
+                MediaType.PDF
+        );
 
-    @Test
-    void testClientCreation() {
-        InstantApiConfig config = InstantApiConfig.create("test-key", Region.US_WEST_2);
-        InstantApiClient client = InstantApiClient.create(config);
-
-        assertEquals(config, client.getConfig());
+        assertArrayEquals(data, request.getFileData());
+        assertEquals("application/pdf", request.getContentType());
+        assertEquals("application/pdf", request.getAcceptType());
+        assertNull(request.getOptions());
     }
 }

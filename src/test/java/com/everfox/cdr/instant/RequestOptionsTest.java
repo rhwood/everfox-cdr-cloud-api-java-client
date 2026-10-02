@@ -20,11 +20,13 @@ import com.everfox.cdr.Risk;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Set;
+
 class RequestOptionsTest {
 
     @Test
     void testNoRequestOptions() {
-        RequestOptions options = new RequestOptions();
+        RequestOptions options = new RequestOptions(null, null, null, null);
 
         String json = options.toJson();
         assertNotNull(json);
@@ -33,8 +35,7 @@ class RequestOptionsTest {
 
     @Test
     void testRequestOptionsFullReport() {
-        RequestOptions options = new RequestOptions();
-        options.setReport(RequestOptions.ReportFormat.FULL);
+        RequestOptions options = new RequestOptions(RequestOptions.ReportFormat.FULL, null, null, null);
 
         String json = options.toJson();
         assertNotNull(json);
@@ -43,8 +44,7 @@ class RequestOptionsTest {
 
     @Test
     void testRequestOptionsAllowGifStenography() {
-        RequestOptions options = new RequestOptions();
-        options.allowRisk(Risk.STEG_IMAGE_GIF);
+        RequestOptions options = new RequestOptions(null, null, Set.of(Risk.STEG_IMAGE_GIF), null);
 
         String json = options.toJson();
         assertNotNull(json);

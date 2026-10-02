@@ -19,20 +19,25 @@ import com.everfox.cdr.Region;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class InstantApiClientTest {
+import java.net.URI;
+
+class InstantApiConfigTest {
 
     @Test
-    void testClientWithNullConfig() {
-        assertThrows(NullPointerException.class, () -> {
-            InstantApiClient.create(null);
-        });
+    void testConfigWithRegion() {
+        InstantApiConfig config = InstantApiConfig.create("test-key", Region.US_WEST_2);
+
+        assertEquals("test-key", config.getApiKey());
+        assertEquals("https://us-west-2.aws.instant.cdr.everfox.com/v1", config.getBaseUrl().toString());
     }
 
     @Test
-    void testClientCreation() {
-        InstantApiConfig config = InstantApiConfig.create("test-key", Region.US_WEST_2);
-        InstantApiClient client = InstantApiClient.create(config);
+    void testConfigWithCustomUrl() {
+        InstantApiConfig config = InstantApiConfig.create("test-key", URI.create("https://custom.example.com"), 5, 30);
 
-        assertEquals(config, client.getConfig());
+        assertEquals("test-key", config.getApiKey());
+        assertEquals("https://custom.example.com", config.getBaseUrl().toString());
+        assertEquals(5, config.getConnectTimeoutSeconds());
+        assertEquals(30, config.getRequestTimeoutSeconds());
     }
 }

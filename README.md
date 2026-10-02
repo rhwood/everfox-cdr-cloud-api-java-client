@@ -40,7 +40,7 @@ InstantApiConfig config = InstantApiConfig.builder()
 try (InstantApiClient client = new InstantApiClient(config)) {
     // Upload and process a file
     byte[] fileData = Files.readAllBytes(Path.of("document.pdf"));
-    InstantApiRequest request = new InstantApiRequest(
+    InstantApiRequest request = InstantApiRequest.create(
         fileData,
         "application/pdf",
         "application/pdf"
@@ -77,7 +77,7 @@ options.setRisks(risks);
 options.setReporting(RequestOptions.ReportFormat.FULL);
 
 // Create request with options
-InstantApiRequest request = new InstantApiRequest(
+InstantApiRequest request = InstantApiRequest.create(
     fileData,
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/pdf",
