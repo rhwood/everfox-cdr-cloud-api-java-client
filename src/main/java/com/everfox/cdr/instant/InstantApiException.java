@@ -33,6 +33,10 @@ public class InstantApiException extends Exception {
      */
     private final int httpStatusCode;
     /**
+     * The API error message returned by the API. This is "Unknown error" if the API did not return a valid error response.
+     */
+    private final String apiMessage;
+    /**
      * The name of the error returned by the API. This is "Unknown" if the API did not return a valid error response.
      */
     private final String name;
@@ -48,9 +52,10 @@ public class InstantApiException extends Exception {
      */
     // This is private because the constructor must call super() first, so we can't parse the body in the constructor
     private InstantApiException(int apiStatusCode, int httpStatusCode, String message, String name, String type) {
-        super(message);
+        super();
         this.apiStatusCode = apiStatusCode;
         this.httpStatusCode = httpStatusCode;
+        this.apiMessage = message;
         this.name = name;
         this.type = type;
     }
@@ -74,6 +79,15 @@ public class InstantApiException extends Exception {
     }
 
     /**
+     * Returns the API error message.
+     *
+     * @return the API error message
+     */
+    public String getApiMessage() {
+        return apiMessage;
+    }
+
+    /**
      * Returns the name of the error.
      *
      * @return the error name
@@ -89,6 +103,16 @@ public class InstantApiException extends Exception {
      */
     public String getType() {
         return type;
+    }
+
+    @Override
+    public String getLocalizedMessage() {
+        return getMessage();
+    }
+
+    @Override
+    public String getMessage() {
+        return String.format("API Error: %s (code: %d, HTTP status: %d, type: %s)", apiMessage, apiStatusCode, httpStatusCode, type);
     }
 
     /**
