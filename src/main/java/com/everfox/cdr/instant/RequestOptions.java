@@ -43,19 +43,21 @@ public class RequestOptions {
     /**
      * Creates a new instance of {@link RequestOptions}.
      *
-     * Note that the allowedRisks and deniedRisks sets are mutually exclusive.
-     * If both are provided, the deniedRisks will take precedence.
+     * Note that allowed risks and denied risks are mutually exclusive.
+     * If a risk is in both, the denied risks will take precedence.
      * 
-     * @param report the report options
+     * @param format the report format
      * @param images the image options
      * @param allowedRisks the allowed risks
      * @param deniedRisks the denied risks
      */
-    public RequestOptions(ReportOptions report, ImagesOptions images, Set<String> allowedRisks, Set<String> deniedRisks) {
-        for (String risk : deniedRisks) {
-            allowedRisks.remove(risk);
+    public RequestOptions(ReportFormat format, ImagesOptions images, Set<String> allowedRisks, Set<String> deniedRisks) {
+        if (deniedRisks != null && allowedRisks != null) {
+            for (String risk : deniedRisks) {
+                allowedRisks.remove(risk);
+            }
         }
-        this.report = report;
+        this.report = format != null ? new ReportOptions(format) : null;
         this.images = images;
         this.allowedRisks = allowedRisks != null ? new HashSet<>(allowedRisks) : new HashSet<>();
         this.deniedRisks = deniedRisks != null ? new HashSet<>(deniedRisks) : new HashSet<>();
@@ -227,38 +229,38 @@ public class RequestOptions {
         }
     }
 
-    public static class RequestOptionsBuilder {
+    public static class Builder {
 
         private Set<String> allowedRisks = new HashSet<>();
         private Set<String> deniedRisks = new HashSet<>();
-        private ReportOptions reportOptions;
+        private ReportFormat reportFormat;
         private ImagesOptions imagesOptions;
 
-        public RequestOptionsBuilder() {
+        public Builder() {
         }
 
-        public RequestOptionsBuilder setReportOptions(ReportOptions reportOptions) {
-            this.reportOptions = reportOptions;
+        public Builder reportFormat(ReportFormat format) {
+            this.reportFormat = format;
             return this;
         }
 
-        public RequestOptionsBuilder setImagesOptions(ImagesOptions imagesOptions) {
+        public Builder imagesOptions(ImagesOptions imagesOptions) {
             this.imagesOptions = imagesOptions;
             return this;
         }
 
-        public RequestOptionsBuilder setAllowedRisks(Risk... allowedRisks) {
+        public Builder allowRisks(Risk... allowedRisks) {
             this.allowedRisks = Arrays.stream(allowedRisks).map(Risk::getRisk).collect(Collectors.toSet());
             return this;
         }
 
-        public RequestOptionsBuilder setDeniedRisks(Risk... deniedRisks) {
+        public Builder denyRisks(Risk... deniedRisks) {
             this.deniedRisks = Arrays.stream(deniedRisks).map(Risk::getRisk).collect(Collectors.toSet());
             return this;
         }
 
         public RequestOptions build() {
-            return new RequestOptions(reportOptions, imagesOptions, allowedRisks, deniedRisks);
+            return new RequestOptions(reportFormat, imagesOptions, allowedRisks, deniedRisks);
         }
     }
 }

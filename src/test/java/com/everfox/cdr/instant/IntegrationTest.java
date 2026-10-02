@@ -242,8 +242,9 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadJsonFilePartialRisks() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            RequestOptions options = new RequestOptions();
-            options.allowRisks(Risk.POLY_TEXT_JSON);
+            RequestOptions options = new RequestOptions.Builder()
+                    .allowRisks(Risk.POLY_TEXT_JSON)
+                    .build();
             InstantApiRequest request = InstantApiRequest.create(
                     JSON_TEST_DATA,
                     MediaType.JSON,
@@ -269,8 +270,9 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadJsonFileRequiredRisks() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            RequestOptions options = new RequestOptions();
-            options.allowRisks(Risk.POLY_TEXT_JSON, Risk.STRUCTURED_NO_SCHEMA_JSON);
+            RequestOptions options = new RequestOptions.Builder()
+                    .allowRisks(Risk.POLY_TEXT_JSON, Risk.STRUCTURED_NO_SCHEMA_JSON)
+                    .build();
             InstantApiRequest request = InstantApiRequest.create(
                     JSON_TEST_DATA,
                     MediaType.JSON,
@@ -292,8 +294,9 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadInvalidJsonFile() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            RequestOptions options = new RequestOptions();
-            options.allowRisks(Risk.POLY_TEXT_JSON, Risk.STRUCTURED_NO_SCHEMA_JSON);
+            RequestOptions options = new RequestOptions.Builder()
+                    .allowRisks(Risk.POLY_TEXT_JSON, Risk.STRUCTURED_NO_SCHEMA_JSON)
+                    .build();
             InstantApiRequest request = InstantApiRequest.create(
                     INVALID_JSON_TEST_DATA,
                     MediaType.JSON,
@@ -334,8 +337,7 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadWithOptions() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            RequestOptions options = new RequestOptions();
-            options.setReport(RequestOptions.ReportFormat.FULL);
+            RequestOptions options = new RequestOptions(RequestOptions.ReportFormat.FULL, null, null, null);
 
             InstantApiRequest request = InstantApiRequest.create(
                     PDF_TEST_DATA,
@@ -364,10 +366,11 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadWithImageQualityPreserveJpeg() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            RequestOptions options = new RequestOptions();
             RequestOptions.ImagesOptions imagesOptions = new RequestOptions.ImagesOptions(MediaType.IMAGE_JPEG);
-            options.setImages(imagesOptions);
-            options.allowRisk(Risk.STEG_IMAGE_JPEG);
+            RequestOptions options = new RequestOptions.Builder()
+                .imagesOptions(imagesOptions)
+                .allowRisks(Risk.STEG_IMAGE_JPEG)
+                .build();
 
             InstantApiRequest request = InstantApiRequest.create(
                     JPEG_TEST_DATA,
@@ -389,9 +392,8 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadWithImageQualityPreserveEmptyArray() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            RequestOptions options = new RequestOptions();
             RequestOptions.ImagesOptions imagesOptions = new RequestOptions.ImagesOptions(new String[0]);
-            options.setImages(imagesOptions);
+            RequestOptions options = new RequestOptions(null, imagesOptions, null, null);
 
             InstantApiRequest request = InstantApiRequest.create(
                     JPEG_TEST_DATA,
@@ -546,15 +548,14 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testAllRequestOptions() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            RequestOptions options = new RequestOptions();
-            options.allowRisks(Risk.EXE, Risk.EXE_MACRO, Risk.STEG, Risk.POLY);
-
-            // Configure reporting
-            options.setReport(RequestOptions.ReportFormat.FULL);
-
-            // Configure image quality
             RequestOptions.ImagesOptions images = new RequestOptions.ImagesOptions(MediaType.IMAGE_JPEG, MediaType.IMAGE_PNG);
-            options.setImages(images);
+            RequestOptions options = new RequestOptions.Builder()
+                .allowRisks(Risk.EXE, Risk.EXE_MACRO, Risk.STEG, Risk.POLY)
+                // Configure reporting
+                .reportFormat(RequestOptions.ReportFormat.FULL)
+                // Configure image quality
+                .imagesOptions(images)
+                .build();
 
             InstantApiRequest request = InstantApiRequest.create(
                     PDF_TEST_DATA,
