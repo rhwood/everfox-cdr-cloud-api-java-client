@@ -28,28 +28,6 @@ public class InstantApiRequest {
     private final RequestOptions options;
 
     /**
-     * Creates a new request with the specified file data and content types.
-     *
-     * @param fileData the file data (max 4.5 MB)
-     * @param contentType the media type of the file
-     * @param acceptType the desired media type of the processed file
-     */
-    public InstantApiRequest(byte[] fileData, MediaType contentType, MediaType acceptType) {
-        this(fileData, contentType, acceptType, null);
-    }
-
-    /**
-     * Creates a new request with the specified file data and content types.
-     *
-     * @param fileData the file data (max 4.5 MB)
-     * @param contentType the media type of the file
-     * @param acceptType the desired media type of the processed file
-     */
-    public InstantApiRequest(byte[] fileData, String contentType, String acceptType) {
-        this(fileData, contentType, acceptType, null);
-    }
-
-    /**
      * Creates a new request with the specified file data, content types, and options.
      *
      * @param fileData the file data (max 4.5 MB)
@@ -57,22 +35,11 @@ public class InstantApiRequest {
      * @param acceptType the desired media type of the processed file
      * @param options additional processing options
      */
-    public InstantApiRequest(byte[] fileData, MediaType contentType, MediaType acceptType, RequestOptions options) {
-        this(fileData, contentType.getMediaType(), acceptType.getMediaType(), options);
-    }
-
-    /**
-     * Creates a new request with the specified file data, content types, and options.
-     *
-     * @param fileData the file data (max 4.5 MB)
-     * @param contentType the media type of the file
-     * @param acceptType the desired media type of the processed file
-     * @param options additional processing options
-     */
-    public InstantApiRequest(byte[] fileData, String contentType, String acceptType, RequestOptions options) {
-        this.fileData = Objects.requireNonNull(fileData, "fileData cannot be null");
-        this.contentType = Objects.requireNonNull(contentType, "contentType cannot be null");
-        this.acceptType = Objects.requireNonNull(acceptType, "acceptType cannot be null");
+    
+    private InstantApiRequest(byte[] fileData, String contentType, String acceptType, RequestOptions options) {
+        this.fileData = fileData.clone();
+        this.contentType = contentType;
+        this.acceptType = acceptType;
         this.options = options;
     }
 
@@ -82,7 +49,7 @@ public class InstantApiRequest {
      * @return the file data
      */
     public byte[] getFileData() {
-        return fileData;
+        return fileData.clone();
     }
 
     /**
@@ -110,5 +77,58 @@ public class InstantApiRequest {
      */
     public RequestOptions getOptions() {
         return options;
+    }
+
+    /**
+     * Creates a new request with the specified file data and content types.
+     *
+     * @param fileData the file data (max 4.5 MB)
+     * @param contentType the media type of the file
+     * @param acceptType the desired media type of the processed file
+     * @return a new InstantApiRequest instance
+     */
+    public static InstantApiRequest create(byte[] fileData, MediaType contentType, MediaType acceptType) {
+        return InstantApiRequest.create(fileData, contentType, acceptType, null);
+    }
+
+    /**
+     * Creates a new request with the specified file data and content types.
+     *
+     * @param fileData the file data (max 4.5 MB)
+     * @param contentType the media type of the file
+     * @param acceptType the desired media type of the processed file
+     * @return a new InstantApiRequest instance
+     */
+    public static InstantApiRequest create(byte[] fileData, String contentType, String acceptType) {
+        return InstantApiRequest.create(fileData, contentType, acceptType, null);
+    }
+
+    /**
+     * Creates a new request with the specified file data, content types, and options.
+     *
+     * @param fileData the file data (max 4.5 MB)
+     * @param contentType the media type of the file
+     * @param acceptType the desired media type of the processed file
+     * @param options additional processing options
+     * @return a new InstantApiRequest instance
+     */
+    public static InstantApiRequest create(byte[] fileData, MediaType contentType, MediaType acceptType, RequestOptions options) {
+        return InstantApiRequest.create(fileData, contentType.getMediaType(), acceptType.getMediaType(), options);
+    }
+
+    /**
+     * Creates a new request with the specified file data, content types, and options.
+     *
+     * @param fileData the file data (max 4.5 MB)
+     * @param contentType the media type of the file
+     * @param acceptType the desired media type of the processed file
+     * @param options additional processing options
+     * @return a new InstantApiRequest instance
+     */
+    public static InstantApiRequest create(byte[] fileData, String contentType, String acceptType, RequestOptions options) {
+        Objects.requireNonNull(fileData, "fileData cannot be null");
+        Objects.requireNonNull(contentType, "contentType cannot be null");
+        Objects.requireNonNull(acceptType, "acceptType cannot be null");
+        return new InstantApiRequest(fileData, contentType, acceptType, options);
     }
 }

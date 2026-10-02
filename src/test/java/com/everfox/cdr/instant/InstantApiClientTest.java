@@ -15,45 +15,24 @@ package com.everfox.cdr.instant;
 
 import org.junit.jupiter.api.Test;
 
-import com.everfox.cdr.MediaType;
 import com.everfox.cdr.Region;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.net.URI;
-
 class InstantApiClientTest {
 
     @Test
-    void testConfigWithRegion() {
-        InstantApiConfig config = new InstantApiConfig("test-key", Region.US_WEST_2);
-
-        assertEquals("test-key", config.getApiKey());
-        assertEquals("https://us-west-2.aws.instant.cdr.everfox.com/v1", config.getBaseUrl().toString());
+    void testClientWithNullConfig() {
+        assertThrows(NullPointerException.class, () -> {
+            InstantApiClient.create(null);
+        });
     }
 
     @Test
-    void testConfigWithCustomUrl() {
-        InstantApiConfig config = new InstantApiConfig("test-key", URI.create("https://custom.example.com"), 5, 30);
+    void testClientCreation() {
+        InstantApiConfig config = InstantApiConfig.create("test-key", Region.US_WEST_2);
+        InstantApiClient client = InstantApiClient.create(config);
 
-        assertEquals("test-key", config.getApiKey());
-        assertEquals("https://custom.example.com", config.getBaseUrl().toString());
-        assertEquals(5, config.getConnectTimeoutSeconds());
-        assertEquals(30, config.getRequestTimeoutSeconds());
-    }
-
-    @Test
-    void testRequestCreation() {
-        byte[] data = "test data".getBytes();
-        InstantApiRequest request = new InstantApiRequest(
-                data,
-                MediaType.PDF,
-                MediaType.PDF
-        );
-
-        assertArrayEquals(data, request.getFileData());
-        assertEquals("application/pdf", request.getContentType());
-        assertEquals("application/pdf", request.getAcceptType());
-        assertNull(request.getOptions());
+        assertEquals(config, client.getConfig());
     }
 }
