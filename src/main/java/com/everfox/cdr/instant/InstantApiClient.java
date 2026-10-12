@@ -43,8 +43,9 @@ public class InstantApiClient implements AutoCloseable {
      *
      * @param config the API configuration
      */
-    public InstantApiClient(InstantApiConfig config) {
-        this.config = Objects.requireNonNull(config, "config cannot be null");
+    // private to force use of the static factory method
+    private InstantApiClient(InstantApiConfig config) {
+        this.config = config;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(config.getConnectTimeoutSeconds()))
                 .build();
@@ -98,7 +99,7 @@ public class InstantApiClient implements AutoCloseable {
     public InstantApiResponse upload(InputStream inputStream, String contentType, String acceptType)
             throws IOException, InterruptedException, InstantApiException {
         byte[] fileData = inputStream.readAllBytes();
-        InstantApiRequest request = new InstantApiRequest(fileData, contentType, acceptType);
+        InstantApiRequest request = InstantApiRequest.create(fileData, contentType, acceptType);
         return upload(request);
     }
 
@@ -114,5 +115,16 @@ public class InstantApiClient implements AutoCloseable {
     @Override
     public void close() {
         // HttpClient does not require explicit cleanup
+    }
+
+    /**
+     * Creates a new instance of the InstantApiClient with the specified configuration.
+     *
+     * @param config the API configuration
+     * @return a new instance of InstantApiClient
+     */
+    public static InstantApiClient create(InstantApiConfig config) {
+        Objects.requireNonNull(config, "config cannot be null");
+        return new InstantApiClient(config);
     }
 }

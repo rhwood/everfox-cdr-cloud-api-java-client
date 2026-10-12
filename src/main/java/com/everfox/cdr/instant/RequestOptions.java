@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.everfox.cdr.MediaType;
 import com.everfox.cdr.Risk;
@@ -32,86 +33,34 @@ public class RequestOptions {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private ReportOptions report;
+    private final ReportOptions report;
     // private ConversionOptions conversion; // not yet implemented
-    private ImagesOptions images;
+    private final ImagesOptions images;
     // private RedactionOptions redactions; // not yet implemented
-    private Set<String> allowedRisks = new HashSet<>();
-    private Set<String> deniedRisks = new HashSet<>();
+    private final Set<String> allowedRisks;
+    private final Set<String> deniedRisks;
 
     /**
-     * Default constructor.
-     */
-    public RequestOptions() {
-    }
-
-    /**
-     * Allow the specified risks.
+     * Creates a new instance of {@link RequestOptions}.
      *
-     * @param risks the risks to allow
-     */
-    public void allowRisks(Risk... risks) {
-        for (Risk risk : risks) {
-            allowRisk(risk);
-        }
-    }
-
-    /**
-     * Deny the specified risks.
-     *
-     * @param risks the risks to deny
-     */
-    public void denyRisks(Risk... risks) {
-        for (Risk risk : risks) {
-            denyRisk(risk);
-        }
-    }
-
-    /**
-     * Allow the specified risk.
-     *
-     * @param risk the risk to allow
-     */
-    public void allowRisk(Risk risk) {
-        allowRisk(risk.getRisk());
-    }
-
-    /**
-     * Deny the specified risk.
-     *
-     * @param risk the risk to deny
-     */
-    public void denyRisk(Risk risk) {
-        denyRisk(risk.getRisk());
-    }
-
-    /**
-     * Allow the specified risk.
-     *
-     * @param risk the risk to allow
-     */
-    public void allowRisk(String risk) {
-        allowedRisks.add(risk);
-        deniedRisks.remove(risk);
-    }
-
-    /**
-     * Deny the specified risk.
-     *
-     * @param risk the risk to deny
-     */
-    public void denyRisk(String risk) {
-        deniedRisks.add(risk);
-        allowedRisks.remove(risk);
-    }
-
-    /**
-     * Set the image options.
-     *
+     * Note that allowed risks and denied risks are mutually exclusive.
+     * If a risk is in both, the denied risks will take precedence.
+     * 
+     * @param format the report format
      * @param images the image options
+     * @param allowedRisks the allowed risks
+     * @param deniedRisks the denied risks
      */
-    public void setImages(ImagesOptions images) {
+    public RequestOptions(ReportFormat format, ImagesOptions images, Set<String> allowedRisks, Set<String> deniedRisks) {
+        if (deniedRisks != null && allowedRisks != null) {
+            for (String risk : deniedRisks) {
+                allowedRisks.remove(risk);
+            }
+        }
+        this.report = format != null ? new ReportOptions(format) : null;
         this.images = images;
+        this.allowedRisks = allowedRisks != null ? new HashSet<>(allowedRisks) : new HashSet<>();
+        this.deniedRisks = deniedRisks != null ? new HashSet<>(deniedRisks) : new HashSet<>();
     }
 
     /**
@@ -152,15 +101,6 @@ public class RequestOptions {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public ReportOptions getReport() {
         return report;
-    }
-
-    /**
-     * Set the report options.
-     *
-     * @param format report format
-     */
-    public void setReport(ReportFormat format) {
-        this.report = new ReportOptions(format);
     }
 
     /**
@@ -289,4 +229,73 @@ public class RequestOptions {
         }
     }
 
+    /**
+     * Builder for creating {@link RequestOptions} instances.
+     */
+    public static class Builder {
+
+        private Set<String> allowedRisks = new HashSet<>();
+        private Set<String> deniedRisks = new HashSet<>();
+        private ReportFormat reportFormat;
+        private ImagesOptions imagesOptions;
+
+        /**
+         * Creates a new instance of the Builder.
+         */
+        public Builder() {
+        }
+
+        /**
+         * Sets the report format for the request options.
+         *
+         * @param format the report format
+         * @return the builder instance
+         */
+        public Builder reportFormat(ReportFormat format) {
+            this.reportFormat = format;
+            return this;
+        }
+
+        /**
+         * Sets the image options for the request options.
+         *
+         * @param imagesOptions the image options
+         * @return the builder instance
+         */
+        public Builder imagesOptions(ImagesOptions imagesOptions) {
+            this.imagesOptions = imagesOptions;
+            return this;
+        }
+
+        /**
+         * Adds allowed risks to the request options.
+         *
+         * @param allowedRisks the risks to allow
+         * @return the builder instance
+         */
+        public Builder allowRisks(Risk... allowedRisks) {
+            this.allowedRisks = Arrays.stream(allowedRisks).map(Risk::getRisk).collect(Collectors.toSet());
+            return this;
+        }
+
+        /**
+         * Adds denied risks to the request options.
+         *
+         * @param deniedRisks the risks to deny
+         * @return the builder instance
+         */
+        public Builder denyRisks(Risk... deniedRisks) {
+            this.deniedRisks = Arrays.stream(deniedRisks).map(Risk::getRisk).collect(Collectors.toSet());
+            return this;
+        }
+
+        /**
+         * Builds the {@link RequestOptions} instance with the specified configurations.
+         *
+         * @return a new instance of RequestOptions
+         */
+        public RequestOptions build() {
+            return new RequestOptions(reportFormat, imagesOptions, allowedRisks, deniedRisks);
+        }
+    }
 }

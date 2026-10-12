@@ -38,38 +38,6 @@ public class InstantApiConfig {
     private final int requestTimeoutSeconds;
 
     /**
-     * Creates a new configuration with the specified API key and region.
-     *
-     * @param apiKey the API key
-     * @param region the API region
-     */
-    public InstantApiConfig(String apiKey, Region region) {
-        this(apiKey, region.getBaseUrl());
-    }
-
-    /**
-     * Creates a new configuration with the specified API key, region, and timeouts.
-     *
-     * @param apiKey the API key
-     * @param region the API region
-     * @param connectTimeoutSeconds the connection timeout in seconds
-     * @param requestTimeoutSeconds the request timeout in seconds
-     */
-    public InstantApiConfig(String apiKey, Region region, int connectTimeoutSeconds, int requestTimeoutSeconds) {
-        this(apiKey, region.getBaseUrl(), connectTimeoutSeconds, requestTimeoutSeconds);
-    }
-
-    /**
-     * Creates a new configuration with the specified API key and base URL.
-     *
-     * @param apiKey the API key
-     * @param baseUrl the base URL of the Instant API
-     */
-    public InstantApiConfig(String apiKey, URI baseUrl) {
-        this(apiKey, baseUrl, DEFAULT_CONNECT_TIMEOUT_SECONDS, DEFAULT_REQUEST_TIMEOUT_SECONDS);
-    }
-
-    /**
      * Creates a new configuration with the specified API key, base URL, and timeouts.
      *
      * @param apiKey the API key
@@ -77,9 +45,10 @@ public class InstantApiConfig {
      * @param connectTimeoutSeconds the connection timeout in seconds
      * @param requestTimeoutSeconds the request timeout in seconds
      */
-    public InstantApiConfig(String apiKey, URI baseUrl, int connectTimeoutSeconds, int requestTimeoutSeconds) {
-        this.apiKey = Objects.requireNonNull(apiKey, "apiKey cannot be null");
-        this.baseUrl = Objects.requireNonNull(baseUrl, "baseUrl cannot be null");
+    // private to force use of the static factory method
+    private InstantApiConfig(String apiKey, URI baseUrl, int connectTimeoutSeconds, int requestTimeoutSeconds) {
+        this.apiKey = apiKey;
+        this.baseUrl = baseUrl;
         this.connectTimeoutSeconds = connectTimeoutSeconds;
         this.requestTimeoutSeconds = requestTimeoutSeconds;
     }
@@ -120,4 +89,53 @@ public class InstantApiConfig {
         return requestTimeoutSeconds;
     }
 
+    /**
+     * Creates a new configuration with the specified API key and region.
+     *
+     * @param apiKey the API key
+     * @param region the region for the Instant API
+     * @return a new configuration
+     */
+    public static InstantApiConfig create(String apiKey, Region region) {
+        return InstantApiConfig.create(apiKey, region.getBaseUrl());
+    }
+
+    /**
+     * Creates a new configuration with the specified API key and base URL.
+     *
+     * @param apiKey the API key
+     * @param baseUrl the base URL of the Instant API
+     * @return a new configuration
+     */
+    public static InstantApiConfig create(String apiKey, URI baseUrl) {
+        return InstantApiConfig.create(apiKey, baseUrl, DEFAULT_CONNECT_TIMEOUT_SECONDS, DEFAULT_REQUEST_TIMEOUT_SECONDS);
+    }
+
+    /**
+     * Creates a new configuration with the specified API key, base URL, and timeouts.
+     *
+     * @param apiKey the API key
+     * @param region the region for the Instant API
+     * @param connectTimeoutSeconds the connection timeout in seconds
+     * @param requestTimeoutSeconds the request timeout in seconds
+     * @return a new configuration
+     */
+    public static InstantApiConfig create(String apiKey, Region region, int connectTimeoutSeconds, int requestTimeoutSeconds) {
+        return InstantApiConfig.create(apiKey, region.getBaseUrl(), connectTimeoutSeconds, requestTimeoutSeconds);
+    }
+
+    /**
+     * Creates a new configuration with the specified API key, base URL, and timeouts.
+     *
+     * @param apiKey the API key
+     * @param baseUrl the base URL of the Instant API
+     * @param connectTimeoutSeconds the connection timeout in seconds
+     * @param requestTimeoutSeconds the request timeout in seconds
+     * @return a new configuration
+     */
+    public static InstantApiConfig create(String apiKey, URI baseUrl, int connectTimeoutSeconds, int requestTimeoutSeconds) {
+        Objects.requireNonNull(apiKey, "apiKey cannot be null");
+        Objects.requireNonNull(baseUrl, "baseUrl cannot be null");
+        return new InstantApiConfig(apiKey, baseUrl, connectTimeoutSeconds, requestTimeoutSeconds);
+    }
 }
