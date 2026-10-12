@@ -1,6 +1,6 @@
 /**
  * Copyright 2026 Everfox
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,10 +13,9 @@
  */
 package com.everfox.cdr.instant;
 
+import com.everfox.cdr.Region;
 import java.net.URI;
 import java.util.Objects;
-
-import com.everfox.cdr.Region;
 
 /**
  * Configuration for the Instant API client.
@@ -108,7 +107,8 @@ public class InstantApiConfig {
      * @return a new configuration
      */
     public static InstantApiConfig create(String apiKey, URI baseUrl) {
-        return InstantApiConfig.create(apiKey, baseUrl, DEFAULT_CONNECT_TIMEOUT_SECONDS, DEFAULT_REQUEST_TIMEOUT_SECONDS);
+        return InstantApiConfig.create(
+                apiKey, baseUrl, DEFAULT_CONNECT_TIMEOUT_SECONDS, DEFAULT_REQUEST_TIMEOUT_SECONDS);
     }
 
     /**
@@ -120,7 +120,8 @@ public class InstantApiConfig {
      * @param requestTimeoutSeconds the request timeout in seconds
      * @return a new configuration
      */
-    public static InstantApiConfig create(String apiKey, Region region, int connectTimeoutSeconds, int requestTimeoutSeconds) {
+    public static InstantApiConfig create(
+            String apiKey, Region region, int connectTimeoutSeconds, int requestTimeoutSeconds) {
         return InstantApiConfig.create(apiKey, region.getBaseUrl(), connectTimeoutSeconds, requestTimeoutSeconds);
     }
 
@@ -133,7 +134,8 @@ public class InstantApiConfig {
      * @param requestTimeoutSeconds the request timeout in seconds
      * @return a new configuration
      */
-    public static InstantApiConfig create(String apiKey, URI baseUrl, int connectTimeoutSeconds, int requestTimeoutSeconds) {
+    public static InstantApiConfig create(
+            String apiKey, URI baseUrl, int connectTimeoutSeconds, int requestTimeoutSeconds) {
         Objects.requireNonNull(apiKey, "apiKey cannot be null");
         Objects.requireNonNull(baseUrl, "baseUrl cannot be null");
         return new InstantApiConfig(apiKey, baseUrl, connectTimeoutSeconds, requestTimeoutSeconds);

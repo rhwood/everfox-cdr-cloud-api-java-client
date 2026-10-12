@@ -1,6 +1,6 @@
 /**
  * Copyright 2026 Everfox
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,17 +13,14 @@
  */
 package com.everfox.cdr.instant;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.everfox.cdr.MediaType;
 import com.everfox.cdr.Risk;
-
+import java.util.List;
+import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.List;
 
 class RequestOptionsTest {
 
@@ -49,9 +46,8 @@ class RequestOptionsTest {
 
     @Test
     void testRequestOptionsAllowGifStenography() {
-        RequestOptions options = new RequestOptions.Builder()
-            .allowRisks(Risk.STEG_IMAGE_GIF)
-            .build();
+        RequestOptions options =
+                new RequestOptions.Builder().allowRisks(Risk.STEG_IMAGE_GIF).build();
 
         String json = options.toJson();
         assertNotNull(json);
@@ -70,7 +66,8 @@ class RequestOptionsTest {
 
     @Test
     void testRequestOptionsPreserveJpegAndPngMediaTypes() {
-        RequestOptions.ImagesOptions images = new RequestOptions.ImagesOptions(MediaType.IMAGE_JPEG, MediaType.IMAGE_PNG);
+        RequestOptions.ImagesOptions images =
+                new RequestOptions.ImagesOptions(MediaType.IMAGE_JPEG, MediaType.IMAGE_PNG);
         RequestOptions options = new RequestOptions(null, images, null, null);
 
         String json = options.toJson();
@@ -91,9 +88,9 @@ class RequestOptionsTest {
     @Test
     void testRisksAreExclusive() {
         RequestOptions options = new RequestOptions.Builder()
-            .allowRisks(Risk.EXE, Risk.POLY)
-            .denyRisks(Risk.POLY, Risk.STEG)
-            .build();
+                .allowRisks(Risk.EXE, Risk.POLY)
+                .denyRisks(Risk.POLY, Risk.STEG)
+                .build();
 
         JsonNode json = MAPPER.readTree(options.toJson());
 

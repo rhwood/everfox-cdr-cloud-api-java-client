@@ -1,6 +1,6 @@
 /**
  * Copyright 2026 Everfox
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,13 +13,11 @@
  */
 package com.everfox.cdr.instant;
 
-import org.junit.jupiter.api.Test;
-
-import com.everfox.cdr.Region;
-
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.everfox.cdr.Region;
 import java.net.URI;
+import org.junit.jupiter.api.Test;
 
 class InstantApiConfigTest {
 
@@ -28,7 +26,9 @@ class InstantApiConfigTest {
         InstantApiConfig config = InstantApiConfig.create("test-key", Region.US_WEST_2);
 
         assertEquals("test-key", config.getApiKey());
-        assertEquals("https://us-west-2.aws.instant.cdr.everfox.com/v1", config.getBaseUrl().toString());
+        assertEquals(
+                "https://us-west-2.aws.instant.cdr.everfox.com/v1",
+                config.getBaseUrl().toString());
     }
 
     @Test

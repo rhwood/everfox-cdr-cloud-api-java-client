@@ -1,6 +1,6 @@
 /**
  * Copyright 2026 Everfox
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,22 +13,17 @@
  */
 package com.everfox.cdr.instant;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.everfox.cdr.MediaType;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 class InstantApiRequestTest {
 
     @Test
     void testRequestCreation() {
         byte[] data = "test data".getBytes();
-        InstantApiRequest request = InstantApiRequest.create(
-                data,
-                MediaType.PDF,
-                MediaType.PDF
-        );
+        InstantApiRequest request = InstantApiRequest.create(data, MediaType.PDF, MediaType.PDF);
 
         assertArrayEquals(data, request.getFileData());
         assertEquals("application/pdf", request.getContentType());

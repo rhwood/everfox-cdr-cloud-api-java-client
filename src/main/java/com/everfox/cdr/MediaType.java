@@ -1,6 +1,6 @@
 /**
  * Copyright 2026 Everfox
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -112,31 +112,38 @@ public enum MediaType {
     /**
      * Content type for OpenXML Presentation files.
      */
-    OPENXMLFORMATS_OFFICEDOCUMENT_PRESENTATIONML_PRESENTATION("application/vnd.openxmlformats-officedocument.presentationml.presentation"),
+    OPENXMLFORMATS_OFFICEDOCUMENT_PRESENTATIONML_PRESENTATION(
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation"),
     /**
      * Content type for OpenXML Slideshow files.
      */
-    OPENXMLFORMATS_OFFICEDOCUMENT_PRESENTATIONML_SLIDESHOW("application/vnd.openxmlformats-officedocument.presentationml.slideshow"),
+    OPENXMLFORMATS_OFFICEDOCUMENT_PRESENTATIONML_SLIDESHOW(
+            "application/vnd.openxmlformats-officedocument.presentationml.slideshow"),
     /**
      * Content type for OpenXML Presentation Template files.
      */
-    OPENXMLFORMATS_OFFICEDOCUMENT_PRESENTATIONML_TEMPLATE("application/vnd.openxmlformats-officedocument.presentationml.template"),
+    OPENXMLFORMATS_OFFICEDOCUMENT_PRESENTATIONML_TEMPLATE(
+            "application/vnd.openxmlformats-officedocument.presentationml.template"),
     /**
      * Content type for OpenXML Spreadsheet files.
      */
-    OPENXMLFORMATS_OFFICEDOCUMENT_SPREADSHEETML_SHEET("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+    OPENXMLFORMATS_OFFICEDOCUMENT_SPREADSHEETML_SHEET(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
     /**
      * Content type for OpenXML Spreadsheet Template files.
      */
-    OPENXMLFORMATS_OFFICEDOCUMENT_SPREADSHEETML_TEMPLATE("application/vnd.openxmlformats-officedocument.spreadsheetml.template"),
+    OPENXMLFORMATS_OFFICEDOCUMENT_SPREADSHEETML_TEMPLATE(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.template"),
     /**
      * Content type for OpenXML Word Document files.
      */
-    OPENXMLFORMATS_OFFICEDOCUMENT_WORDPROCESSINGML_DOCUMENT("application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+    OPENXMLFORMATS_OFFICEDOCUMENT_WORDPROCESSINGML_DOCUMENT(
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
     /**
      * Content type for OpenXML Word Template files.
      */
-    OPENXMLFORMATS_OFFICEDOCUMENT_WORDPROCESSINGML_TEMPLATE("application/vnd.openxmlformats-officedocument.wordprocessingml.template"),
+    OPENXMLFORMATS_OFFICEDOCUMENT_WORDPROCESSINGML_TEMPLATE(
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.template"),
     /**
      * Content type for Windows Metafile files.
      */

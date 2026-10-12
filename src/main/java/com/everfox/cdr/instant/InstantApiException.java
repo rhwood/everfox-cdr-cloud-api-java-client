@@ -1,6 +1,6 @@
 /**
  * Copyright 2026 Everfox
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,7 +14,6 @@
 package com.everfox.cdr.instant;
 
 import java.util.Map;
-
 import tools.jackson.databind.ObjectMapper;
 
 /**
@@ -25,7 +24,7 @@ public class InstantApiException extends Exception {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     /**
-     * The API status code returned by the API. This is -1 is the API did not return a valid error response. 
+     * The API status code returned by the API. This is -1 is the API did not return a valid error response.
      */
     private final int apiStatusCode;
     /**
@@ -47,7 +46,7 @@ public class InstantApiException extends Exception {
 
     /**
      * Creates a new exception from the JSON error response returned by the API.
-     * 
+     *
      * @param body the JSON error response body
      */
     // This is private because the constructor must call super() first, so we can't parse the body in the constructor
@@ -112,7 +111,8 @@ public class InstantApiException extends Exception {
 
     @Override
     public String getMessage() {
-        return String.format("API Error: %s (code: %d, HTTP status: %d, type: %s)", apiMessage, apiStatusCode, httpStatusCode, type);
+        return String.format(
+                "API Error: %s (code: %d, HTTP status: %d, type: %s)", apiMessage, apiStatusCode, httpStatusCode, type);
     }
 
     /**
@@ -136,8 +136,7 @@ public class InstantApiException extends Exception {
                             httpStatusCode,
                             (String) errorObj.get("message"),
                             (String) errorObj.get("name"),
-                            (String) errorObj.get("type")
-                    );
+                            (String) errorObj.get("type"));
                 }
             }
         } catch (Exception e) {

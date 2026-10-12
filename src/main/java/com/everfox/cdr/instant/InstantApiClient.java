@@ -1,6 +1,6 @@
 /**
  * Copyright 2026 Everfox
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,6 +13,7 @@
  */
 package com.everfox.cdr.instant;
 
+import com.everfox.cdr.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -20,12 +21,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.Objects;
-
-import com.everfox.cdr.MediaType;
-
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Objects;
 
 /**
  * Client for interacting with the Everfox CDR Instant API.
@@ -60,11 +58,13 @@ public class InstantApiClient implements AutoCloseable {
      * @throws InterruptedException if the operation is interrupted
      * @throws InstantApiException if the API returns an error
      */
-    public InstantApiResponse upload(InstantApiRequest request) throws IOException, InterruptedException, InstantApiException {
+    public InstantApiResponse upload(InstantApiRequest request)
+            throws IOException, InterruptedException, InstantApiException {
         Objects.requireNonNull(request, "request cannot be null");
 
         String endpoint = config.getBaseUrl() + "/upload";
-        HashSet<String> acceptTypes = new HashSet<>(Arrays.asList(request.getAcceptType().split(",")));
+        HashSet<String> acceptTypes =
+                new HashSet<>(Arrays.asList(request.getAcceptType().split(",")));
         acceptTypes.add(MediaType.JSON.getMediaType());
 
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
