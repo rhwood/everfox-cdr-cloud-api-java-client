@@ -1,6 +1,6 @@
 /**
  * Copyright 2026 Everfox
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,9 +13,8 @@
  */
 package com.everfox.cdr.instant;
 
-import java.util.Objects;
-
 import com.everfox.cdr.MediaType;
+import java.util.Objects;
 
 /**
  * Represents a request to upload and process a file through the Instant API.
@@ -35,7 +34,6 @@ public class InstantApiRequest {
      * @param acceptType the desired media type of the processed file
      * @param options additional processing options
      */
-    
     private InstantApiRequest(byte[] fileData, String contentType, String acceptType, RequestOptions options) {
         this.fileData = fileData.clone();
         this.contentType = contentType;
@@ -112,7 +110,8 @@ public class InstantApiRequest {
      * @param options additional processing options
      * @return a new InstantApiRequest instance
      */
-    public static InstantApiRequest create(byte[] fileData, MediaType contentType, MediaType acceptType, RequestOptions options) {
+    public static InstantApiRequest create(
+            byte[] fileData, MediaType contentType, MediaType acceptType, RequestOptions options) {
         return InstantApiRequest.create(fileData, contentType.getMediaType(), acceptType.getMediaType(), options);
     }
 
@@ -125,7 +124,8 @@ public class InstantApiRequest {
      * @param options additional processing options
      * @return a new InstantApiRequest instance
      */
-    public static InstantApiRequest create(byte[] fileData, String contentType, String acceptType, RequestOptions options) {
+    public static InstantApiRequest create(
+            byte[] fileData, String contentType, String acceptType, RequestOptions options) {
         Objects.requireNonNull(fileData, "fileData cannot be null");
         Objects.requireNonNull(contentType, "contentType cannot be null");
         Objects.requireNonNull(acceptType, "acceptType cannot be null");

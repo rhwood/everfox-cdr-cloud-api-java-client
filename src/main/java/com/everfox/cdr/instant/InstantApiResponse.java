@@ -1,6 +1,6 @@
 /**
  * Copyright 2026 Everfox
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,8 +27,8 @@ public class InstantApiResponse {
     private final String risksTaken;
     private final String report;
 
-    private InstantApiResponse(int statusCode, byte[] body, Map<String, String> headers,
-                               String risksTaken, String report) {
+    private InstantApiResponse(
+            int statusCode, byte[] body, Map<String, String> headers, String risksTaken, String report) {
         this.statusCode = statusCode;
         this.body = body;
         this.headers = headers;
@@ -47,10 +47,7 @@ public class InstantApiResponse {
         int statusCode = httpResponse.statusCode();
         byte[] body = httpResponse.body();
         Map<String, String> headers = httpResponse.headers().map().entrySet().stream()
-                .collect(java.util.stream.Collectors.toMap(
-                        Map.Entry::getKey,
-                        e -> String.join(", ", e.getValue())
-                ));
+                .collect(java.util.stream.Collectors.toMap(Map.Entry::getKey, e -> String.join(", ", e.getValue())));
 
         String risksTaken = headers.get("x-risks-taken");
         String report = headers.get("x-report");

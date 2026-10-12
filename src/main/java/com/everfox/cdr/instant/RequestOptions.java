@@ -1,6 +1,6 @@
 /**
  * Copyright 2026 Everfox
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,15 +13,14 @@
  */
 package com.everfox.cdr.instant;
 
+import com.everfox.cdr.MediaType;
+import com.everfox.cdr.Risk;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import com.everfox.cdr.MediaType;
-import com.everfox.cdr.Risk;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
@@ -45,13 +44,14 @@ public class RequestOptions {
      *
      * Note that allowed risks and denied risks are mutually exclusive.
      * If a risk is in both, the denied risks will take precedence.
-     * 
+     *
      * @param format the report format
      * @param images the image options
      * @param allowedRisks the allowed risks
      * @param deniedRisks the denied risks
      */
-    public RequestOptions(ReportFormat format, ImagesOptions images, Set<String> allowedRisks, Set<String> deniedRisks) {
+    public RequestOptions(
+            ReportFormat format, ImagesOptions images, Set<String> allowedRisks, Set<String> deniedRisks) {
         if (deniedRisks != null && allowedRisks != null) {
             for (String risk : deniedRisks) {
                 allowedRisks.remove(risk);
@@ -88,8 +88,7 @@ public class RequestOptions {
         } else {
             return Map.of(
                     "allow", allowedRisks,
-                    "deny", deniedRisks
-            );
+                    "deny", deniedRisks);
         }
     }
 
@@ -172,10 +171,8 @@ public class RequestOptions {
          * @param preservationFormats the media types to preserve
          */
         public ImagesOptions(MediaType... preservationFormats) {
-            this.preservationFormats = new HashSet<>(Arrays
-                .stream(preservationFormats)
-                .map(MediaType::toString)
-                .toList());
+            this.preservationFormats = new HashSet<>(
+                    Arrays.stream(preservationFormats).map(MediaType::toString).toList());
         }
 
         /**
@@ -192,7 +189,7 @@ public class RequestOptions {
          *
          * @return a map with "preserve" key and the set of preservation formats, or null if no formats are specified
          */
-        @JsonInclude (JsonInclude.Include.NON_NULL)
+        @JsonInclude(JsonInclude.Include.NON_NULL)
         public Map<String, Set<String>> getQuality() {
             if (preservationFormats.isEmpty()) {
                 return null;
@@ -200,7 +197,6 @@ public class RequestOptions {
                 return Map.of("preserve", preservationFormats);
             }
         }
-
     }
 
     /**
@@ -242,8 +238,7 @@ public class RequestOptions {
         /**
          * Creates a new instance of the Builder.
          */
-        public Builder() {
-        }
+        public Builder() {}
 
         /**
          * Sets the report format for the request options.

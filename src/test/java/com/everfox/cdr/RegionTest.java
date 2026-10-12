@@ -1,6 +1,6 @@
 /**
  * Copyright 2026 Everfox
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,9 +13,9 @@
  */
 package com.everfox.cdr;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for the {@link Region} enum.
@@ -31,7 +31,9 @@ class RegionTest {
     @Test
     void testGetBaseUrl() {
         Region region = Region.EU_WEST_1;
-        assertEquals("https://eu-west-1.aws.instant.cdr.everfox.com/v1", region.getBaseUrl().toString());
+        assertEquals(
+                "https://eu-west-1.aws.instant.cdr.everfox.com/v1",
+                region.getBaseUrl().toString());
     }
 
     @Test

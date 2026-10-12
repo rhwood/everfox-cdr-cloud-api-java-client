@@ -1,6 +1,6 @@
 /**
  * Copyright 2026 Everfox
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,9 +13,9 @@
  */
 package com.everfox.cdr;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for the {@link Risk} enum.
@@ -27,5 +27,4 @@ class RiskTest {
         Risk risk = Risk.EXE_MACRO_MS_WORD;
         assertEquals("exe/macro/ms/word", risk.toString());
     }
-
 }
