@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2026 Everfox
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,112 +14,62 @@
 package com.everfox.cdr;
 
 /**
- * Represents the risks allowed to be taken by the CDR Cloud API when processing
- * a file. These risks are used to determine how a file is processed and can be
- * explicitly allowed or denied. Certain risks must be allowed for some file
- * types to be processed. See
- * <a href="https://cdr.everfox.com/documentation/risks">Managing Risks</a> for
- * more information.
+ * Represents the risks allowed to be taken by the CDR Cloud API when processing a file. These risks are used to
+ * determine how a file is processed and can be explicitly allowed or denied. Certain risks must be allowed for some
+ * file types to be processed. See <a href="https://cdr.everfox.com/documentation/risks">Managing Risks</a> for more
+ * information.
  */
 public enum Risk {
-    /**
-     * Represents a risk that a file could be an executable.
-     */
+    /** Represents a risk that a file could be an executable. */
     EXE("exe"),
-    /**
-     * Represents a risk that a file contains executable macros.
-     */
+    /** Represents a risk that a file contains executable macros. */
     EXE_MACRO("exe/macro"),
-    /**
-     * Represents a risk that a file contains executable macros for Microsoft Office
-     * applications.
-     */
+    /** Represents a risk that a file contains executable macros for Microsoft Office applications. */
     EXE_MACRO_MS("exe/macro/ms"),
-    /**
-     * Represents a risk that a file contains executable macros for Microsoft Excel.
-     */
+    /** Represents a risk that a file contains executable macros for Microsoft Excel. */
     EXE_MACRO_MS_EXCEL("exe/macro/ms/excel"),
-    /**
-     * Represents a risk that a file contains executable macros for Microsoft PowerPoint.
-     */
+    /** Represents a risk that a file contains executable macros for Microsoft PowerPoint. */
     EXE_MACRO_MS_POWERPOINT("exe/macro/ms/powerpoint"),
-    /**
-     * Represents a risk that a file contains executable macros for Microsoft Word.
-     */
+    /** Represents a risk that a file contains executable macros for Microsoft Word. */
     EXE_MACRO_MS_WORD("exe/macro/ms/word"),
-    /**
-     * Represents a risk that a file is polyglot.
-     */
+    /** Represents a risk that a file is polyglot. */
     POLY("poly"),
-    /**
-     * Represents a risk that a file is a polyglot text file.
-     */
+    /** Represents a risk that a file is a polyglot text file. */
     POLY_TEXT("poly/text"),
-    /**
-     * Represents a risk that a file is a polyglot JSON file.
-     */
+    /** Represents a risk that a file is a polyglot JSON file. */
     POLY_TEXT_JSON("poly/text/json"),
-    /**
-     * Represents a risk that a file is a polyglot XML file.
-     */
+    /** Represents a risk that a file is a polyglot XML file. */
     POLY_TEXT_XML("poly/text/xml"),
-    /**
-     * Represents a risk that a file contains steganography.
-     */
+    /** Represents a risk that a file contains steganography. */
     STEG("steg"),
-    /**
-     * Represents a risk that a file contains steganography in an image.
-     */
+    /** Represents a risk that a file contains steganography in an image. */
     STEG_IMAGE("steg/image"),
-    /**
-     * Represents a risk that a file contains steganography in a BMP image.
-     */
+    /** Represents a risk that a file contains steganography in a BMP image. */
     STEG_IMAGE_BMP("steg/image/bmp"),
-    /**
-     * Represents a risk that a file contains steganography in a GIF image.
-     */
+    /** Represents a risk that a file contains steganography in a GIF image. */
     STEG_IMAGE_GIF("steg/image/gif"),
-    /**
-     * Represents a risk that a file contains steganography in a JPEG image.
-     */
+    /** Represents a risk that a file contains steganography in a JPEG image. */
     STEG_IMAGE_JPEG("steg/image/jpeg"),
-    /**
-     * Represents a risk that a file contains steganography in a JPEG2000 image.
-     */
+    /** Represents a risk that a file contains steganography in a JPEG2000 image. */
     STEG_IMAGE_JPEG2K("steg/image/jpeg2k"),
-    /**
-     * Represents a risk that a file contains steganography in a JPEG-XR image.
-     */
+    /** Represents a risk that a file contains steganography in a JPEG-XR image. */
     STEG_IMAGE_JXR("steg/image/jxr"),
-    /**
-     * Represents a risk that a file contains steganography in a PDF image.
-     */
+    /** Represents a risk that a file contains steganography in a PDF image. */
     STEG_IMAGE_PDF("steg/image/pdf"),
-    /**
-     * Represents a risk that a file contains steganography in a PNG image.
-     */
+    /** Represents a risk that a file contains steganography in a PNG image. */
     STEG_IMAGE_PNG("steg/image/png"),
-    /**
-     * Represents a risk that a file contains steganography in a WEBP image.
-     */
+    /** Represents a risk that a file contains steganography in a WEBP image. */
     STEG_IMAGE_WEBP("steg/image/webp"),
-    /**
-     * Represents a risk that a file is structured data that can't be transformed.
-     */
+    /** Represents a risk that a file is structured data that can't be transformed. */
     STRUCTURED("structured"),
-    /**
-     * Represents a risk that a file is structured data that does not have a schema.
-     */
+    /** Represents a risk that a file is structured data that does not have a schema. */
     STRUCTURED_NO_SCHEMA("structured/no-schema"),
-    /**
-     * Represents a risk that a file is JSON and does not have a schema.
-     */
+    /** Represents a risk that a file is JSON and does not have a schema. */
     STRUCTURED_NO_SCHEMA_JSON("structured/no-schema/json"),
-    /**
-     * Represents a risk that a file is XML and does not have a schema.
-     */
+    /** Represents a risk that a file is XML and does not have a schema. */
     STRUCTURED_NO_SCHEMA_XML("structured/no-schema/xml");
 
+    /** The string representation of the risk. */
     private final String risk;
 
     /**

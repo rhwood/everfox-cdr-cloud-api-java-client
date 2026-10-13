@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2026 Everfox
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,12 +28,14 @@ import java.util.Objects;
 /**
  * Client for interacting with the Everfox CDR Instant API.
  *
- * This client provides methods to upload and process files through the CDR service,
- * removing potential threats and converting files to safe formats.
+ * <p>This client provides methods to upload and process files through the CDR service, removing potential threats and
+ * converting files to safe formats.
  */
 public class InstantApiClient implements AutoCloseable {
 
+    /** The API configuration. */
     private final InstantApiConfig config;
+    /** The HTTP client used for making requests. */
     private final HttpClient httpClient;
 
     /**

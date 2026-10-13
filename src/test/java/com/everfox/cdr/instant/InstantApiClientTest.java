@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2026 Everfox
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,8 +18,15 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.everfox.cdr.Region;
 import org.junit.jupiter.api.Test;
 
+/** Unit tests for {@link InstantApiClient}. */
 class InstantApiClientTest {
 
+    /** Default constructor for the test class. */
+    InstantApiClientTest() {
+        // Nothing to do here
+    }
+
+    /** Tests that creating an InstantApiClient with a null configuration throws a NullPointerException. */
     @Test
     void testClientWithNullConfig() {
         assertThrows(NullPointerException.class, () -> {
@@ -27,6 +34,7 @@ class InstantApiClientTest {
         });
     }
 
+    /** Tests that creating an InstantApiClient with a valid configuration succeeds. */
     @Test
     void testClientCreation() {
         InstantApiConfig config = InstantApiConfig.create("test-key", Region.US_WEST_2);

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2026 Everfox
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,23 +17,21 @@ import com.everfox.cdr.Region;
 import java.net.URI;
 import java.util.Objects;
 
-/**
- * Configuration for the Instant API client.
- */
+/** Configuration for the Instant API client. */
 public class InstantApiConfig {
 
-    /**
-     * Default connection timeout in seconds.
-     */
+    /** Default connection timeout in seconds. */
     public static final int DEFAULT_CONNECT_TIMEOUT_SECONDS = 10;
-    /**
-     * Default request timeout in seconds.
-     */
+    /** Default request timeout in seconds. */
     public static final int DEFAULT_REQUEST_TIMEOUT_SECONDS = 60;
 
+    /** The API key for authenticating with the Instant API. */
     private final String apiKey;
+    /** The base URL of the Instant API. */
     private final URI baseUrl;
+    /** The connection timeout in seconds. */
     private final int connectTimeoutSeconds;
+    /** The request timeout in seconds. */
     private final int requestTimeoutSeconds;
 
     /**

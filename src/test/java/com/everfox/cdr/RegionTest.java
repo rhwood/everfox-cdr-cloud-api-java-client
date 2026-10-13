@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2026 Everfox
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,17 +17,22 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for the {@link Region} enum.
- */
+/** Unit tests for the {@link Region} enum. */
 class RegionTest {
 
+    /** Default constructor. */
+    RegionTest() {
+        // Nothing to do
+    }
+
+    /** Tests that the {@link Region#toString()} method returns the correct string representation of the region. */
     @Test
     void testToString() {
         Region region = Region.EU_WEST_1;
         assertEquals("EU_WEST_1", region.toString());
     }
 
+    /** Tests that the {@link Region#getBaseUrl()} method returns the correct base URL for the region. */
     @Test
     void testGetBaseUrl() {
         Region region = Region.EU_WEST_1;
@@ -36,12 +41,14 @@ class RegionTest {
                 region.getBaseUrl().toString());
     }
 
+    /** Tests that the {@link Region#fromString(String)} method returns the correct region for a valid string. */
     @Test
     void testFromString() {
         Region region = Region.fromString("eu_west_1");
         assertEquals(Region.EU_WEST_1, region);
     }
 
+    /** Tests that the {@link Region#fromString(String)} method throws an exception for an invalid string. */
     @Test
     void testFromStringInvalid() {
         assertThrows(IllegalArgumentException.class, () -> {

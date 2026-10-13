@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2026 Everfox
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,8 +19,15 @@ import com.everfox.cdr.Region;
 import java.net.URI;
 import org.junit.jupiter.api.Test;
 
+/** Unit tests for {@link InstantApiConfig}. */
 class InstantApiConfigTest {
 
+    /** Default constructor for the test class. */
+    InstantApiConfigTest() {
+        // Nothing to do here
+    }
+
+    /** Tests that creating an InstantApiConfig with a region sets the correct base URL. */
     @Test
     void testConfigWithRegion() {
         InstantApiConfig config = InstantApiConfig.create("test-key", Region.US_WEST_2);
@@ -31,6 +38,7 @@ class InstantApiConfigTest {
                 config.getBaseUrl().toString());
     }
 
+    /** Tests that creating an InstantApiConfig with a custom URL sets the correct base URL. */
     @Test
     void testConfigWithCustomUrl() {
         InstantApiConfig config = InstantApiConfig.create("test-key", URI.create("https://custom.example.com"), 5, 30);

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2026 Everfox
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,25 +15,23 @@ package com.everfox.cdr;
 
 import java.net.URI;
 
-/**
- * Available API regions.
- */
+/** Available API regions. */
 public enum Region {
-    /**
-     * EU West (Ireland) region.
-     */
+    /** EU West (Ireland) region. */
     EU_WEST_1("https://eu-west-1.aws.instant.cdr.everfox.com/v1"),
-    /**
-     * EU West (London) region.
-     */
+    /** EU West (London) region. */
     EU_WEST_2("https://eu-west-2.aws.instant.cdr.everfox.com/v1"),
-    /**
-     * US West (Oregon) region.
-     */
+    /** US West (Oregon) region. */
     US_WEST_2("https://us-west-2.aws.instant.cdr.everfox.com/v1");
 
+    /** The base URL for the region. */
     private final URI baseUrl;
 
+    /**
+     * Constructs a Region enum constant with the specified base URL.
+     *
+     * @param baseUrl the base URL for the region
+     */
     Region(String baseUrl) {
         this.baseUrl = URI.create(baseUrl);
     }
