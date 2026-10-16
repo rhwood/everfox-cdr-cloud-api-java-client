@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2026 Everfox
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,17 +16,32 @@ package com.everfox.cdr.instant;
 import java.net.http.HttpResponse;
 import java.util.Map;
 
-/**
- * Response from the Instant API.
- */
+/** Response from the Instant API. */
 public class InstantApiResponse {
 
+    /** The HTTP status code of the response. */
     private final int statusCode;
+    /** The response body (processed file data). */
     private final byte[] body;
+    /** The response headers. */
     private final Map<String, String> headers;
+    /** The X-Risks-Taken header value. */
     private final String risksTaken;
+    /** The X-Report header value. */
     private final String report;
 
+    /**
+     * Creates a new response with the specified status code, body, headers, and optional headers.
+     *
+     * <p>Note: This constructor is private to force the use of the static factory method
+     * {@link #fromHttpResponse(HttpResponse)} so exceptions can be thrown without creating a new instance.
+     *
+     * @param statusCode the HTTP status code
+     * @param body the response body (processed file data)
+     * @param headers the response headers
+     * @param risksTaken the X-Risks-Taken header value
+     * @param report the X-Report header value
+     */
     private InstantApiResponse(
             int statusCode, byte[] body, Map<String, String> headers, String risksTaken, String report) {
         this.statusCode = statusCode;

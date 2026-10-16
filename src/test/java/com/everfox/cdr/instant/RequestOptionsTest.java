@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2026 Everfox
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,10 +22,18 @@ import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+/** Unit tests for the {@link RequestOptions} class. */
 class RequestOptionsTest {
 
+    /** Object mapper for parsing JSON. */
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
+    /** Default constructor. */
+    RequestOptionsTest() {
+        // Nothing to do
+    }
+
+    /** Tests that the {@link RequestOptions#toJson()} method returns an empty JSON object when no options are set. */
     @Test
     void testNoRequestOptions() {
         RequestOptions options = new RequestOptions(null, null, null, null);
@@ -35,6 +43,10 @@ class RequestOptionsTest {
         assertEquals("{}", json);
     }
 
+    /**
+     * Tests that the {@link RequestOptions#toJson()} method returns the correct JSON when the report format is set to
+     * FULL.
+     */
     @Test
     void testRequestOptionsFullReport() {
         RequestOptions options = new RequestOptions(RequestOptions.ReportFormat.FULL, null, null, null);
@@ -44,6 +56,10 @@ class RequestOptionsTest {
         assertEquals("{\"report\":{\"format\":\"full\"}}", json);
     }
 
+    /**
+     * Tests that the {@link RequestOptions#toJson()} method returns the correct JSON when the GIF image stenography
+     * risk is allowed.
+     */
     @Test
     void testRequestOptionsAllowGifStenography() {
         RequestOptions options =
@@ -54,6 +70,21 @@ class RequestOptionsTest {
         assertEquals("{\"risks\":{\"allow\":[\"steg/image/gif\"]}}", json);
     }
 
+    /**
+     * Tests that the {@link RequestOptions#toJson()} method returns the correct JSON when the GIF image stenography
+     * risk is denied.
+     */
+    @Test
+    void testRequestOptionsDenyGifStenography() {
+        RequestOptions options =
+                new RequestOptions.Builder().denyRisks(Risk.STEG_IMAGE_GIF).build();
+
+        String json = options.toJson();
+        assertNotNull(json);
+        assertEquals("{\"risks\":{\"deny\":[\"steg/image/gif\"]}}", json);
+    }
+
+    /** Tests that the {@link RequestOptions#toJson()} method returns the correct JSON when no image options are set. */
     @Test
     void testRequestOptionsNoImagesOptions() {
         RequestOptions.ImagesOptions images = new RequestOptions.ImagesOptions(new String[0]);
@@ -64,6 +95,10 @@ class RequestOptionsTest {
         assertEquals("{\"images\":{}}", json);
     }
 
+    /**
+     * Tests that the {@link RequestOptions#toJson()} method returns the correct JSON when the image quality is set to
+     * preserve JPEG and PNG {@link MediaType}s.
+     */
     @Test
     void testRequestOptionsPreserveJpegAndPngMediaTypes() {
         RequestOptions.ImagesOptions images =
@@ -75,6 +110,10 @@ class RequestOptionsTest {
         assertEquals("{\"images\":{\"quality\":{\"preserve\":[\"image/png\",\"image/jpeg\"]}}}", json);
     }
 
+    /**
+     * Tests that the {@link RequestOptions#toJson()} method returns the correct JSON when the image quality is set to
+     * preserve JPEG and PNG strings.
+     */
     @Test
     void testRequestOptionsPreserveJpegAndPngStrings() {
         RequestOptions.ImagesOptions images = new RequestOptions.ImagesOptions("image/jpeg", "image/png");
@@ -85,6 +124,10 @@ class RequestOptionsTest {
         assertEquals("{\"images\":{\"quality\":{\"preserve\":[\"image/png\",\"image/jpeg\"]}}}", json);
     }
 
+    /**
+     * Tests that the {@link RequestOptions#toJson()} method returns the correct JSON when a given risk is both allowed
+     * and denied.
+     */
     @Test
     void testRisksAreExclusive() {
         RequestOptions options = new RequestOptions.Builder()

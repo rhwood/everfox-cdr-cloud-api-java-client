@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2026 Everfox
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,23 +16,19 @@ package com.everfox.cdr.instant;
 import java.util.Map;
 import tools.jackson.databind.ObjectMapper;
 
-/**
- * Exception thrown when the Instant API returns an error response.
- */
+/** Exception thrown when the Instant API returns an error response. */
 public class InstantApiException extends Exception {
 
+    /** The Jackson object mapper used to parse the error response. */
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    /**
-     * The API status code returned by the API. This is -1 is the API did not return a valid error response.
-     */
+    /** The API status code returned by the API. This is -1 is the API did not return a valid error response. */
     private final int apiStatusCode;
-    /**
-     * The HTTP status code returned by the server.
-     */
+    /** The HTTP status code returned by the server. */
     private final int httpStatusCode;
     /**
-     * The API error message returned by the API. This is "Unknown error" if the API did not return a valid error response.
+     * The API error message returned by the API. This is "Unknown error" if the API did not return a valid error
+     * response.
      */
     private final String apiMessage;
     /**
@@ -47,7 +43,11 @@ public class InstantApiException extends Exception {
     /**
      * Creates a new exception from the JSON error response returned by the API.
      *
-     * @param body the JSON error response body
+     * @param apiStatusCode the API status code
+     * @param httpStatusCode the HTTP status code
+     * @param message the API error message
+     * @param name the name of the error
+     * @param type the type of the error
      */
     // This is private because the constructor must call super() first, so we can't parse the body in the constructor
     private InstantApiException(int apiStatusCode, int httpStatusCode, String message, String name, String type) {

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2026 Everfox
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,26 +24,28 @@ import java.util.stream.Collectors;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
-/**
- * Options for customizing file processing behavior.
- */
+/** Options for customizing file processing behavior. */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RequestOptions {
 
+    /** ObjectMapper for JSON serialization. */
     private static final ObjectMapper MAPPER = new ObjectMapper();
-
+    /** Report format options. */
     private final ReportOptions report;
     // private ConversionOptions conversion; // not yet implemented
+    /** Image processing options. */
     private final ImagesOptions images;
     // private RedactionOptions redactions; // not yet implemented
+    /** Set of allowed risks. */
     private final Set<String> allowedRisks;
+    /** Set of denied risks. */
     private final Set<String> deniedRisks;
 
     /**
      * Creates a new instance of {@link RequestOptions}.
      *
-     * Note that allowed risks and denied risks are mutually exclusive.
-     * If a risk is in both, the denied risks will take precedence.
+     * <p>Note that allowed risks and denied risks are mutually exclusive. If a risk is in both, the denied risks will
+     * take precedence.
      *
      * @param format the report format
      * @param images the image options
@@ -115,29 +117,28 @@ public class RequestOptions {
         }
     }
 
-    /**
-     * Report format options. See https://cdr.everfox.com/documentation/report for details.
-     */
+    /** Report format options. See https://cdr.everfox.com/documentation/report for details. */
     public enum ReportFormat {
-        /**
-         * Reports on data that has had a notable change.
-         */
+        /** Reports on data that has had a notable change. */
         CHANGED("changed"),
-        /**
-         * The current default behavior is @{@link #CHANGED}.
-         */
+        /** The current default behavior is @{@link #CHANGED}. */
         DEFAULT("default"),
         /**
-         * Reports everything about the data, including information on data that hasn't been transformed. These reports can be big!
+         * Reports everything about the data, including information on data that hasn't been transformed. These reports
+         * can be big!
          */
         FULL("full"),
-        /**
-         * A report will not be generated. Use this if you don't need the report.
-         */
+        /** A report will not be generated. Use this if you don't need the report. */
         NONE("none");
 
+        /** The string representation of the report format. */
         private final String format;
 
+        /**
+         * Creates a new report format with the specified string representation.
+         *
+         * @param format the string representation of the report format
+         */
         ReportFormat(String format) {
             this.format = format;
         }
@@ -157,12 +158,14 @@ public class RequestOptions {
         }
     }
 
-    /**
-     * Options for handling images.
-     */
+    /** Options for handling images. */
     public static class ImagesOptions {
 
-        // this is a set and not an arrat to avoid duplicates and to make it easier to check for existence
+        /**
+         * The set of media types to preserve image quality for.
+         *
+         * <p>This is a set and not an array to avoid duplicates and to make it easier to check for existence.
+         */
         private final Set<String> preservationFormats;
 
         /**
@@ -199,11 +202,10 @@ public class RequestOptions {
         }
     }
 
-    /**
-     * Report options.
-     */
+    /** Report options. */
     // public for JSON serialization
     public static class ReportOptions {
+        /** The preferred format of the report. */
         private final ReportFormat format;
 
         /**
@@ -225,19 +227,19 @@ public class RequestOptions {
         }
     }
 
-    /**
-     * Builder for creating {@link RequestOptions} instances.
-     */
+    /** Builder for creating {@link RequestOptions} instances. */
     public static class Builder {
 
+        /** Set of allowed risks. */
         private Set<String> allowedRisks = new HashSet<>();
+        /** Set of denied risks. */
         private Set<String> deniedRisks = new HashSet<>();
+        /** Report format for the request options. */
         private ReportFormat reportFormat;
+        /** Image options for the request options. */
         private ImagesOptions imagesOptions;
 
-        /**
-         * Creates a new instance of the Builder.
-         */
+        /** Creates a new instance of the Builder. */
         public Builder() {}
 
         /**

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2026 Everfox
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,14 +16,16 @@ package com.everfox.cdr.instant;
 import com.everfox.cdr.MediaType;
 import java.util.Objects;
 
-/**
- * Represents a request to upload and process a file through the Instant API.
- */
+/** Represents a request to upload and process a file through the Instant API. */
 public class InstantApiRequest {
 
+    /** The file data to be uploaded (max 4.5 MB). */
     private final byte[] fileData;
+    /** The media type of the file being uploaded. */
     private final String contentType;
+    /** The desired media type of the processed file. */
     private final String acceptType;
+    /** Additional processing options for the request. */
     private final RequestOptions options;
 
     /**

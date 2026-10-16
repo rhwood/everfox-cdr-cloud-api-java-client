@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2026 Everfox
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,11 +17,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for the {@link Risk} enum.
- */
+/** Unit tests for the {@link Risk} enum. */
 class RiskTest {
 
+    /** Default constructor. */
+    RiskTest() {
+        // Nothing to do
+    }
+
+    /** Tests the {@link Risk#toString()} method. */
     @Test
     void testToString() {
         Risk risk = Risk.EXE_MACRO_MS_WORD;

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2026 Everfox
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,30 +29,33 @@ import tools.jackson.databind.ObjectMapper;
 /**
  * Integration tests for the Everfox CDR Instant API client.
  *
- * These tests require a valid API key set in the CDR_INSTANT_API_KEY environment variable.
- * To run: export CDR_INSTANT_API_KEY=your-api-key-here && mvn test -Dtest=IntegrationTest
+ * <p>These tests require a valid API key set in the CDR_INSTANT_API_KEY environment variable. To run: export
+ * CDR_INSTANT_API_KEY=your-api-key-here &amp;&amp; mvn test -Dtest=IntegrationTest
  *
- * The US_WEST_2 region is used for testing, but you can change the region by setting the
- * CDR_INSTANT_API_URL environment variable. Note that the API URL must be a valid URI,
- * e.g., "https://us-west-2.aws.instant.cdr.everfox.com/v1" and not the name of a region.
+ * <p>The US_WEST_2 region is used for testing, but you can change the region by setting the CDR_INSTANT_API_URL
+ * environment variable. Note that the API URL must be a valid URI, e.g.,
+ * "https://us-west-2.aws.instant.cdr.everfox.com/v1" and not the name of a region.
  *
- * If you want to use a different region, you can set the CDR_INSTANT_API_REGION environment
- * variable to one of the supported region names (case-insensitive), e.g., "eu_west_1" or
- * "us_west_2". If both CDR_INSTANT_API_URL and CDR_INSTANT_API_REGION are set, the region will
- * take precedence.
+ * <p>If you want to use a different region, you can set the CDR_INSTANT_API_REGION environment variable to one of the
+ * supported region names (case-insensitive), e.g., "eu_west_1" or "us_west_2". If both CDR_INSTANT_API_URL and
+ * CDR_INSTANT_API_REGION are set, the region will take precedence.
  *
- * Tests are disabled by default if the environment variable is not set.
+ * <p>Tests are disabled by default if the environment variable is not set.
  *
- * NOTE: The API has specific requirements for Accept headers that may vary by content type.
- * Using "application/pdf" for both Content-Type and Accept typically works well for testing.
+ * <p>NOTE: The API has specific requirements for Accept headers that may vary by content type. Using "application/pdf"
+ * for both Content-Type and Accept typically works well for testing.
  */
 class IntegrationTest {
 
+    /** JSON object mapper for parsing API responses. */
     private static final ObjectMapper MAPPER = new ObjectMapper();
+    /** Environment variable name for the API key. */
     private static final String API_KEY_ENV = "CDR_INSTANT_API_KEY";
+    /** Environment variable name for the API URL. */
     private static final String API_URL_ENV = "CDR_INSTANT_API_URL";
+    /** Environment variable name for the API region. */
     private static final String API_REGION_ENV = "CDR_INSTANT_API_REGION";
-    // Simple PDF content for testing (minimal valid PDF)
+    /** Simple PDF content for testing (minimal valid PDF) */
     private static final byte[] PDF_TEST_DATA = ("%PDF-1.4\n" + "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
                     + "2 0 obj<</Type/Pages/Count 1/Kids[3 0 R]>>endobj\n"
                     + "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Contents 4 0 R>>endobj\n"
@@ -63,7 +66,7 @@ class IntegrationTest {
                     + "0000000115 00000 n\n0000000214 00000 n\ntrailer<</Size 5/Root 1 0 R>>\n"
                     + "startxref\n307\n%%EOF")
             .getBytes();
-    // Simple JPEG content for testing (minimal valid JPEG)
+    /** Simple JPEG content for testing (minimal valid JPEG) */
     private static final byte[] JPEG_TEST_DATA = new byte[] {
         (byte) 0xff, (byte) 0xd8, (byte) 0xff, (byte) 0xe0, (byte) 0x00, (byte) 0x10, (byte) 0x4a, (byte) 0x46,
         (byte) 0x49, (byte) 0x46, (byte) 0x00, (byte) 0x01, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x01,
@@ -162,10 +165,15 @@ class IntegrationTest {
         (byte) 0x00, (byte) 0x3f, (byte) 0x00, (byte) 0xfe, (byte) 0xfe, (byte) 0x28, (byte) 0x00, (byte) 0xa0,
         (byte) 0x02, (byte) 0x80, (byte) 0x0a, (byte) 0x00, (byte) 0xff, (byte) 0xd9
     };
-    // Minimal valid JSON content for testing
+    /** Minimal valid JSON content for testing */
     private static final byte[] JSON_TEST_DATA = "[]".getBytes();
-    // Minimal invalid JSON content for testing
+    /** Minimal invalid JSON content for testing */
     private static final byte[] INVALID_JSON_TEST_DATA = "[}".getBytes();
+
+    /** Default constructor. */
+    IntegrationTest() {
+        // Nothing to do
+    }
 
     /**
      * Creates a client configured for testing using the API key and optional API URL from environment variables.
@@ -191,6 +199,13 @@ class IntegrationTest {
         return InstantApiClient.create(config);
     }
 
+    /**
+     * Tests uploading a PDF file to the Instant API.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws InterruptedException if the operation is interrupted
+     * @throws InstantApiException if the API returns an error response
+     */
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadPdfFile() throws IOException, InterruptedException, InstantApiException {
@@ -207,9 +222,10 @@ class IntegrationTest {
         }
     }
 
+    /** Tests uploading a JSON file to the Instant API without specifying any risk options. */
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
-    void testUploadJsonFileNoOptions() throws IOException, InterruptedException, InstantApiException {
+    void testUploadJsonFileNoOptions() {
         try (InstantApiClient client = createClient()) {
             InstantApiRequest request = InstantApiRequest.create(JSON_TEST_DATA, MediaType.JSON, MediaType.JSON);
 
@@ -228,9 +244,10 @@ class IntegrationTest {
         }
     }
 
+    /** Tests uploading a JSON file to the Instant API with only one of the required risk options specified. */
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
-    void testUploadJsonFilePartialRisks() throws IOException, InterruptedException, InstantApiException {
+    void testUploadJsonFilePartialRisks() {
         try (InstantApiClient client = createClient()) {
             RequestOptions options =
                     new RequestOptions.Builder().allowRisks(Risk.POLY_TEXT_JSON).build();
@@ -252,6 +269,13 @@ class IntegrationTest {
         }
     }
 
+    /**
+     * Tests uploading a JSON file to the Instant API with all required risk options specified.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws InterruptedException if the operation is interrupted
+     * @throws InstantApiException if the API returns an error response
+     */
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadJsonFileRequiredRisks() throws IOException, InterruptedException, InstantApiException {
@@ -272,9 +296,10 @@ class IntegrationTest {
         }
     }
 
+    /** Tests uploading an invalid JSON file to the Instant API with all required risk options specified. */
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
-    void testUploadInvalidJsonFile() throws IOException, InterruptedException, InstantApiException {
+    void testUploadInvalidJsonFile() {
         try (InstantApiClient client = createClient()) {
             RequestOptions options = new RequestOptions.Builder()
                     .allowRisks(Risk.POLY_TEXT_JSON, Risk.STRUCTURED_NO_SCHEMA_JSON)
@@ -297,6 +322,13 @@ class IntegrationTest {
         }
     }
 
+    /**
+     * Tests uploading a PDF file to the Instant API using an InputStream.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws InterruptedException if the operation is interrupted
+     * @throws InstantApiException if the API returns an error response
+     */
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadWithInputStream() throws IOException, InterruptedException, InstantApiException {
@@ -312,6 +344,13 @@ class IntegrationTest {
         }
     }
 
+    /**
+     * Tests uploading a PDF file to the Instant API with additional request options.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws InterruptedException if the operation is interrupted
+     * @throws InstantApiException if the API returns an error response
+     */
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadWithOptions() throws IOException, InterruptedException, InstantApiException {
@@ -337,6 +376,13 @@ class IntegrationTest {
         }
     }
 
+    /**
+     * Tests uploading a JPEG image to the Instant API with image quality preservation options.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws InterruptedException if the operation is interrupted
+     * @throws InstantApiException if the API returns an error response
+     */
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadWithImageQualityPreserveJpeg() throws IOException, InterruptedException, InstantApiException {
@@ -359,6 +405,13 @@ class IntegrationTest {
         }
     }
 
+    /**
+     * Tests uploading a JPEG image to the Instant API with an empty array of image quality preservation options.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws InterruptedException if the operation is interrupted
+     * @throws InstantApiException if the API returns an error response
+     */
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadWithImageQualityPreserveEmptyArray() throws IOException, InterruptedException, InstantApiException {
@@ -381,13 +434,12 @@ class IntegrationTest {
     /**
      * Tests uploading a file to the Instant API using the configured region and API key.
      *
-     * Note that this test ignores the API URL environment variable and uses the
-     * {@link Region.US_WEST_2} region for testing unless the {@code CDR_INSTANT_API_REGION}
-     * environment variable is set.
+     * <p>Note that this test ignores the API URL environment variable and uses the {@link Region#EU_WEST_2} region for
+     * testing unless the {@code CDR_INSTANT_API_REGION} environment variable is set.
      *
-     * @throws IOException
-     * @throws InterruptedException
-     * @throws InstantApiException
+     * @throws IOException if an I/O error occurs
+     * @throws InterruptedException if the operation is interrupted
+     * @throws InstantApiException if the API returns an error response
      */
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
@@ -409,6 +461,7 @@ class IntegrationTest {
         }
     }
 
+    /** Tests uploading a file to the Instant API with an invalid API key. */
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testInvalidApiKey() {
@@ -431,6 +484,7 @@ class IntegrationTest {
         }
     }
 
+    /** Tests uploading a file that exceeds the size limit of the Instant API. */
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testFileSizeLimit() {
@@ -453,6 +507,13 @@ class IntegrationTest {
         }
     }
 
+    /**
+     * Tests that the response headers from the Instant API are captured correctly in the response object.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws InterruptedException if the operation is interrupted
+     * @throws InstantApiException if the API returns an error response
+     */
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testResponseHeaders() throws IOException, InterruptedException, InstantApiException {
@@ -475,6 +536,13 @@ class IntegrationTest {
         }
     }
 
+    /**
+     * Tests that custom timeouts can be set in the Instant API client configuration.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws InterruptedException if the operation is interrupted
+     * @throws InstantApiException if the API returns an error response
+     */
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testCustomTimeouts() throws IOException, InterruptedException, InstantApiException {
@@ -491,6 +559,13 @@ class IntegrationTest {
         }
     }
 
+    /**
+     * Tests uploading a PDF file to the Instant API with all request options configured.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws InterruptedException if the operation is interrupted
+     * @throws InstantApiException if the API returns an error response
+     */
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testAllRequestOptions() throws IOException, InterruptedException, InstantApiException {
