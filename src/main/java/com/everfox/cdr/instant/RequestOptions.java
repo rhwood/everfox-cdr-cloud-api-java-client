@@ -35,7 +35,8 @@ public class RequestOptions {
     // private ConversionOptions conversion; // not yet implemented
     /** Image processing options. */
     private final ImagesOptions images;
-    // private RedactionOptions redactions; // not yet implemented
+    /** Redaction options. */
+    private final RedactionOptions redactions;
     /** Set of allowed risks. */
     private final Set<String> allowedRisks;
     /** Set of denied risks. */
@@ -49,11 +50,16 @@ public class RequestOptions {
      *
      * @param format the report format
      * @param images the image options
+     * @param redactions the redaction options
      * @param allowedRisks the allowed risks
      * @param deniedRisks the denied risks
      */
     public RequestOptions(
-            ReportFormat format, ImagesOptions images, Set<String> allowedRisks, Set<String> deniedRisks) {
+            ReportFormat format,
+            ImagesOptions images,
+            RedactionOptions redactions,
+            Set<String> allowedRisks,
+            Set<String> deniedRisks) {
         if (deniedRisks != null && allowedRisks != null) {
             for (String risk : deniedRisks) {
                 allowedRisks.remove(risk);
@@ -61,6 +67,7 @@ public class RequestOptions {
         }
         this.report = format != null ? new ReportOptions(format) : null;
         this.images = images;
+        this.redactions = redactions;
         this.allowedRisks = allowedRisks != null ? new HashSet<>(allowedRisks) : new HashSet<>();
         this.deniedRisks = deniedRisks != null ? new HashSet<>(deniedRisks) : new HashSet<>();
     }
@@ -102,6 +109,16 @@ public class RequestOptions {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public ReportOptions getReport() {
         return report;
+    }
+
+    /**
+     * Returns the redaction options.
+     *
+     * @return redaction options
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public RedactionOptions getRedactions() {
+        return redactions;
     }
 
     /**
@@ -227,6 +244,76 @@ public class RequestOptions {
         }
     }
 
+    /**
+     * Redaction options.
+     *
+     * <p>Redaction options specify how to redact files in archives when those would otherwise prevent the archive from
+     * being processed by the CDR. For example, if a ZIP file contains an executable, the executable can be redacted to
+     * allow the ZIP file to be processed.
+     */
+    public static class RedactionOptions {
+        /** The file extension to replace redacted files with. */
+        private final String extension;
+        /** The media type to use for the redacted file replacement. */
+        private final String mime;
+        /** The text to use for the redacted file replacement. */
+        private final String text;
+
+        /**
+         * Create a set of redaction options.
+         *
+         * @param extension the file extension to replace redacted files with
+         * @param mime the media type to use for the redacted file replacement
+         * @param text the text to use for the redacted file replacement
+         */
+        public RedactionOptions(String extension, MediaType mime, String text) {
+            this(extension, mime.toString(), text);
+        }
+
+        /**
+         * Create a set of redaction options.
+         *
+         * @param extension the file extension to replace redacted files with
+         * @param mime the media type to use for the redacted file replacement
+         * @param text the text to use for the redacted file replacement
+         */
+        public RedactionOptions(String extension, String mime, String text) {
+            this.extension = extension;
+            this.mime = mime;
+            this.text = text;
+        }
+
+        /**
+         * Returns the file extension used when redating a file.
+         *
+         * @return the file extension
+         */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        public String getExtension() {
+            return extension;
+        }
+
+        /**
+         * Returns the media type for the redaction.
+         *
+         * @return the media type
+         */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        public String getMime() {
+            return mime;
+        }
+
+        /**
+         * Returns the text used in the redaction.
+         *
+         * @return the text
+         */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        public String getText() {
+            return text;
+        }
+    }
+
     /** Builder for creating {@link RequestOptions} instances. */
     public static class Builder {
 
@@ -238,6 +325,8 @@ public class RequestOptions {
         private ReportFormat reportFormat;
         /** Image options for the request options. */
         private ImagesOptions imagesOptions;
+        /** Redaction options for the request options. */
+        private RedactionOptions redactionOptions;
 
         /** Creates a new instance of the Builder. */
         public Builder() {}
@@ -261,6 +350,17 @@ public class RequestOptions {
          */
         public Builder imagesOptions(ImagesOptions imagesOptions) {
             this.imagesOptions = imagesOptions;
+            return this;
+        }
+
+        /**
+         * Sets the redaction options for the request options.
+         *
+         * @param redactionOptions the redaction options
+         * @return the builder instance
+         */
+        public Builder redactionOptions(RedactionOptions redactionOptions) {
+            this.redactionOptions = redactionOptions;
             return this;
         }
 
@@ -292,7 +392,7 @@ public class RequestOptions {
          * @return a new instance of RequestOptions
          */
         public RequestOptions build() {
-            return new RequestOptions(reportFormat, imagesOptions, allowedRisks, deniedRisks);
+            return new RequestOptions(reportFormat, imagesOptions, redactionOptions, allowedRisks, deniedRisks);
         }
     }
 }

@@ -355,7 +355,7 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadWithOptions() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            RequestOptions options = new RequestOptions(RequestOptions.ReportFormat.FULL, null, null, null);
+            RequestOptions options = new RequestOptions(RequestOptions.ReportFormat.FULL, null, null, null, null);
 
             InstantApiRequest request =
                     InstantApiRequest.create(PDF_TEST_DATA, "application/pdf", "application/pdf", options);
@@ -417,7 +417,7 @@ class IntegrationTest {
     void testUploadWithImageQualityPreserveEmptyArray() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
             RequestOptions.ImagesOptions imagesOptions = new RequestOptions.ImagesOptions(new String[0]);
-            RequestOptions options = new RequestOptions(null, imagesOptions, null, null);
+            RequestOptions options = new RequestOptions(null, imagesOptions, null, null, null);
 
             InstantApiRequest request =
                     InstantApiRequest.create(JPEG_TEST_DATA, MediaType.IMAGE_JPEG, MediaType.IMAGE_JPEG, options);
