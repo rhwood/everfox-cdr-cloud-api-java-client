@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.everfox.cdr.MediaType;
 import com.everfox.cdr.Risk;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -84,6 +85,30 @@ class RequestOptionsTest {
         assertEquals("{\"risks\":{\"deny\":[\"steg/image/gif\"]}}", json);
     }
 
+    @Test
+    void testRequestOptionsNullAllowNullDeny() {
+        RequestOptions options = new RequestOptions(null, null, null, null, null);
+        String json = options.toJson();
+        assertNotNull(json);
+        assertEquals("{}", json);
+    }
+
+    @Test
+    void testRequestOptionsNullDeny() {
+        RequestOptions options = new RequestOptions(null, null, null, Set.of(Risk.STEG_IMAGE_GIF.getRisk()), null);
+        String json = options.toJson();
+        assertNotNull(json);
+        assertEquals("{\"risks\":{\"allow\":[\"steg/image/gif\"]}}", json);
+    }
+
+    @Test
+    void testRequestOptionsNullAllow() {
+        RequestOptions options = new RequestOptions(null, null, null, null, Set.of(Risk.STEG_IMAGE_GIF.getRisk()));
+        String json = options.toJson();
+        assertNotNull(json);
+        assertEquals("{\"risks\":{\"deny\":[\"steg/image/gif\"]}}", json);
+    }
+
     /** Tests that the {@link RequestOptions#toJson()} method returns the correct JSON when no image options are set. */
     @Test
     void testRequestOptionsNoImagesOptions() {
@@ -96,7 +121,18 @@ class RequestOptionsTest {
     }
 
     @Test
-    void testRequestOptionsRedationOptions() {
+    void testRequestOptionsRedationOptionsMediaType() {
+        RequestOptions options = new RequestOptions.Builder()
+                .redactionOptions(new RequestOptions.RedactionOptions("txt", MediaType.TEXT_XML, "Redacted"))
+                .build();
+
+        String json = options.toJson();
+        assertNotNull(json);
+        assertEquals("{\"redactions\":{\"extension\":\"txt\",\"mime\":\"text/xml\",\"text\":\"Redacted\"}}", json);
+    }
+
+    @Test
+    void testRequestOptionsRedationOptionsString() {
         RequestOptions options = new RequestOptions.Builder()
                 .redactionOptions(new RequestOptions.RedactionOptions("txt", "text/plain", "Redacted"))
                 .build();
