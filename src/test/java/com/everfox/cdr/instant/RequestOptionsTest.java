@@ -36,7 +36,7 @@ class RequestOptionsTest {
     /** Tests that the {@link RequestOptions#toJson()} method returns an empty JSON object when no options are set. */
     @Test
     void testNoRequestOptions() {
-        RequestOptions options = new RequestOptions(null, null, null, null);
+        RequestOptions options = new RequestOptions(null, null, null, null, null);
 
         String json = options.toJson();
         assertNotNull(json);
@@ -49,7 +49,7 @@ class RequestOptionsTest {
      */
     @Test
     void testRequestOptionsFullReport() {
-        RequestOptions options = new RequestOptions(RequestOptions.ReportFormat.FULL, null, null, null);
+        RequestOptions options = new RequestOptions(RequestOptions.ReportFormat.FULL, null, null, null, null);
 
         String json = options.toJson();
         assertNotNull(json);
@@ -88,11 +88,22 @@ class RequestOptionsTest {
     @Test
     void testRequestOptionsNoImagesOptions() {
         RequestOptions.ImagesOptions images = new RequestOptions.ImagesOptions(new String[0]);
-        RequestOptions options = new RequestOptions(null, images, null, null);
+        RequestOptions options = new RequestOptions(null, images, null, null, null);
 
         String json = options.toJson();
         assertNotNull(json);
         assertEquals("{\"images\":{}}", json);
+    }
+
+    @Test
+    void testRequestOptionsRedationOptions() {
+        RequestOptions options = new RequestOptions.Builder()
+                .redactionOptions(new RequestOptions.RedactionOptions("txt", "text/plain", "Redacted"))
+                .build();
+
+        String json = options.toJson();
+        assertNotNull(json);
+        assertEquals("{\"redactions\":{\"extension\":\"txt\",\"mime\":\"text/plain\",\"text\":\"Redacted\"}}", json);
     }
 
     /**
@@ -103,7 +114,7 @@ class RequestOptionsTest {
     void testRequestOptionsPreserveJpegAndPngMediaTypes() {
         RequestOptions.ImagesOptions images =
                 new RequestOptions.ImagesOptions(MediaType.IMAGE_JPEG, MediaType.IMAGE_PNG);
-        RequestOptions options = new RequestOptions(null, images, null, null);
+        RequestOptions options = new RequestOptions(null, images, null, null, null);
 
         String json = options.toJson();
         assertNotNull(json);
@@ -117,7 +128,7 @@ class RequestOptionsTest {
     @Test
     void testRequestOptionsPreserveJpegAndPngStrings() {
         RequestOptions.ImagesOptions images = new RequestOptions.ImagesOptions("image/jpeg", "image/png");
-        RequestOptions options = new RequestOptions(null, images, null, null);
+        RequestOptions options = new RequestOptions(null, images, null, null, null);
 
         String json = options.toJson();
         assertNotNull(json);
