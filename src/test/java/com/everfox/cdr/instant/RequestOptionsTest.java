@@ -122,7 +122,10 @@ class RequestOptionsTest {
         assertEquals("{\"images\":{}}", json);
     }
 
-    /** Tests that the {@link RequestOptions#toJson()} method returns the correct JSON when redaction options MIME is a {@link MediaType}. */
+    /**
+     * Tests that the {@link RequestOptions#toJson()} method returns the correct JSON when redaction options MIME is a
+     * {@link MediaType}.
+     */
     @Test
     void testRequestOptionsRedationOptionsMediaType() {
         RequestOptions options = new RequestOptions.Builder()
@@ -134,7 +137,10 @@ class RequestOptionsTest {
         assertEquals("{\"redactions\":{\"extension\":\"txt\",\"mime\":\"text/xml\",\"text\":\"Redacted\"}}", json);
     }
 
-    /** Tests that the {@link RequestOptions#toJson()} method returns the correct JSON when redaction options MIME is a String. */
+    /**
+     * Tests that the {@link RequestOptions#toJson()} method returns the correct JSON when redaction options MIME is a
+     * String.
+     */
     @Test
     void testRequestOptionsRedationOptionsString() {
         RequestOptions options = new RequestOptions.Builder()
