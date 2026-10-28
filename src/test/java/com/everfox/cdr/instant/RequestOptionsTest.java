@@ -59,10 +59,10 @@ class RequestOptionsTest {
 
     /**
      * Tests that the {@link RequestOptions#toJson()} method returns the correct JSON when the GIF image stenography
-     * risk is allowed.
+     * risk is allowed using Builder.
      */
     @Test
-    void testRequestOptionsAllowGifStenography() {
+    void testRequestOptionsBuilderAllowGifStenography() {
         RequestOptions options =
                 new RequestOptions.Builder().allowRisks(Risk.STEG_IMAGE_GIF).build();
 
@@ -73,10 +73,10 @@ class RequestOptionsTest {
 
     /**
      * Tests that the {@link RequestOptions#toJson()} method returns the correct JSON when the GIF image stenography
-     * risk is denied.
+     * risk is denied using Builder.
      */
     @Test
-    void testRequestOptionsDenyGifStenography() {
+    void testRequestOptionsBuilderDenyGifStenography() {
         RequestOptions options =
                 new RequestOptions.Builder().denyRisks(Risk.STEG_IMAGE_GIF).build();
 
@@ -85,25 +85,27 @@ class RequestOptionsTest {
         assertEquals("{\"risks\":{\"deny\":[\"steg/image/gif\"]}}", json);
     }
 
+    /**
+     * Tests that the {@link RequestOptions#toJson()} method returns the correct JSON when the GIF image stenography
+     * risk is allowed using constructor.
+     */
     @Test
-    void testRequestOptionsNullAllowNullDeny() {
-        RequestOptions options = new RequestOptions(null, null, null, null, null);
-        String json = options.toJson();
-        assertNotNull(json);
-        assertEquals("{}", json);
-    }
-
-    @Test
-    void testRequestOptionsNullDeny() {
+    void testRequestOptionsConstructorAllowGifStenography() {
         RequestOptions options = new RequestOptions(null, null, null, Set.of(Risk.STEG_IMAGE_GIF.getRisk()), null);
+
         String json = options.toJson();
         assertNotNull(json);
         assertEquals("{\"risks\":{\"allow\":[\"steg/image/gif\"]}}", json);
     }
 
+    /**
+     * Tests that the {@link RequestOptions#toJson()} method returns the correct JSON when the GIF image stenography
+     * risk is denied using constructor.
+     */
     @Test
-    void testRequestOptionsNullAllow() {
+    void testRequestOptionsConstructorDenyGifStenography() {
         RequestOptions options = new RequestOptions(null, null, null, null, Set.of(Risk.STEG_IMAGE_GIF.getRisk()));
+
         String json = options.toJson();
         assertNotNull(json);
         assertEquals("{\"risks\":{\"deny\":[\"steg/image/gif\"]}}", json);
@@ -120,6 +122,7 @@ class RequestOptionsTest {
         assertEquals("{\"images\":{}}", json);
     }
 
+    /** Tests that the {@link RequestOptions#toJson()} method returns the correct JSON when redaction options MIME is a {@link MediaType}. */
     @Test
     void testRequestOptionsRedationOptionsMediaType() {
         RequestOptions options = new RequestOptions.Builder()
@@ -131,6 +134,7 @@ class RequestOptionsTest {
         assertEquals("{\"redactions\":{\"extension\":\"txt\",\"mime\":\"text/xml\",\"text\":\"Redacted\"}}", json);
     }
 
+    /** Tests that the {@link RequestOptions#toJson()} method returns the correct JSON when redaction options MIME is a String. */
     @Test
     void testRequestOptionsRedationOptionsString() {
         RequestOptions options = new RequestOptions.Builder()
