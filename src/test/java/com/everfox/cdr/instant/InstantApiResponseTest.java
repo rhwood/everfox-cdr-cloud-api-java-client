@@ -37,6 +37,7 @@ class InstantApiResponseTest {
      */
     @Test
     void testResponseIsSuccess() throws InstantApiException {
+        @SuppressWarnings("unchecked") // unavoidable when mocking due to HttpResponse being generic
         HttpResponse<byte[]> httpResponse = mock(HttpResponse.class);
         when(httpResponse.statusCode()).thenReturn(200);
         when(httpResponse.headers())
@@ -48,11 +49,51 @@ class InstantApiResponseTest {
         InstantApiResponse apiResponse = InstantApiResponse.fromHttpResponse(httpResponse);
         assertEquals(200, apiResponse.getStatusCode());
         assertTrue(apiResponse.isSuccess());
+        when(httpResponse.statusCode()).thenReturn(100);
+        apiResponse = InstantApiResponse.fromHttpResponse(httpResponse);
+        assertEquals(100, apiResponse.getStatusCode());
+        assertFalse(apiResponse.isSuccess());
+    }
+
+    /**
+     * Tests that creating an InstantApiResponse with HTTP code 3xx is neither successful nor an exception.
+     *
+     * @throws InstantApiException
+     */
+    @Test
+    void testResponseHttpRedirectionIsNotSuccess() throws InstantApiException {
+        @SuppressWarnings("unchecked") // unavoidable when mocking due to HttpResponse being generic
+        HttpResponse<byte[]> httpResponse = mock(HttpResponse.class);
         when(httpResponse.statusCode()).thenReturn(300);
+        when(httpResponse.headers())
+                .thenReturn(HttpHeaders.of(
+                        Map.of(
+                                "Content-Type", List.of("application/json"),
+                                "X-Custom-Header", List.of("value1", "value2")),
+                        (k, v) -> true));
+        InstantApiResponse apiResponse = InstantApiResponse.fromHttpResponse(httpResponse);
         apiResponse = InstantApiResponse.fromHttpResponse(httpResponse);
         assertEquals(300, apiResponse.getStatusCode());
         assertFalse(apiResponse.isSuccess());
+    }
+
+    /**
+     * Tests that creating an InstantApiResponse with HTTP code 1xx is neither successful nor an exception.
+     *
+     * @throws InstantApiException
+     */
+    @Test
+    void testResponseHttpInformationalIsNotSuccess() throws InstantApiException {
+        @SuppressWarnings("unchecked") // unavoidable when mocking due to HttpResponse being generic
+        HttpResponse<byte[]> httpResponse = mock(HttpResponse.class);
         when(httpResponse.statusCode()).thenReturn(100);
+        when(httpResponse.headers())
+                .thenReturn(HttpHeaders.of(
+                        Map.of(
+                                "Content-Type", List.of("application/json"),
+                                "X-Custom-Header", List.of("value1", "value2")),
+                        (k, v) -> true));
+        InstantApiResponse apiResponse = InstantApiResponse.fromHttpResponse(httpResponse);
         apiResponse = InstantApiResponse.fromHttpResponse(httpResponse);
         assertEquals(100, apiResponse.getStatusCode());
         assertFalse(apiResponse.isSuccess());
