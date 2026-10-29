@@ -129,8 +129,9 @@ limitations under the License.
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.6.1</version>
                 <configuration>
-                    <!-- Load Mockito as a Java agent instead of relying on self-attach (JEP 451) -->
-                    <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
+                    <!-- Load Mockito as a Java agent instead of relying on self-attach (JEP 451);
+                         disable CDS to silence the warning caused by the agent appending to the bootclasspath -->
+                    <argLine>@{argLine} -Xshare:off -javaagent:${org.mockito:mockito-core:jar}</argLine>
                 </configuration>
             </plugin>
             <plugin>
