@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** Unit tests for {@link InstantApiRequest}. */
+/** Unit tests for {@link InstantApiResponse}. */
 class InstantApiResponseTest {
 
     /** Default constructor for the test class. */
@@ -33,7 +33,7 @@ class InstantApiResponseTest {
     /**
      * Tests that creating an InstantApiResponse with HTTP code 2xx is successful.
      *
-     * @throws InstantApiException
+     * @throws InstantApiException if the response is unexpectedly treated as an error
      */
     @Test
     void testResponseIsSuccess() throws InstantApiException {
@@ -58,7 +58,7 @@ class InstantApiResponseTest {
     /**
      * Tests that creating an InstantApiResponse with HTTP code 3xx is neither successful nor an exception.
      *
-     * @throws InstantApiException
+     * @throws InstantApiException if the response is unexpectedly treated as an error
      */
     @Test
     void testResponseHttpRedirectionIsNotSuccess() throws InstantApiException {
@@ -72,7 +72,6 @@ class InstantApiResponseTest {
                                 "X-Custom-Header", List.of("value1", "value2")),
                         (k, v) -> true));
         InstantApiResponse apiResponse = InstantApiResponse.fromHttpResponse(httpResponse);
-        apiResponse = InstantApiResponse.fromHttpResponse(httpResponse);
         assertEquals(300, apiResponse.getStatusCode());
         assertFalse(apiResponse.isSuccess());
     }
@@ -80,7 +79,7 @@ class InstantApiResponseTest {
     /**
      * Tests that creating an InstantApiResponse with HTTP code 1xx is neither successful nor an exception.
      *
-     * @throws InstantApiException
+     * @throws InstantApiException if the response is unexpectedly treated as an error
      */
     @Test
     void testResponseHttpInformationalIsNotSuccess() throws InstantApiException {
