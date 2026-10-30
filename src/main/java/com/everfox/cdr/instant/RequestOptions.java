@@ -16,8 +16,14 @@ package com.everfox.cdr.instant;
 import com.everfox.cdr.MediaType;
 import com.everfox.cdr.Risk;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -32,7 +38,8 @@ public class RequestOptions {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     /** Report format options. */
     private final ReportOptions report;
-    // private ConversionOptions conversion; // not yet implemented
+    /** Format conversion options. */
+    private final ConversionOptions conversion;
     /** Image processing options. */
     private final ImagesOptions images;
     /** Redaction options. */
@@ -49,6 +56,7 @@ public class RequestOptions {
      * take precedence.
      *
      * @param format the report format
+     * @param conversion the format conversion options
      * @param images the image options
      * @param redactions the redaction options
      * @param allowedRisks the allowed risks
@@ -56,20 +64,28 @@ public class RequestOptions {
      */
     public RequestOptions(
             ReportFormat format,
+            ConversionOptions conversion,
             ImagesOptions images,
             RedactionOptions redactions,
             Set<String> allowedRisks,
             Set<String> deniedRisks) {
-        if (deniedRisks != null && allowedRisks != null) {
-            for (String risk : deniedRisks) {
-                allowedRisks.remove(risk);
-            }
-        }
         this.report = format != null ? new ReportOptions(format) : null;
+        this.conversion = conversion;
         this.images = images;
         this.redactions = redactions;
         this.allowedRisks = allowedRisks != null ? new HashSet<>(allowedRisks) : new HashSet<>();
         this.deniedRisks = deniedRisks != null ? new HashSet<>(deniedRisks) : new HashSet<>();
+        this.allowedRisks.removeAll(this.deniedRisks);
+    }
+
+    /**
+     * Returns the format conversion options.
+     *
+     * @return the format conversion options
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public ConversionOptions getConversion() {
+        return conversion;
     }
 
     /**
@@ -172,6 +188,44 @@ public class RequestOptions {
         @Override
         public String toString() {
             return getFormat();
+        }
+    }
+
+    /** Format conversion methods (tools). See https://cdr.everfox.com/documentation/format-conversion for details. */
+    public enum ConversionMethod {
+        /** The default set of conversion tools. Disable this to only use explicitly enabled tools. */
+        DEFAULT("default"),
+        /** Convert files using LibreOffice. */
+        LIBREOFFICE("libreoffice"),
+        /** Return the report in the response body instead of the transformed file. */
+        REPORT("report"),
+        /** Add the text extracted from supported documents to the report. */
+        TEXT_EXTRACTION("text-extraction");
+
+        /** The string representation of the conversion method. */
+        private final String method;
+
+        /**
+         * Creates a new conversion method with the specified string representation.
+         *
+         * @param method the string representation of the conversion method
+         */
+        ConversionMethod(String method) {
+            this.method = method;
+        }
+
+        /**
+         * Returns the string representation of the conversion method.
+         *
+         * @return the conversion method as a string
+         */
+        public String getMethod() {
+            return method;
+        }
+
+        @Override
+        public String toString() {
+            return getMethod();
         }
     }
 
@@ -316,6 +370,270 @@ public class RequestOptions {
         }
     }
 
+    /**
+     * Format conversion options.
+     *
+     * <p>Format conversion options specify the original format of a file to convert from, which conversion tools may be
+     * used, and which media type conversions are allowed. See https://cdr.everfox.com/documentation/format-conversion
+     * for details.
+     */
+    public static class ConversionOptions {
+        /** The media type of the original file. */
+        private final String fromMediaType;
+        /** The conversion methods to enable. */
+        private final Set<String> enabledMethods;
+        /** The conversion methods to disable. */
+        private final Set<String> disabledMethods;
+        /** The media type conversions to enable. */
+        private final List<MediaTypeConversion> enabledMediaTypes;
+        /** The media type conversions to disable. */
+        private final List<MediaTypeConversion> disabledMediaTypes;
+
+        /**
+         * Create a set of format conversion options.
+         *
+         * <p>Note that enabled methods and disabled methods are mutually exclusive. If a method is in both, the
+         * disabled methods will take precedence.
+         *
+         * @param fromMediaType the media type of the original file
+         * @param enabledMethods the conversion methods to enable
+         * @param disabledMethods the conversion methods to disable
+         * @param enabledMediaTypes the media type conversions to enable
+         * @param disabledMediaTypes the media type conversions to disable
+         */
+        public ConversionOptions(
+                String fromMediaType,
+                Set<String> enabledMethods,
+                Set<String> disabledMethods,
+                List<MediaTypeConversion> enabledMediaTypes,
+                List<MediaTypeConversion> disabledMediaTypes) {
+            this.fromMediaType = fromMediaType;
+            this.enabledMethods = enabledMethods != null ? new LinkedHashSet<>(enabledMethods) : new LinkedHashSet<>();
+            this.disabledMethods =
+                    disabledMethods != null ? new LinkedHashSet<>(disabledMethods) : new LinkedHashSet<>();
+            this.enabledMethods.removeAll(this.disabledMethods);
+            this.enabledMediaTypes = enabledMediaTypes != null ? List.copyOf(enabledMediaTypes) : List.of();
+            this.disabledMediaTypes = disabledMediaTypes != null ? List.copyOf(disabledMediaTypes) : List.of();
+        }
+
+        /**
+         * Returns the original file format as a map for JSON serialization.
+         *
+         * @return a map with "mime-type" key and the original media type, or null if no media type is specified
+         */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        public Map<String, String> getFrom() {
+            return fromMediaType != null ? Map.of("mime-type", fromMediaType) : null;
+        }
+
+        /**
+         * Returns the enabled and disabled conversion methods as a map for JSON serialization.
+         *
+         * @return a map with "enabled" and/or "disabled" keys, or null if no methods are specified
+         */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        public Map<String, Set<String>> getMethods() {
+            return enabledAndDisabled(enabledMethods, disabledMethods);
+        }
+
+        /**
+         * Returns the enabled and disabled media type conversions as a map for JSON serialization.
+         *
+         * @return a map with "enabled" and/or "disabled" keys, or null if no media type conversions are specified
+         */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @JsonProperty("mime_types")
+        public Map<String, List<MediaTypeConversion>> getMediaTypes() {
+            return enabledAndDisabled(enabledMediaTypes, disabledMediaTypes);
+        }
+
+        /**
+         * Combines enabled and disabled collections into a map, omitting empty collections.
+         *
+         * @param <T> the collection type
+         * @param enabled the enabled collection
+         * @param disabled the disabled collection
+         * @return a map with "enabled" and/or "disabled" keys, or null if both collections are empty
+         */
+        private static <T extends Collection<?>> Map<String, T> enabledAndDisabled(T enabled, T disabled) {
+            Map<String, T> map = new LinkedHashMap<>();
+            if (!enabled.isEmpty()) {
+                map.put("enabled", enabled);
+            }
+            if (!disabled.isEmpty()) {
+                map.put("disabled", disabled);
+            }
+            return map.isEmpty() ? null : map;
+        }
+
+        /**
+         * Creates a new instance of the Builder.
+         *
+         * @return a new instance of the Builder
+         */
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        /** Builder for creating {@link ConversionOptions} instances. */
+        public static class Builder {
+            /** The media type of the original file. */
+            private String fromMediaType;
+            /** The conversion methods to enable. */
+            private final Set<String> enabledMethods = new LinkedHashSet<>();
+            /** The conversion methods to disable. */
+            private final Set<String> disabledMethods = new LinkedHashSet<>();
+            /** The media type conversions to enable. */
+            private final List<MediaTypeConversion> enabledMediaTypes = new ArrayList<>();
+            /** The media type conversions to disable. */
+            private final List<MediaTypeConversion> disabledMediaTypes = new ArrayList<>();
+
+            /** Creates a new instance of the Builder. */
+            public Builder() {}
+
+            /**
+             * Sets the media type of the original file to convert from.
+             *
+             * @param mediaType the media type of the original file
+             * @return the builder instance
+             */
+            public Builder from(MediaType mediaType) {
+                return from(mediaType.getMediaType());
+            }
+
+            /**
+             * Sets the media type of the original file to convert from.
+             *
+             * @param mediaType the media type of the original file
+             * @return the builder instance
+             */
+            public Builder from(String mediaType) {
+                this.fromMediaType = mediaType;
+                return this;
+            }
+
+            /**
+             * Adds conversion methods to enable, in order of priority.
+             *
+             * @param methods the conversion methods to enable
+             * @return the builder instance
+             */
+            public Builder enableMethods(ConversionMethod... methods) {
+                Arrays.stream(methods).map(ConversionMethod::getMethod).forEach(enabledMethods::add);
+                return this;
+            }
+
+            /**
+             * Adds conversion methods to disable.
+             *
+             * @param methods the conversion methods to disable
+             * @return the builder instance
+             */
+            public Builder disableMethods(ConversionMethod... methods) {
+                Arrays.stream(methods).map(ConversionMethod::getMethod).forEach(disabledMethods::add);
+                return this;
+            }
+
+            /**
+             * Adds a media type conversion to enable.
+             *
+             * @param from the media type to convert from
+             * @param to the media type to convert to
+             * @return the builder instance
+             */
+            public Builder enableMediaTypeConversion(MediaType from, MediaType to) {
+                return enableMediaTypeConversion(from.getMediaType(), to.getMediaType());
+            }
+
+            /**
+             * Adds a media type conversion to enable.
+             *
+             * @param from the media type to convert from
+             * @param to the media type to convert to
+             * @return the builder instance
+             */
+            public Builder enableMediaTypeConversion(String from, String to) {
+                enabledMediaTypes.add(new MediaTypeConversion(from, to));
+                return this;
+            }
+
+            /**
+             * Adds a media type conversion to disable.
+             *
+             * @param from the media type to convert from
+             * @param to the media type to convert to
+             * @return the builder instance
+             */
+            public Builder disableMediaTypeConversion(MediaType from, MediaType to) {
+                return disableMediaTypeConversion(from.getMediaType(), to.getMediaType());
+            }
+
+            /**
+             * Adds a media type conversion to disable.
+             *
+             * @param from the media type to convert from
+             * @param to the media type to convert to
+             * @return the builder instance
+             */
+            public Builder disableMediaTypeConversion(String from, String to) {
+                disabledMediaTypes.add(new MediaTypeConversion(from, to));
+                return this;
+            }
+
+            /**
+             * Builds the {@link ConversionOptions} instance with the specified configurations.
+             *
+             * @return a new instance of ConversionOptions
+             * @throws IllegalArgumentException if any conversion method is both enabled and disabled
+             */
+            public ConversionOptions build() {
+                requireDisjoint(
+                        enabledMethods, disabledMethods, "Conversion methods cannot be both enabled and disabled");
+                return new ConversionOptions(
+                        fromMediaType, enabledMethods, disabledMethods, enabledMediaTypes, disabledMediaTypes);
+            }
+        }
+    }
+
+    /** A conversion from one media type to another. */
+    public static class MediaTypeConversion {
+        /** The media type to convert from. */
+        private final String from;
+        /** The media type to convert to. */
+        private final String to;
+
+        /**
+         * Create a media type conversion.
+         *
+         * @param from the media type to convert from
+         * @param to the media type to convert to
+         */
+        public MediaTypeConversion(String from, String to) {
+            this.from = from;
+            this.to = to;
+        }
+
+        /**
+         * Returns the media type to convert from.
+         *
+         * @return the media type to convert from
+         */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        public String getFrom() {
+            return from;
+        }
+
+        /**
+         * Returns the media type to convert to.
+         *
+         * @return the media type to convert to
+         */
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        public String getTo() {
+            return to;
+        }
+    }
+
     /** Builder for creating {@link RequestOptions} instances. */
     public static class Builder {
 
@@ -325,6 +643,8 @@ public class RequestOptions {
         private Set<String> deniedRisks = new HashSet<>();
         /** Report format for the request options. */
         private ReportFormat reportFormat;
+        /** Format conversion options for the request options. */
+        private ConversionOptions conversionOptions;
         /** Image options for the request options. */
         private ImagesOptions imagesOptions;
         /** Redaction options for the request options. */
@@ -341,6 +661,17 @@ public class RequestOptions {
          */
         public Builder reportFormat(ReportFormat format) {
             this.reportFormat = format;
+            return this;
+        }
+
+        /**
+         * Sets the format conversion options for the request options.
+         *
+         * @param conversionOptions the format conversion options
+         * @return the builder instance
+         */
+        public Builder conversionOptions(ConversionOptions conversionOptions) {
+            this.conversionOptions = conversionOptions;
             return this;
         }
 
@@ -392,9 +723,12 @@ public class RequestOptions {
          * Builds the {@link RequestOptions} instance with the specified configurations.
          *
          * @return a new instance of RequestOptions
+         * @throws IllegalArgumentException if any risk is both allowed and denied
          */
         public RequestOptions build() {
-            return new RequestOptions(reportFormat, imagesOptions, redactionOptions, allowedRisks, deniedRisks);
+            requireDisjoint(allowedRisks, deniedRisks, "Risks cannot be both allowed and denied");
+            return new RequestOptions(
+                    reportFormat, conversionOptions, imagesOptions, redactionOptions, allowedRisks, deniedRisks);
         }
     }
 
@@ -405,5 +739,21 @@ public class RequestOptions {
      */
     public static Builder builder() {
         return new Builder();
+    }
+
+    /**
+     * Ensures that two sets have no elements in common.
+     *
+     * @param first the first set
+     * @param second the second set
+     * @param message the exception message, to which the common elements are appended
+     * @throws IllegalArgumentException if the sets have any elements in common
+     */
+    private static void requireDisjoint(Set<String> first, Set<String> second, String message) {
+        Set<String> common = new LinkedHashSet<>(first);
+        common.retainAll(second);
+        if (!common.isEmpty()) {
+            throw new IllegalArgumentException(message + ": " + common);
+        }
     }
 }

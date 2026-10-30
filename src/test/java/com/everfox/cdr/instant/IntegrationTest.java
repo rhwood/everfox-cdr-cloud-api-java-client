@@ -25,6 +25,7 @@ import java.io.UncheckedIOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -64,6 +65,8 @@ class IntegrationTest {
     private static final String API_REGION_ENV = "CDR_INSTANT_API_REGION";
     /** Simple PDF content for testing (minimal valid PDF) */
     private static final byte[] PDF_TEST_DATA = loadResource("test.pdf");
+    /** Simple DOCX content for testing (minimal valid Word document containing "This is a test.") */
+    private static final byte[] DOCX_TEST_DATA = loadResource("test.docx");
     /** Simple JPEG content for testing (minimal valid JPEG) */
     private static final byte[] JPEG_TEST_DATA = loadResource("test.jpg");
     /** ZIP archive for testing that cannot be processed unless unsupported content is redacted */
@@ -277,7 +280,7 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadWithOptions() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            RequestOptions options = new RequestOptions(RequestOptions.ReportFormat.FULL, null, null, null, null);
+            RequestOptions options = new RequestOptions(RequestOptions.ReportFormat.FULL, null, null, null, null, null);
 
             InstantApiRequest request =
                     InstantApiRequest.create(PDF_TEST_DATA, "application/pdf", "application/pdf", options);
@@ -339,7 +342,7 @@ class IntegrationTest {
     void testUploadWithImageQualityPreserveEmptyArray() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
             RequestOptions.ImagesOptions imagesOptions = new RequestOptions.ImagesOptions(new String[0]);
-            RequestOptions options = new RequestOptions(null, imagesOptions, null, null, null);
+            RequestOptions options = new RequestOptions(null, null, imagesOptions, null, null, null);
 
             InstantApiRequest request =
                     InstantApiRequest.create(JPEG_TEST_DATA, MediaType.IMAGE_JPEG, MediaType.IMAGE_JPEG, options);
@@ -414,7 +417,7 @@ class IntegrationTest {
             // Create a file larger than 4.5 MB
             byte[] largeFile = new byte[5 * 1024 * 1024]; // 5 MB
             InstantApiRequest request =
-                    InstantApiRequest.create(largeFile, "application/octet-stream", "application/octet-stream");
+                    InstantApiRequest.create(largeFile, MediaType.OCTET_STREAM, MediaType.OCTET_STREAM);
 
             InstantApiException exception = assertThrows(
                     InstantApiException.class,
@@ -564,7 +567,7 @@ class IntegrationTest {
     void testUploadZipFileWithRedaction() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
             RequestOptions options = RequestOptions.builder()
-                    .redactionOptions(new RequestOptions.RedactionOptions(".txt", "text/plain", "Redacted"))
+                    .redactionOptions(new RequestOptions.RedactionOptions(".txt", MediaType.TEXT_PLAIN, "Redacted"))
                     .build();
             InstantApiRequest request = InstantApiRequest.create(ZIP_TEST_DATA, MediaType.ZIP, MediaType.ZIP, options);
 
@@ -574,6 +577,87 @@ class IntegrationTest {
             assertTrue(response.isSuccess());
             assertEquals(200, response.getStatusCode());
             assertEquals(Map.of("minimal.json.txt", "Redacted"), readZipEntries(response.getBody()));
+        }
+    }
+
+    /**
+     * Tests uploading a PDF file to the Instant API using automatic format conversion, which returns a PDF file since
+     * PDF is a supported format.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws InterruptedException if the operation is interrupted
+     * @throws InstantApiException if the API returns an error response
+     */
+    @Test
+    @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
+    void testUploadPdfFileWithAutomaticConversion() throws IOException, InterruptedException, InstantApiException {
+        try (InstantApiClient client = createClient()) {
+            RequestOptions options = RequestOptions.builder()
+                    .conversionOptions(RequestOptions.ConversionOptions.builder()
+                            .from(MediaType.PDF)
+                            .build())
+                    .build();
+            InstantApiRequest request =
+                    InstantApiRequest.create(PDF_TEST_DATA, MediaType.OCTET_STREAM, MediaType.PDF, options);
+
+            InstantApiResponse response = client.upload(request);
+
+            assertNotNull(response);
+            assertTrue(response.isSuccess());
+            assertEquals(200, response.getStatusCode());
+            assertEquals("%PDF-", new String(response.getBody(), 0, 5, StandardCharsets.US_ASCII));
+            assertEquals(
+                    MediaType.PDF.getMediaType(),
+                    MAPPER.readTree(response.getReport())
+                            .get("structure")
+                            .get(0)
+                            .get("details")
+                            .get("type")
+                            .asString());
+        }
+    }
+
+    /**
+     * Tests uploading a DOCX file to the Instant API with the text extraction and report conversion methods, which
+     * returns the report containing the document text instead of the transformed file.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws InterruptedException if the operation is interrupted
+     * @throws InstantApiException if the API returns an error response
+     */
+    @Test
+    @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
+    void testUploadDocxFileWithTextExtraction() throws IOException, InterruptedException, InstantApiException {
+        try (InstantApiClient client = createClient()) {
+            RequestOptions options = RequestOptions.builder()
+                    .conversionOptions(RequestOptions.ConversionOptions.builder()
+                            .enableMethods(
+                                    RequestOptions.ConversionMethod.TEXT_EXTRACTION,
+                                    RequestOptions.ConversionMethod.REPORT)
+                            .build())
+                    .build();
+            InstantApiRequest request = InstantApiRequest.create(
+                    DOCX_TEST_DATA,
+                    MediaType.OPENXMLFORMATS_OFFICEDOCUMENT_WORDPROCESSINGML_DOCUMENT,
+                    MediaType.OPENXMLFORMATS_OFFICEDOCUMENT_WORDPROCESSINGML_DOCUMENT,
+                    options);
+
+            InstantApiResponse response = client.upload(request);
+
+            assertNotNull(response);
+            assertTrue(response.isSuccess());
+            assertEquals(200, response.getStatusCode());
+            JsonNode parts = MAPPER.readTree(response.getBody())
+                    .get("structure")
+                    .get(0)
+                    .get("previous")
+                    .get("textExtraction")
+                    .get("parts");
+            List<String> strings = parts.valueStream()
+                    .flatMap(part -> part.get("strings").valueStream())
+                    .map(JsonNode::asString)
+                    .toList();
+            assertEquals(List.of("This is a test."), strings);
         }
     }
 

@@ -15,18 +15,24 @@ package com.everfox.cdr;
 
 /** Available content types for file uploads and downloads. */
 public enum MediaType {
-    /** Content type for Adobe Illustrator files. */
+    /** Content type for Windows Enhanced Metafile files. */
     EMF("application/emf"),
     /** Content type for JSON files. */
     JSON("application/json"),
     /** Content type for MP4 files. */
     MP4("application/mp4"),
+    /** Content type for Microsoft Outlook TNEF (winmail.dat) files. */
+    MS_TNEF("application/ms-tnef"),
     /** Content type for Microsoft Word documents. */
     MSWORD("application/msword"),
+    /** Content type for arbitrary binary data, used to request automatic format conversion. */
+    OCTET_STREAM("application/octet-stream"),
     /** Content type for PDF files. */
     PDF("application/pdf"),
     /** Content type for RTF files. */
     RTF("application/rtf"),
+    /** Content type for Microsoft Excel 97 spreadsheets. */
+    MS_EXCEL("application/vnd.ms-excel"),
     /** Content type for Microsoft Excel addins with macros. */
     MS_EXCEL_ADDIN_MACROENABLED_12("application/vnd.ms-excel.addin.macroenabled.12"),
     /** Content type for Microsoft Excel sheets with binary macros. */
@@ -94,7 +100,9 @@ public enum MediaType {
     ZIP("application/zip"),
     /** Content type for MP4 audio files. */
     AUDIO_MP4("audio/mp4"),
-    /** Content type for MPEG audio files. */
+    /** Content type for MPEG (MP3) audio files. */
+    AUDIO_MPEG("audio/mpeg"),
+    /** Content type for MPEG-4 (M4A) audio files. */
     AUDIO_X_M4A("audio/x-m4a"),
     /** Content type for WAV audio files. */
     AUDIO_X_WAV("audio/x-wav"),
@@ -126,8 +134,12 @@ public enum MediaType {
     IMAGE_X_MS_BMP("image/x-ms-bmp"),
     /** Content type for RFC822 messages. */
     MESSAGE_RFC822("message/rfc822"),
+    /** Content type for CSS text files. */
+    TEXT_CSS("text/css"),
     /** Content type for CSV text files. */
     TEXT_CSV("text/csv"),
+    /** Content type for plain text files. */
+    TEXT_PLAIN("text/plain"),
     /** Content type for RTF text files. */
     TEXT_RTF("text/rtf"),
     /** Content type for vCard text files. */
