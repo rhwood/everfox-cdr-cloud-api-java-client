@@ -395,4 +395,13 @@ public class RequestOptions {
             return new RequestOptions(reportFormat, imagesOptions, redactionOptions, allowedRisks, deniedRisks);
         }
     }
+
+    /**
+     * Creates a new instance of the Builder.
+     *
+     * @return a new instance of the Builder
+     */
+    public static Builder builder() {
+        return new Builder();
+    }
 }

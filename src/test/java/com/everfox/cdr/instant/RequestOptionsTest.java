@@ -50,7 +50,9 @@ class RequestOptionsTest {
      */
     @Test
     void testRequestOptionsFullReport() {
-        RequestOptions options = new RequestOptions(RequestOptions.ReportFormat.FULL, null, null, null, null);
+        RequestOptions options = RequestOptions.builder()
+                .reportFormat(RequestOptions.ReportFormat.FULL)
+                .build();
 
         String json = options.toJson();
         assertNotNull(json);
@@ -64,7 +66,7 @@ class RequestOptionsTest {
     @Test
     void testRequestOptionsBuilderAllowGifStenography() {
         RequestOptions options =
-                new RequestOptions.Builder().allowRisks(Risk.STEG_IMAGE_GIF).build();
+                RequestOptions.builder().allowRisks(Risk.STEG_IMAGE_GIF).build();
 
         String json = options.toJson();
         assertNotNull(json);
@@ -78,7 +80,7 @@ class RequestOptionsTest {
     @Test
     void testRequestOptionsBuilderDenyGifStenography() {
         RequestOptions options =
-                new RequestOptions.Builder().denyRisks(Risk.STEG_IMAGE_GIF).build();
+                RequestOptions.builder().denyRisks(Risk.STEG_IMAGE_GIF).build();
 
         String json = options.toJson();
         assertNotNull(json);
@@ -115,7 +117,7 @@ class RequestOptionsTest {
     @Test
     void testRequestOptionsNoImagesOptions() {
         RequestOptions.ImagesOptions images = new RequestOptions.ImagesOptions(new String[0]);
-        RequestOptions options = new RequestOptions(null, images, null, null, null);
+        RequestOptions options = RequestOptions.builder().imagesOptions(images).build();
 
         String json = options.toJson();
         assertNotNull(json);
@@ -128,7 +130,7 @@ class RequestOptionsTest {
      */
     @Test
     void testRequestOptionsRedationOptionsMediaType() {
-        RequestOptions options = new RequestOptions.Builder()
+        RequestOptions options = RequestOptions.builder()
                 .redactionOptions(new RequestOptions.RedactionOptions("txt", MediaType.TEXT_XML, "Redacted"))
                 .build();
 
@@ -143,7 +145,7 @@ class RequestOptionsTest {
      */
     @Test
     void testRequestOptionsRedationOptionsString() {
-        RequestOptions options = new RequestOptions.Builder()
+        RequestOptions options = RequestOptions.builder()
                 .redactionOptions(new RequestOptions.RedactionOptions("txt", "text/plain", "Redacted"))
                 .build();
 
@@ -187,7 +189,7 @@ class RequestOptionsTest {
      */
     @Test
     void testRisksAreExclusive() {
-        RequestOptions options = new RequestOptions.Builder()
+        RequestOptions options = RequestOptions.builder()
                 .allowRisks(Risk.EXE, Risk.POLY)
                 .denyRisks(Risk.POLY, Risk.STEG)
                 .build();

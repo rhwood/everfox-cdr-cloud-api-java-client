@@ -250,7 +250,7 @@ class IntegrationTest {
     void testUploadJsonFilePartialRisks() {
         try (InstantApiClient client = createClient()) {
             RequestOptions options =
-                    new RequestOptions.Builder().allowRisks(Risk.POLY_TEXT_JSON).build();
+                    RequestOptions.builder().allowRisks(Risk.POLY_TEXT_JSON).build();
             InstantApiRequest request =
                     InstantApiRequest.create(JSON_TEST_DATA, MediaType.JSON, MediaType.JSON, options);
 
@@ -280,7 +280,7 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadJsonFileRequiredRisks() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            RequestOptions options = new RequestOptions.Builder()
+            RequestOptions options = RequestOptions.builder()
                     .allowRisks(Risk.POLY_TEXT_JSON, Risk.STRUCTURED_NO_SCHEMA_JSON)
                     .build();
             InstantApiRequest request =
@@ -301,7 +301,7 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadInvalidJsonFile() {
         try (InstantApiClient client = createClient()) {
-            RequestOptions options = new RequestOptions.Builder()
+            RequestOptions options = RequestOptions.builder()
                     .allowRisks(Risk.POLY_TEXT_JSON, Risk.STRUCTURED_NO_SCHEMA_JSON)
                     .build();
             InstantApiRequest request =
@@ -388,7 +388,7 @@ class IntegrationTest {
     void testUploadWithImageQualityPreserveJpeg() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
             RequestOptions.ImagesOptions imagesOptions = new RequestOptions.ImagesOptions(MediaType.IMAGE_JPEG);
-            RequestOptions options = new RequestOptions.Builder()
+            RequestOptions options = RequestOptions.builder()
                     .imagesOptions(imagesOptions)
                     .allowRisks(Risk.STEG_IMAGE_JPEG)
                     .build();
@@ -572,7 +572,7 @@ class IntegrationTest {
         try (InstantApiClient client = createClient()) {
             RequestOptions.ImagesOptions images =
                     new RequestOptions.ImagesOptions(MediaType.IMAGE_JPEG, MediaType.IMAGE_PNG);
-            RequestOptions options = new RequestOptions.Builder()
+            RequestOptions options = RequestOptions.builder()
                     .allowRisks(Risk.EXE, Risk.EXE_MACRO, Risk.STEG, Risk.POLY)
                     // Configure reporting
                     .reportFormat(RequestOptions.ReportFormat.FULL)
