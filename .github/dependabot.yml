@@ -3,11 +3,15 @@ updates:
 - package-ecosystem: maven
   directory: "/"
   schedule:
-    interval: daily
+    interval: monthly
+  cooldown:
+    default-days: 7
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule:
     interval: monthly
+  cooldown:
+    default-days: 7
   groups:
     codeql:
       patterns:
