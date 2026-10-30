@@ -26,6 +26,14 @@ limitations under the License.
     <name>Everfox CDR Instant API Client</name>
     <description>Java client library for Everfox CDR Instant API</description>
 
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>
@@ -158,6 +166,27 @@ limitations under the License.
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.spdx</groupId>
+                <artifactId>spdx-maven-plugin</artifactId>
+                <version>1.0.4</version>
+                <executions>
+                    <!-- Generates an SPDX SBOM and attaches it as a build artifact -->
+                    <execution>
+                        <id>build-spdx</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>createSPDX</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <copyrightText>Copyright 2026 Everfox</copyrightText>
+                    <!-- Only describe what ships to consumers -->
+                    <includeTestScope>false</includeTestScope>
+                    <generatePurls>true</generatePurls>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
