@@ -20,7 +20,14 @@ import com.everfox.cdr.Region;
 import com.everfox.cdr.Risk;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import tools.jackson.databind.JsonNode;
@@ -56,115 +63,11 @@ class IntegrationTest {
     /** Environment variable name for the API region. */
     private static final String API_REGION_ENV = "CDR_INSTANT_API_REGION";
     /** Simple PDF content for testing (minimal valid PDF) */
-    private static final byte[] PDF_TEST_DATA = ("%PDF-1.4\n" + "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
-                    + "2 0 obj<</Type/Pages/Count 1/Kids[3 0 R]>>endobj\n"
-                    + "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Contents 4 0 R>>endobj\n"
-                    + "4 0 obj<</Length 44>>stream\n"
-                    + "BT /F1 12 Tf 100 700 Td (Test Document) Tj ET\n"
-                    + "endstream endobj\n"
-                    + "xref\n0 5\n0000000000 65535 f\n0000000009 00000 n\n0000000056 00000 n\n"
-                    + "0000000115 00000 n\n0000000214 00000 n\ntrailer<</Size 5/Root 1 0 R>>\n"
-                    + "startxref\n307\n%%EOF")
-            .getBytes();
+    private static final byte[] PDF_TEST_DATA = loadResource("test.pdf");
     /** Simple JPEG content for testing (minimal valid JPEG) */
-    private static final byte[] JPEG_TEST_DATA = new byte[] {
-        (byte) 0xff, (byte) 0xd8, (byte) 0xff, (byte) 0xe0, (byte) 0x00, (byte) 0x10, (byte) 0x4a, (byte) 0x46,
-        (byte) 0x49, (byte) 0x46, (byte) 0x00, (byte) 0x01, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x01,
-        (byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0xff, (byte) 0xe1, (byte) 0x00, (byte) 0x82,
-        (byte) 0x45, (byte) 0x78, (byte) 0x69, (byte) 0x66, (byte) 0x00, (byte) 0x00, (byte) 0x4d, (byte) 0x4d,
-        (byte) 0x00, (byte) 0x2a, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x08, (byte) 0x00, (byte) 0x04,
-        (byte) 0x01, (byte) 0x1a, (byte) 0x00, (byte) 0x05, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x01,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x3e, (byte) 0x01, (byte) 0x1b, (byte) 0x00, (byte) 0x05,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x46,
-        (byte) 0x01, (byte) 0x31, (byte) 0x00, (byte) 0x02, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x18,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x4e, (byte) 0x01, (byte) 0x32, (byte) 0x00, (byte) 0x02,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x14, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x66,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x48,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x48,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x46, (byte) 0x6c, (byte) 0x79, (byte) 0x69,
-        (byte) 0x6e, (byte) 0x67, (byte) 0x20, (byte) 0x4d, (byte) 0x65, (byte) 0x61, (byte) 0x74, (byte) 0x20,
-        (byte) 0x41, (byte) 0x63, (byte) 0x6f, (byte) 0x72, (byte) 0x6e, (byte) 0x20, (byte) 0x37, (byte) 0x2e,
-        (byte) 0x34, (byte) 0x2e, (byte) 0x36, (byte) 0x00, (byte) 0x32, (byte) 0x30, (byte) 0x32, (byte) 0x36,
-        (byte) 0x3a, (byte) 0x31, (byte) 0x30, (byte) 0x3a, (byte) 0x30, (byte) 0x31, (byte) 0x20, (byte) 0x31,
-        (byte) 0x33, (byte) 0x3a, (byte) 0x31, (byte) 0x37, (byte) 0x3a, (byte) 0x31, (byte) 0x38, (byte) 0x00,
-        (byte) 0xff, (byte) 0xdb, (byte) 0x00, (byte) 0x43, (byte) 0x00, (byte) 0x01, (byte) 0x01, (byte) 0x01,
-        (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01,
-        (byte) 0x01, (byte) 0x01, (byte) 0x02, (byte) 0x02, (byte) 0x03, (byte) 0x02, (byte) 0x02, (byte) 0x02,
-        (byte) 0x02, (byte) 0x02, (byte) 0x04, (byte) 0x03, (byte) 0x03, (byte) 0x02, (byte) 0x03, (byte) 0x05,
-        (byte) 0x04, (byte) 0x05, (byte) 0x05, (byte) 0x05, (byte) 0x04, (byte) 0x04, (byte) 0x04, (byte) 0x05,
-        (byte) 0x06, (byte) 0x07, (byte) 0x06, (byte) 0x05, (byte) 0x05, (byte) 0x07, (byte) 0x06, (byte) 0x04,
-        (byte) 0x04, (byte) 0x06, (byte) 0x09, (byte) 0x06, (byte) 0x07, (byte) 0x08, (byte) 0x08, (byte) 0x08,
-        (byte) 0x08, (byte) 0x08, (byte) 0x05, (byte) 0x06, (byte) 0x09, (byte) 0x0a, (byte) 0x09, (byte) 0x08,
-        (byte) 0x0a, (byte) 0x07, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0xff, (byte) 0xdb, (byte) 0x00,
-        (byte) 0x43, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x02, (byte) 0x02, (byte) 0x02,
-        (byte) 0x04, (byte) 0x02, (byte) 0x02, (byte) 0x04, (byte) 0x08, (byte) 0x05, (byte) 0x04, (byte) 0x05,
-        (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08,
-        (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08,
-        (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08,
-        (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08,
-        (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08,
-        (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08, (byte) 0x08,
-        (byte) 0x08, (byte) 0x08, (byte) 0xff, (byte) 0xc0, (byte) 0x00, (byte) 0x11, (byte) 0x08, (byte) 0x00,
-        (byte) 0x0a, (byte) 0x00, (byte) 0x0a, (byte) 0x03, (byte) 0x01, (byte) 0x11, (byte) 0x00, (byte) 0x02,
-        (byte) 0x11, (byte) 0x01, (byte) 0x03, (byte) 0x11, (byte) 0x01, (byte) 0xff, (byte) 0xc4, (byte) 0x00,
-        (byte) 0x1f, (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x05, (byte) 0x01, (byte) 0x01, (byte) 0x01,
-        (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x02, (byte) 0x03, (byte) 0x04, (byte) 0x05,
-        (byte) 0x06, (byte) 0x07, (byte) 0x08, (byte) 0x09, (byte) 0x0a, (byte) 0x0b, (byte) 0xff, (byte) 0xc4,
-        (byte) 0x00, (byte) 0xb5, (byte) 0x10, (byte) 0x00, (byte) 0x02, (byte) 0x01, (byte) 0x03, (byte) 0x03,
-        (byte) 0x02, (byte) 0x04, (byte) 0x03, (byte) 0x05, (byte) 0x05, (byte) 0x04, (byte) 0x04, (byte) 0x00,
-        (byte) 0x00, (byte) 0x01, (byte) 0x7d, (byte) 0x01, (byte) 0x02, (byte) 0x03, (byte) 0x00, (byte) 0x04,
-        (byte) 0x11, (byte) 0x05, (byte) 0x12, (byte) 0x21, (byte) 0x31, (byte) 0x41, (byte) 0x06, (byte) 0x13,
-        (byte) 0x51, (byte) 0x61, (byte) 0x07, (byte) 0x22, (byte) 0x71, (byte) 0x14, (byte) 0x32, (byte) 0x81,
-        (byte) 0x91, (byte) 0xa1, (byte) 0x08, (byte) 0x23, (byte) 0x42, (byte) 0xb1, (byte) 0xc1, (byte) 0x15,
-        (byte) 0x52, (byte) 0xd1, (byte) 0xf0, (byte) 0x24, (byte) 0x33, (byte) 0x62, (byte) 0x72, (byte) 0x82,
-        (byte) 0x09, (byte) 0x0a, (byte) 0x16, (byte) 0x17, (byte) 0x18, (byte) 0x19, (byte) 0x1a, (byte) 0x25,
-        (byte) 0x26, (byte) 0x27, (byte) 0x28, (byte) 0x29, (byte) 0x2a, (byte) 0x34, (byte) 0x35, (byte) 0x36,
-        (byte) 0x37, (byte) 0x38, (byte) 0x39, (byte) 0x3a, (byte) 0x43, (byte) 0x44, (byte) 0x45, (byte) 0x46,
-        (byte) 0x47, (byte) 0x48, (byte) 0x49, (byte) 0x4a, (byte) 0x53, (byte) 0x54, (byte) 0x55, (byte) 0x56,
-        (byte) 0x57, (byte) 0x58, (byte) 0x59, (byte) 0x5a, (byte) 0x63, (byte) 0x64, (byte) 0x65, (byte) 0x66,
-        (byte) 0x67, (byte) 0x68, (byte) 0x69, (byte) 0x6a, (byte) 0x73, (byte) 0x74, (byte) 0x75, (byte) 0x76,
-        (byte) 0x77, (byte) 0x78, (byte) 0x79, (byte) 0x7a, (byte) 0x83, (byte) 0x84, (byte) 0x85, (byte) 0x86,
-        (byte) 0x87, (byte) 0x88, (byte) 0x89, (byte) 0x8a, (byte) 0x92, (byte) 0x93, (byte) 0x94, (byte) 0x95,
-        (byte) 0x96, (byte) 0x97, (byte) 0x98, (byte) 0x99, (byte) 0x9a, (byte) 0xa2, (byte) 0xa3, (byte) 0xa4,
-        (byte) 0xa5, (byte) 0xa6, (byte) 0xa7, (byte) 0xa8, (byte) 0xa9, (byte) 0xaa, (byte) 0xb2, (byte) 0xb3,
-        (byte) 0xb4, (byte) 0xb5, (byte) 0xb6, (byte) 0xb7, (byte) 0xb8, (byte) 0xb9, (byte) 0xba, (byte) 0xc2,
-        (byte) 0xc3, (byte) 0xc4, (byte) 0xc5, (byte) 0xc6, (byte) 0xc7, (byte) 0xc8, (byte) 0xc9, (byte) 0xca,
-        (byte) 0xd2, (byte) 0xd3, (byte) 0xd4, (byte) 0xd5, (byte) 0xd6, (byte) 0xd7, (byte) 0xd8, (byte) 0xd9,
-        (byte) 0xda, (byte) 0xe1, (byte) 0xe2, (byte) 0xe3, (byte) 0xe4, (byte) 0xe5, (byte) 0xe6, (byte) 0xe7,
-        (byte) 0xe8, (byte) 0xe9, (byte) 0xea, (byte) 0xf1, (byte) 0xf2, (byte) 0xf3, (byte) 0xf4, (byte) 0xf5,
-        (byte) 0xf6, (byte) 0xf7, (byte) 0xf8, (byte) 0xf9, (byte) 0xfa, (byte) 0xff, (byte) 0xc4, (byte) 0x00,
-        (byte) 0x1f, (byte) 0x01, (byte) 0x00, (byte) 0x03, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01,
-        (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x02, (byte) 0x03, (byte) 0x04, (byte) 0x05,
-        (byte) 0x06, (byte) 0x07, (byte) 0x08, (byte) 0x09, (byte) 0x0a, (byte) 0x0b, (byte) 0xff, (byte) 0xc4,
-        (byte) 0x00, (byte) 0xb5, (byte) 0x11, (byte) 0x00, (byte) 0x02, (byte) 0x01, (byte) 0x02, (byte) 0x04,
-        (byte) 0x04, (byte) 0x03, (byte) 0x04, (byte) 0x07, (byte) 0x05, (byte) 0x04, (byte) 0x04, (byte) 0x00,
-        (byte) 0x01, (byte) 0x02, (byte) 0x77, (byte) 0x00, (byte) 0x01, (byte) 0x02, (byte) 0x03, (byte) 0x11,
-        (byte) 0x04, (byte) 0x05, (byte) 0x21, (byte) 0x31, (byte) 0x06, (byte) 0x12, (byte) 0x41, (byte) 0x51,
-        (byte) 0x07, (byte) 0x61, (byte) 0x71, (byte) 0x13, (byte) 0x22, (byte) 0x32, (byte) 0x81, (byte) 0x08,
-        (byte) 0x14, (byte) 0x42, (byte) 0x91, (byte) 0xa1, (byte) 0xb1, (byte) 0xc1, (byte) 0x09, (byte) 0x23,
-        (byte) 0x33, (byte) 0x52, (byte) 0xf0, (byte) 0x15, (byte) 0x62, (byte) 0x72, (byte) 0xd1, (byte) 0x0a,
-        (byte) 0x16, (byte) 0x24, (byte) 0x34, (byte) 0xe1, (byte) 0x25, (byte) 0xf1, (byte) 0x17, (byte) 0x18,
-        (byte) 0x19, (byte) 0x1a, (byte) 0x26, (byte) 0x27, (byte) 0x28, (byte) 0x29, (byte) 0x2a, (byte) 0x35,
-        (byte) 0x36, (byte) 0x37, (byte) 0x38, (byte) 0x39, (byte) 0x3a, (byte) 0x43, (byte) 0x44, (byte) 0x45,
-        (byte) 0x46, (byte) 0x47, (byte) 0x48, (byte) 0x49, (byte) 0x4a, (byte) 0x53, (byte) 0x54, (byte) 0x55,
-        (byte) 0x56, (byte) 0x57, (byte) 0x58, (byte) 0x59, (byte) 0x5a, (byte) 0x63, (byte) 0x64, (byte) 0x65,
-        (byte) 0x66, (byte) 0x67, (byte) 0x68, (byte) 0x69, (byte) 0x6a, (byte) 0x73, (byte) 0x74, (byte) 0x75,
-        (byte) 0x76, (byte) 0x77, (byte) 0x78, (byte) 0x79, (byte) 0x7a, (byte) 0x82, (byte) 0x83, (byte) 0x84,
-        (byte) 0x85, (byte) 0x86, (byte) 0x87, (byte) 0x88, (byte) 0x89, (byte) 0x8a, (byte) 0x92, (byte) 0x93,
-        (byte) 0x94, (byte) 0x95, (byte) 0x96, (byte) 0x97, (byte) 0x98, (byte) 0x99, (byte) 0x9a, (byte) 0xa2,
-        (byte) 0xa3, (byte) 0xa4, (byte) 0xa5, (byte) 0xa6, (byte) 0xa7, (byte) 0xa8, (byte) 0xa9, (byte) 0xaa,
-        (byte) 0xb2, (byte) 0xb3, (byte) 0xb4, (byte) 0xb5, (byte) 0xb6, (byte) 0xb7, (byte) 0xb8, (byte) 0xb9,
-        (byte) 0xba, (byte) 0xc2, (byte) 0xc3, (byte) 0xc4, (byte) 0xc5, (byte) 0xc6, (byte) 0xc7, (byte) 0xc8,
-        (byte) 0xc9, (byte) 0xca, (byte) 0xd2, (byte) 0xd3, (byte) 0xd4, (byte) 0xd5, (byte) 0xd6, (byte) 0xd7,
-        (byte) 0xd8, (byte) 0xd9, (byte) 0xda, (byte) 0xe2, (byte) 0xe3, (byte) 0xe4, (byte) 0xe5, (byte) 0xe6,
-        (byte) 0xe7, (byte) 0xe8, (byte) 0xe9, (byte) 0xea, (byte) 0xf2, (byte) 0xf3, (byte) 0xf4, (byte) 0xf5,
-        (byte) 0xf6, (byte) 0xf7, (byte) 0xf8, (byte) 0xf9, (byte) 0xfa, (byte) 0xff, (byte) 0xda, (byte) 0x00,
-        (byte) 0x0c, (byte) 0x03, (byte) 0x01, (byte) 0x00, (byte) 0x02, (byte) 0x11, (byte) 0x03, (byte) 0x11,
-        (byte) 0x00, (byte) 0x3f, (byte) 0x00, (byte) 0xfe, (byte) 0xfe, (byte) 0x28, (byte) 0x00, (byte) 0xa0,
-        (byte) 0x02, (byte) 0x80, (byte) 0x0a, (byte) 0x00, (byte) 0xff, (byte) 0xd9
-    };
+    private static final byte[] JPEG_TEST_DATA = loadResource("test.jpg");
+    /** ZIP archive for testing that cannot be processed unless unsupported content is redacted */
+    private static final byte[] ZIP_TEST_DATA = loadResource("test.zip");
     /** Minimal valid JSON content for testing */
     private static final byte[] JSON_TEST_DATA = "[]".getBytes();
     /** Minimal invalid JSON content for testing */
@@ -173,6 +76,25 @@ class IntegrationTest {
     /** Default constructor. */
     IntegrationTest() {
         // Nothing to do
+    }
+
+    /**
+     * Loads a test resource from the classpath.
+     *
+     * @param name the name of the resource, relative to this class's package
+     * @return the contents of the resource
+     * @throws IllegalStateException if the resource is not found
+     * @throws UncheckedIOException if the resource cannot be read
+     */
+    private static byte[] loadResource(String name) {
+        try (InputStream in = IntegrationTest.class.getResourceAsStream(name)) {
+            if (in == null) {
+                throw new IllegalStateException("Test resource not found: " + name);
+            }
+            return in.readAllBytes();
+        } catch (IOException e) {
+            throw new UncheckedIOException("Unable to read test resource: " + name, e);
+        }
     }
 
     /**
@@ -600,5 +522,75 @@ class IntegrationTest {
                     MediaType.PDF.getMediaType(),
                     structure.get(0).get("details").get("type").asString());
         }
+    }
+
+    /**
+     * Tests uploading a ZIP file to the Instant API without redaction options, which redacts unsupported content using
+     * the API's default replacement file.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws InterruptedException if the operation is interrupted
+     * @throws InstantApiException if the API returns an error response
+     */
+    @Test
+    @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
+    void testUploadZipFileWithoutRedaction() throws IOException, InterruptedException, InstantApiException {
+        try (InstantApiClient client = createClient()) {
+            InstantApiRequest request = InstantApiRequest.create(ZIP_TEST_DATA, MediaType.ZIP, MediaType.ZIP);
+
+            InstantApiResponse response = client.upload(request);
+
+            assertNotNull(response);
+            assertTrue(response.isSuccess());
+            assertEquals(200, response.getStatusCode());
+            assertEquals(
+                    Map.of(
+                            "minimal.json.removed.txt",
+                            "The contents of this file were removed for potential security concerns."),
+                    readZipEntries(response.getBody()));
+        }
+    }
+
+    /**
+     * Tests uploading a ZIP file to the Instant API with redaction options, which redacts unsupported content using the
+     * specified replacement file.
+     *
+     * @throws IOException if an I/O error occurs
+     * @throws InterruptedException if the operation is interrupted
+     * @throws InstantApiException if the API returns an error response
+     */
+    @Test
+    @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
+    void testUploadZipFileWithRedaction() throws IOException, InterruptedException, InstantApiException {
+        try (InstantApiClient client = createClient()) {
+            RequestOptions options = RequestOptions.builder()
+                    .redactionOptions(new RequestOptions.RedactionOptions(".txt", "text/plain", "Redacted"))
+                    .build();
+            InstantApiRequest request = InstantApiRequest.create(ZIP_TEST_DATA, MediaType.ZIP, MediaType.ZIP, options);
+
+            InstantApiResponse response = client.upload(request);
+
+            assertNotNull(response);
+            assertTrue(response.isSuccess());
+            assertEquals(200, response.getStatusCode());
+            assertEquals(Map.of("minimal.json.txt", "Redacted"), readZipEntries(response.getBody()));
+        }
+    }
+
+    /**
+     * Reads the entries of a ZIP archive.
+     *
+     * @param zipData the ZIP archive data
+     * @return a map of entry names to entry contents decoded as UTF-8
+     * @throws IOException if the archive cannot be read
+     */
+    private static Map<String, String> readZipEntries(byte[] zipData) throws IOException {
+        Map<String, String> entries = new HashMap<>();
+        try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(zipData))) {
+            for (ZipEntry entry = zip.getNextEntry(); entry != null; entry = zip.getNextEntry()) {
+                entries.put(entry.getName(), new String(zip.readAllBytes(), StandardCharsets.UTF_8));
+            }
+        }
+        return entries;
     }
 }

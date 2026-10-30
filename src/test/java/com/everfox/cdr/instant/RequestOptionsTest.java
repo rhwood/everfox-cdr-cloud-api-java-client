@@ -131,12 +131,12 @@ class RequestOptionsTest {
     @Test
     void testRequestOptionsRedationOptionsMediaType() {
         RequestOptions options = RequestOptions.builder()
-                .redactionOptions(new RequestOptions.RedactionOptions("txt", MediaType.TEXT_XML, "Redacted"))
+                .redactionOptions(new RequestOptions.RedactionOptions(".txt", MediaType.TEXT_XML, "Redacted"))
                 .build();
 
         String json = options.toJson();
         assertNotNull(json);
-        assertEquals("{\"redactions\":{\"extension\":\"txt\",\"mime\":\"text/xml\",\"text\":\"Redacted\"}}", json);
+        assertEquals("{\"redactions\":{\"extension\":\".txt\",\"mime\":\"text/xml\",\"text\":\"Redacted\"}}", json);
     }
 
     /**
@@ -146,12 +146,24 @@ class RequestOptionsTest {
     @Test
     void testRequestOptionsRedationOptionsString() {
         RequestOptions options = RequestOptions.builder()
-                .redactionOptions(new RequestOptions.RedactionOptions("txt", "text/plain", "Redacted"))
+                .redactionOptions(new RequestOptions.RedactionOptions(".txt", "text/plain", "Redacted"))
                 .build();
 
         String json = options.toJson();
         assertNotNull(json);
-        assertEquals("{\"redactions\":{\"extension\":\"txt\",\"mime\":\"text/plain\",\"text\":\"Redacted\"}}", json);
+        assertEquals("{\"redactions\":{\"extension\":\".txt\",\"mime\":\"text/plain\",\"text\":\"Redacted\"}}", json);
+    }
+
+    /** Tests that the {@link RequestOptions#toJson()} method omits the redaction options extension when it is null. */
+    @Test
+    void testRequestOptionsRedationOptionsNullExtension() {
+        RequestOptions options = RequestOptions.builder()
+                .redactionOptions(new RequestOptions.RedactionOptions(null, "text/plain", "Redacted"))
+                .build();
+
+        String json = options.toJson();
+        assertNotNull(json);
+        assertEquals("{\"redactions\":{\"mime\":\"text/plain\",\"text\":\"Redacted\"}}", json);
     }
 
     /**

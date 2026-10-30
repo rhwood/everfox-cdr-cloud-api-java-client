@@ -262,7 +262,8 @@ public class RequestOptions {
         /**
          * Create a set of redaction options.
          *
-         * @param extension the file extension to replace redacted files with
+         * @param extension the file extension to replace redacted files with, including the leading dot (e.g.,
+         *     {@code ".txt"})
          * @param mime the media type to use for the redacted file replacement
          * @param text the text to use for the redacted file replacement
          */
@@ -273,7 +274,8 @@ public class RequestOptions {
         /**
          * Create a set of redaction options.
          *
-         * @param extension the file extension to replace redacted files with
+         * @param extension the file extension to replace redacted files with, including the leading dot (e.g.,
+         *     {@code ".txt"})
          * @param mime the media type to use for the redacted file replacement
          * @param text the text to use for the redacted file replacement
          */
