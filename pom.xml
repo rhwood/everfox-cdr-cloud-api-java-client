@@ -31,6 +31,8 @@ limitations under the License.
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <maven.compiler.release>21</maven.compiler.release>
+        <!-- Default so @{argLine} resolves even when JaCoCo does not set it -->
+        <argLine></argLine>
     </properties>
 
     <dependencies>
@@ -111,8 +113,26 @@ limitations under the License.
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.9.0</version>
+                <executions>
+                    <!-- Exposes dependency jar paths as properties, e.g. ${org.mockito:mockito-core:jar} -->
+                    <execution>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.6.1</version>
+                <configuration>
+                    <!-- Load Mockito as a Java agent instead of relying on self-attach (JEP 451);
+                         disable CDS to silence the warning caused by the agent appending to the bootclasspath -->
+                    <argLine>@{argLine} -Xshare:off -javaagent:${org.mockito:mockito-core:jar}</argLine>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
