@@ -72,9 +72,20 @@ limitations under the License.
                                 <formatJavadoc>true</formatJavadoc>
                             </palantirJavaFormat>
                         </java>
+                        <markdown>
+                            <includes>
+                                <include>**/*.md</include>
+                            </includes>
+                        </markdown>
                         <pom>
                             <!-- accept defaults -->
                         </pom>
+                        <yaml>
+                            <includes>
+                                <include>**/*.yaml</include>
+                                <include>**/*.yml</include>
+                            </includes>
+                        </yaml>
                     </configuration>
                 </plugin>
                 <plugin>
