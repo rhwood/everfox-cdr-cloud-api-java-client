@@ -1,10 +1,10 @@
-# Everfox CDR Instant API Client
+# Everfox CDR Cloud API Client
 
-Java client library for the Everfox CDR (Content Disarm and Reconstruction) Instant API.
+Java client library for the [Everfox CDR (Content Disarm and Reconstruction) Cloud API](https://cdr.everfox.com).
 
 ## Overview
 
-This library provides a simple, type-safe interface for uploading files to the Everfox CDR service, which removes potential security threats and returns sanitized versions. It's designed for use with Apache NiFi 2.0.0+ but can be used in any Java 21+ application.
+This library provides a simple, type-safe interface for uploading files to the Everfox CDR Cloud API service, which removes potential security threats and returns sanitized versions. It's designed for use with Apache NiFi 2.0.0+ but can be used in any Java 21+ application.
 
 ## Requirements
 
@@ -274,4 +274,4 @@ This software is provided "as is" under the Apache 2.0 License without warranty 
 
 ## Support
 
-For API documentation and support, visit https://cdr.everfox.com
+Visit https://cdr.everfox.com for Everfox CDR Cloud API documentation and support. This SDK is not officially supported by Everfox. 
