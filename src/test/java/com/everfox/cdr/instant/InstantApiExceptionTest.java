@@ -43,6 +43,8 @@ class InstantApiExceptionTest {
         assertEquals("Error message", exception.getApiMessage());
         assertEquals("Error name", exception.getName());
         assertEquals("Error type", exception.getType());
+        assertEquals(
+                "API Error: Error message (code: 1000, HTTP status: 1000, type: Error type)", exception.getMessage());
     }
 
     /** Tests that creating an InstantApiException with a null body throws expected unknown error status. */
@@ -54,6 +56,7 @@ class InstantApiExceptionTest {
         assertEquals("Unknown error", exception.getApiMessage());
         assertEquals("Unknown", exception.getName());
         assertEquals("Unknown", exception.getType());
+        assertEquals("API Error: Unknown error (code: -1, HTTP status: 1000, type: Unknown)", exception.getMessage());
     }
 
     /** Tests that creating an InstantApiException with an empty body throws expected unknown error status. */
@@ -65,6 +68,7 @@ class InstantApiExceptionTest {
         assertEquals("Unknown error", exception.getApiMessage());
         assertEquals("Unknown", exception.getName());
         assertEquals("Unknown", exception.getType());
+        assertEquals("API Error: Unknown error (code: -1, HTTP status: 1000, type: Unknown)", exception.getMessage());
     }
 
     /** Tests that creating an InstantApiException with no JSON error object throws expected unknown error status. */
@@ -76,6 +80,7 @@ class InstantApiExceptionTest {
         assertEquals("Unknown error", exception.getApiMessage());
         assertEquals("Unknown", exception.getName());
         assertEquals("Unknown", exception.getType());
+        assertEquals("API Error: Unknown error (code: -1, HTTP status: 1000, type: Unknown)", exception.getMessage());
     }
 
     /** Tests that creating an InstantApiException with invalid JSON throws expected unknown error status. */
@@ -87,5 +92,6 @@ class InstantApiExceptionTest {
         assertEquals("Unknown error", exception.getApiMessage());
         assertEquals("Unknown", exception.getName());
         assertEquals("Unknown", exception.getType());
+        assertEquals("API Error: Unknown error (code: -1, HTTP status: 1000, type: Unknown)", exception.getMessage());
     }
 }
