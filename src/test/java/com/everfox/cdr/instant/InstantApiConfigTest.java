@@ -36,11 +36,41 @@ class InstantApiConfigTest {
         assertEquals(
                 "https://us-west-2.aws.instant.cdr.everfox.com/v1",
                 config.getBaseUrl().toString());
+        assertEquals(10, config.getConnectTimeoutSeconds());
+        assertEquals(60, config.getRequestTimeoutSeconds());
+    }
+
+    /**
+     * Tests that creating an InstantApiConfig with a region and custom timeouts sets the correct base URL and timeouts.
+     */
+    @Test
+    void testConfigWithRegionCustomTimeouts() {
+        InstantApiConfig config = InstantApiConfig.create("test-key", Region.US_WEST_2, 5, 30);
+
+        assertEquals("test-key", config.getApiKey());
+        assertEquals(
+                "https://us-west-2.aws.instant.cdr.everfox.com/v1",
+                config.getBaseUrl().toString());
+        assertEquals(5, config.getConnectTimeoutSeconds());
+        assertEquals(30, config.getRequestTimeoutSeconds());
     }
 
     /** Tests that creating an InstantApiConfig with a custom URL sets the correct base URL. */
     @Test
     void testConfigWithCustomUrl() {
+        InstantApiConfig config = InstantApiConfig.create("test-key", URI.create("https://custom.example.com"));
+
+        assertEquals("test-key", config.getApiKey());
+        assertEquals("https://custom.example.com", config.getBaseUrl().toString());
+        assertEquals(10, config.getConnectTimeoutSeconds());
+        assertEquals(60, config.getRequestTimeoutSeconds());
+    }
+    /**
+     * Tests that creating an InstantApiConfig with a custom URL and custom timeouts sets the correct base URL and
+     * timeouts.
+     */
+    @Test
+    void testConfigWithCustomUrlCustomTimeouts() {
         InstantApiConfig config = InstantApiConfig.create("test-key", URI.create("https://custom.example.com"), 5, 30);
 
         assertEquals("test-key", config.getApiKey());
