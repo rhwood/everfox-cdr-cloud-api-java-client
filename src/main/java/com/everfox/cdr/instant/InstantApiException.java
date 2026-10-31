@@ -105,11 +105,6 @@ public class InstantApiException extends Exception {
     }
 
     @Override
-    public String getLocalizedMessage() {
-        return getMessage();
-    }
-
-    @Override
     public String getMessage() {
         return String.format(
                 "API Error: %s (code: %d, HTTP status: %d, type: %s)", apiMessage, apiStatusCode, httpStatusCode, type);
