@@ -18,6 +18,7 @@ mvn test -Dtest=RequestOptionsTest            # single test class
 mvn test -Dtest=RequestOptionsTest#testName   # single test method
 mvn spotless:apply               # fix formatting
 mvn clean install                # install to local repo
+mvn site                         # build the project site (README.md becomes the index page) in target/site
 ```
 
 **Formatting is enforced at compile time.** `spotless:check` is bound to the `compile` phase (Palantir Java Format, with Javadoc formatting enabled), so badly formatted code fails `mvn compile`. Run `mvn spotless:apply` after editing Java or the POM.
