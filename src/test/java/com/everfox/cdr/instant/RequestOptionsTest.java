@@ -429,4 +429,35 @@ class RequestOptionsTest {
         assertTrue(deny.contains("poly"));
         assertTrue(deny.contains("steg"));
     }
+
+    /**
+     * Tests that the {@link RequestOptions#toJson()} method returns the correct JSON when media type conversions are
+     * disabled using {@link MediaType}s.
+     */
+    @Test
+    void testRequestOptionsConversionDisableMediaTypeConversionMediaTypes() {
+        RequestOptions options = RequestOptions.builder()
+                .conversionOptions(RequestOptions.ConversionOptions.builder()
+                        .disableMediaTypeConversion(MediaType.IMAGE_BMP, MediaType.IMAGE_PNG)
+                        .build())
+                .build();
+
+        assertEquals(
+                "{\"conversion\":{\"mime_types\":{\"disabled\":[{\"from\":\"image/bmp\",\"to\":\"image/png\"}]}}}",
+                options.toJson());
+    }
+
+    /** Tests that the {@link RequestOptions#toJson()} method wraps serialization failures. */
+    @Test
+    void testToJsonSerializationFailure() {
+        RequestOptions options = new RequestOptions(null, null, null, null, null, null) {
+            @Override
+            public ImagesOptions getImages() {
+                throw new IllegalArgumentException("boom");
+            }
+        };
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, options::toJson);
+        assertEquals("Failed to serialize options to JSON", exception.getMessage());
+    }
 }

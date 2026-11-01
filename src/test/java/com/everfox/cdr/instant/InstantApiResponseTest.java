@@ -97,4 +97,44 @@ class InstantApiResponseTest {
         assertEquals(100, apiResponse.getStatusCode());
         assertFalse(apiResponse.isSuccess());
     }
+
+    /**
+     * Tests that the body, headers, and CDR-specific headers are exposed by the response.
+     *
+     * @throws InstantApiException if the response is unexpectedly treated as an error
+     */
+    @Test
+    void testResponseAccessors() throws InstantApiException {
+        byte[] body = "body".getBytes();
+        @SuppressWarnings("unchecked") // unavoidable when mocking due to HttpResponse being generic
+        HttpResponse<byte[]> httpResponse = mock(HttpResponse.class);
+        when(httpResponse.statusCode()).thenReturn(200);
+        when(httpResponse.body()).thenReturn(body);
+        when(httpResponse.headers())
+                .thenReturn(HttpHeaders.of(
+                        Map.of(
+                                "x-risks-taken", List.of("exe", "poly"),
+                                "x-report", List.of("report")),
+                        (k, v) -> true));
+        InstantApiResponse apiResponse = InstantApiResponse.fromHttpResponse(httpResponse);
+
+        assertArrayEquals(body, apiResponse.getBody());
+        assertEquals("exe, poly", apiResponse.getRisksTaken());
+        assertEquals("report", apiResponse.getReport());
+        assertEquals(Map.of("x-risks-taken", "exe, poly", "x-report", "report"), apiResponse.getHeaders());
+    }
+
+    /** Tests that creating an InstantApiResponse with HTTP code 4xx throws an {@link InstantApiException}. */
+    @Test
+    void testResponseHttpErrorThrows() {
+        @SuppressWarnings("unchecked") // unavoidable when mocking due to HttpResponse being generic
+        HttpResponse<byte[]> httpResponse = mock(HttpResponse.class);
+        when(httpResponse.statusCode()).thenReturn(404);
+        when(httpResponse.body()).thenReturn(null);
+        when(httpResponse.headers()).thenReturn(HttpHeaders.of(Map.of(), (k, v) -> true));
+
+        InstantApiException exception =
+                assertThrows(InstantApiException.class, () -> InstantApiResponse.fromHttpResponse(httpResponse));
+        assertEquals(404, exception.getHttpStatusCode());
+    }
 }
