@@ -37,4 +37,16 @@ class InstantApiRequestTest {
         assertEquals("application/pdf", request.getAcceptType());
         assertNull(request.getOptions());
     }
+
+    /** Tests that creating an InstantApiRequest with String media types sets the correct fields. */
+    @Test
+    void testRequestCreationWithStrings() {
+        byte[] data = "test data".getBytes();
+        InstantApiRequest request = InstantApiRequest.create(data, "image/png", "image/jpeg");
+
+        assertArrayEquals(data, request.getFileData());
+        assertEquals("image/png", request.getContentType());
+        assertEquals("image/jpeg", request.getAcceptType());
+        assertNull(request.getOptions());
+    }
 }
