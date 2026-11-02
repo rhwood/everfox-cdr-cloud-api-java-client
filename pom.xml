@@ -19,12 +19,12 @@ limitations under the License.
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.everfox.cdr</groupId>
-    <artifactId>everfox-cdr-instant-client</artifactId>
+    <artifactId>everfox-cdr-cloud-api-client</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Everfox CDR Instant API Client</name>
-    <description>Java client library for Everfox CDR Instant API (pre-release)</description>
+    <name>Everfox CDR Cloud API Client</name>
+    <description>Java client library for the Everfox CDR Cloud Instant and Async APIs (pre-release)</description>
 
     <licenses>
         <license>

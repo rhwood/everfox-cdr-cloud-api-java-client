@@ -20,7 +20,7 @@ The library hasn't been published to a Maven repository yet. Build and install i
 ```xml
 <dependency>
     <groupId>com.everfox.cdr</groupId>
-    <artifactId>everfox-cdr-instant-client</artifactId>
+    <artifactId>everfox-cdr-cloud-api-client</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
@@ -66,8 +66,16 @@ try (InstantApiClient client = InstantApiClient.create(config)) {
 | `InstantApiResponse` | `com.everfox.cdr.instant` | Processed file, status code, headers, risks taken, and report. |
 | `InstantApiException` | `com.everfox.cdr.instant` | Error returned by the API (HTTP 4xx/5xx). |
 | `RequestOptions` | `com.everfox.cdr.instant` | Processing options sent in the `X-Options` header. Created with `RequestOptions.builder()`. |
+| `AsyncApiConfig` | `com.everfox.cdr.async` | API key, endpoint, timeouts, and polling interval and limit. Created with `AsyncApiConfig.create(...)`. |
+| `AsyncApiClient` | `com.everfox.cdr.async` | Initiates, uploads, polls, and downloads. Created with `AsyncApiClient.create(config)`; implements `AutoCloseable`. |
+| `AsyncApiRequest` | `com.everfox.cdr.async` | Content type and options for initiating a job. Created with `AsyncApiRequest.create(...)`. |
+| `AsyncApiStatus` | `com.everfox.cdr.async` | Job state, error, risks taken, and the links for the next step. |
+| `AsyncApiResponse` | `com.everfox.cdr.async` | Downloaded file, status code, headers, and the job's final status. |
+| `AsyncApiException` | `com.everfox.cdr.async` | Error returned by the API, or the error of a failed job. |
+| `RequestOptions` | `com.everfox.cdr.async` | Processing options sent in the initiate request. Created with `RequestOptions.builder()`. |
 | `MediaType` | `com.everfox.cdr` | Media types supported by the API. |
-| `Region` | `com.everfox.cdr` | Regional API endpoints. |
+| `Region` | `com.everfox.cdr` | Regions, and the endpoint of each API in them. |
+| `Api` | `com.everfox.cdr` | The Everfox CDR Cloud APIs, used to look up a region's endpoint. |
 | `Risk` | `com.everfox.cdr` | Risks that can be allowed or denied. |
 
 ## Configuration
@@ -85,6 +93,9 @@ InstantApiConfig config = InstantApiConfig.create(apiKey, Region.EU_WEST_2);
 
 // Region names can also be parsed (case-insensitive), e.g. from configuration
 Region region = Region.fromString("eu_west_2");
+
+// Each API has its own endpoint in every region
+URI asyncUrl = region.getBaseUrl(Api.ASYNC); // https://eu-west-2.aws.async.cdr.everfox.com/v1
 ```
 
 ### Custom Endpoint
@@ -235,6 +246,54 @@ Media type conversions can also be explicitly enabled or disabled with `enableMe
 
 See the [format conversion documentation](https://cdr.everfox.com/documentation/format-conversion) for supported conversions.
 
+## Async API
+
+The [Async API](https://cdr.everfox.com/api/async) handles files up to about 1.25 GB and complex files that take longer to process. A job runs in four steps (initiate, upload, poll status, download), and each step uses the links in the status returned by the step before it. `process(...)` runs all four steps:
+
+```java
+import com.everfox.cdr.MediaType;
+import com.everfox.cdr.Region;
+import com.everfox.cdr.async.AsyncApiClient;
+import com.everfox.cdr.async.AsyncApiConfig;
+import com.everfox.cdr.async.AsyncApiRequest;
+import com.everfox.cdr.async.AsyncApiResponse;
+
+AsyncApiConfig config = AsyncApiConfig.create("your-api-key", Region.US_WEST_2);
+
+try (AsyncApiClient client = AsyncApiClient.create(config)) {
+    AsyncApiResponse response = client.process(AsyncApiRequest.create(MediaType.PDF), fileData);
+    byte[] sanitizedData = response.getBody();
+    List<String> risksTaken = response.getRisksTaken();
+}
+```
+
+`AsyncApiConfig.create(apiKey, region)` uses the region's Async API host, `region.getBaseUrl(Api.ASYNC)`.
+
+For large files, stream from and to disk with `process(request, sourcePath, targetPath)`, which returns the final `AsyncApiStatus`. To control each step yourself, for example to store the status between steps:
+
+```java
+AsyncApiStatus status = client.initiate(AsyncApiRequest.create(MediaType.PDF, options));
+client.upload(status, Path.of("large.pdf"));
+status = client.waitForCompletion(status); // polls until complete
+client.download(status, Path.of("large-safe.pdf")); // a result can only be downloaded once
+```
+
+`waitForCompletion` polls every second for up to 10 minutes by default, and throws `java.util.concurrent.TimeoutException` if processing doesn't finish in time. Change these limits with `AsyncApiConfig.create(apiKey, region, connectTimeout, requestTimeout, pollInterval, processingTimeout)`. The request timeout applies to each upload and download, so increase it for large files.
+
+If processing fails, `download` and `process` throw an `AsyncApiException` that holds the job's error (for example `PROCESSING_NOT_RECOGNISED`), with HTTP status 200. Upload, status, and result links expire after a few minutes and contain credentials, so don't log them.
+
+The async `RequestOptions` accept the same options as the Instant API, plus:
+
+```java
+RequestOptions options = RequestOptions.builder()
+        .largeFileEnvironment(true) // automatically use the large file environment for files over 250 MB
+        .snsStatus(topicArn, roleArn) // publish status updates to an AWS SNS topic
+        .userData("correlation-id") // returned in every status
+        .build();
+```
+
+A status received from SNS can be parsed with `AsyncApiStatus.fromJson(message)` and passed to `download`.
+
 ## Supported File Types
 
 The API supports 60+ file formats including:
@@ -267,6 +326,8 @@ mvn test -Dtest=IntegrationTest
 ```
 
 Integration tests use `Region.US_WEST_2` by default. Set `CDR_INSTANT_API_REGION` to a region name (e.g. `eu_west_1`) or `CDR_INSTANT_API_URL` to a base URL to use a different endpoint. If both are set, the region takes precedence.
+
+The Async API integration tests (`com.everfox.cdr.async.IntegrationTest`) work the same way, using `CDR_ASYNC_API_KEY`, `CDR_ASYNC_API_REGION`, and `CDR_ASYNC_API_URL`.
 
 ## License
 

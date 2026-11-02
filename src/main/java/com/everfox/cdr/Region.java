@@ -14,35 +14,43 @@
 package com.everfox.cdr;
 
 import java.net.URI;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.Objects;
 
 /** Available API regions. */
 public enum Region {
     /** EU West (Ireland) region. */
-    EU_WEST_1("https://eu-west-1.aws.instant.cdr.everfox.com/v1"),
+    EU_WEST_1("eu-west-1"),
     /** EU West (London) region. */
-    EU_WEST_2("https://eu-west-2.aws.instant.cdr.everfox.com/v1"),
+    EU_WEST_2("eu-west-2"),
     /** US West (Oregon) region. */
-    US_WEST_2("https://us-west-2.aws.instant.cdr.everfox.com/v1");
+    US_WEST_2("us-west-2");
 
-    /** The base URL for the region. */
-    private final URI baseUrl;
+    /** The base URL of each API in the region. */
+    private final Map<Api, URI> baseUrls = new EnumMap<>(Api.class);
 
     /**
-     * Constructs a Region enum constant with the specified base URL.
+     * Constructs a Region enum constant with the specified AWS region name.
      *
-     * @param baseUrl the base URL for the region
+     * @param awsRegion the AWS region name, which identifies the region in API host names
      */
-    Region(String baseUrl) {
-        this.baseUrl = URI.create(baseUrl);
+    Region(String awsRegion) {
+        for (Api api : Api.values()) {
+            baseUrls.put(
+                    api, URI.create("https://" + awsRegion + ".aws." + api.getSubdomain() + ".cdr.everfox.com/v1"));
+        }
     }
 
     /**
-     * Returns the base URL for the region.
+     * Returns the base URL of an API in the region.
      *
+     * @param api the API
      * @return the base URL
      */
-    public URI getBaseUrl() {
-        return baseUrl;
+    public URI getBaseUrl(Api api) {
+        Objects.requireNonNull(api, "api cannot be null");
+        return baseUrls.get(api);
     }
 
     /**

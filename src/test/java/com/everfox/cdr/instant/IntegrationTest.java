@@ -15,6 +15,7 @@ package com.everfox.cdr.instant;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.everfox.cdr.Api;
 import com.everfox.cdr.MediaType;
 import com.everfox.cdr.Region;
 import com.everfox.cdr.Risk;
@@ -106,7 +107,7 @@ class IntegrationTest {
      * @return a configured Instant API client
      */
     private InstantApiClient createClient() {
-        URI apiUri = Region.US_WEST_2.getBaseUrl();
+        URI apiUri = Region.US_WEST_2.getBaseUrl(Api.INSTANT);
         String apiKey = System.getenv(API_KEY_ENV);
         assertNotNull(apiKey, "CDR_INSTANT_API_KEY environment variable must be set");
 
@@ -117,7 +118,7 @@ class IntegrationTest {
         String apiRegion = System.getenv(API_REGION_ENV);
         if (apiRegion != null && !apiRegion.isEmpty()) {
             Region region = Region.fromString(apiRegion);
-            apiUri = region.getBaseUrl();
+            apiUri = region.getBaseUrl(Api.INSTANT);
         }
         InstantApiConfig config = InstantApiConfig.create(apiKey, apiUri);
 

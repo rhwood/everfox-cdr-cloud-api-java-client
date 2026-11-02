@@ -13,6 +13,7 @@
  */
 package com.everfox.cdr.instant;
 
+import com.everfox.cdr.Api;
 import com.everfox.cdr.Region;
 import java.net.URI;
 import java.util.Objects;
@@ -94,7 +95,7 @@ public class InstantApiConfig {
      * @return a new configuration
      */
     public static InstantApiConfig create(String apiKey, Region region) {
-        return InstantApiConfig.create(apiKey, region.getBaseUrl());
+        return InstantApiConfig.create(apiKey, region.getBaseUrl(Api.INSTANT));
     }
 
     /**
@@ -120,7 +121,8 @@ public class InstantApiConfig {
      */
     public static InstantApiConfig create(
             String apiKey, Region region, int connectTimeoutSeconds, int requestTimeoutSeconds) {
-        return InstantApiConfig.create(apiKey, region.getBaseUrl(), connectTimeoutSeconds, requestTimeoutSeconds);
+        return InstantApiConfig.create(
+                apiKey, region.getBaseUrl(Api.INSTANT), connectTimeoutSeconds, requestTimeoutSeconds);
     }
 
     /**
