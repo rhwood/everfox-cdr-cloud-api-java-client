@@ -14,130 +14,85 @@
 package com.everfox.cdr.instant;
 
 import com.everfox.cdr.Api;
+import com.everfox.cdr.CdrApiConfig;
 import com.everfox.cdr.Region;
 import java.net.URI;
 import java.util.Objects;
 
-/** Configuration for the Instant API client. */
-public class InstantApiConfig {
-
-    /** Default connection timeout in seconds. */
-    public static final int DEFAULT_CONNECT_TIMEOUT_SECONDS = 10;
-    /** Default request timeout in seconds. */
-    public static final int DEFAULT_REQUEST_TIMEOUT_SECONDS = 60;
-
-    /** The API key for authenticating with the Instant API. */
-    private final String apiKey;
-    /** The base URL of the Instant API. */
-    private final URI baseUrl;
-    /** The connection timeout in seconds. */
-    private final int connectTimeoutSeconds;
-    /** The request timeout in seconds. */
-    private final int requestTimeoutSeconds;
+/** Configuration for the Instant API client. The Instant API has only the {@linkplain CdrApiConfig shared settings}. */
+public final class InstantApiConfig extends CdrApiConfig {
 
     /**
-     * Creates a new configuration with the specified API key, base URL, and timeouts.
+     * Creates the configuration held by a builder.
+     *
+     * @param builder the builder holding the configuration
+     */
+    // private to force use of the factory methods
+    private InstantApiConfig(Builder builder) {
+        super(builder);
+    }
+
+    /**
+     * Creates a configuration with the default timeouts.
      *
      * @param apiKey the API key
-     * @param baseUrl the base URL of the Instant API
-     * @param connectTimeoutSeconds the connection timeout in seconds
-     * @param requestTimeoutSeconds the request timeout in seconds
-     */
-    // private to force use of the static factory method
-    private InstantApiConfig(String apiKey, URI baseUrl, int connectTimeoutSeconds, int requestTimeoutSeconds) {
-        this.apiKey = apiKey;
-        this.baseUrl = baseUrl;
-        this.connectTimeoutSeconds = connectTimeoutSeconds;
-        this.requestTimeoutSeconds = requestTimeoutSeconds;
-    }
-
-    /**
-     * Returns the API key.
-     *
-     * @return the API key
-     */
-    public String getApiKey() {
-        return apiKey;
-    }
-
-    /**
-     * Returns the base URL of the Instant API.
-     *
-     * @return the base URL
-     */
-    public URI getBaseUrl() {
-        return baseUrl;
-    }
-
-    /**
-     * Returns the connection timeout in seconds.
-     *
-     * @return the connection timeout
-     */
-    public int getConnectTimeoutSeconds() {
-        return connectTimeoutSeconds;
-    }
-
-    /**
-     * Returns the request timeout in seconds.
-     *
-     * @return the request timeout
-     */
-    public int getRequestTimeoutSeconds() {
-        return requestTimeoutSeconds;
-    }
-
-    /**
-     * Creates a new configuration with the specified API key and region.
-     *
-     * @param apiKey the API key
-     * @param region the region for the Instant API
+     * @param region the region, whose Instant API endpoint is used
      * @return a new configuration
      */
     public static InstantApiConfig create(String apiKey, Region region) {
-        return InstantApiConfig.create(apiKey, region.getBaseUrl(Api.INSTANT));
+        return builder(apiKey, region).build();
     }
 
     /**
-     * Creates a new configuration with the specified API key and base URL.
+     * Creates a builder for a region's Instant API endpoint.
+     *
+     * @param apiKey the API key
+     * @param region the region
+     * @return a new builder
+     */
+    public static Builder builder(String apiKey, Region region) {
+        Objects.requireNonNull(region, "region cannot be null");
+        return builder(apiKey, region.getBaseUrl(Api.INSTANT));
+    }
+
+    /**
+     * Creates a builder for a custom endpoint.
      *
      * @param apiKey the API key
      * @param baseUrl the base URL of the Instant API
-     * @return a new configuration
+     * @return a new builder
      */
-    public static InstantApiConfig create(String apiKey, URI baseUrl) {
-        return InstantApiConfig.create(
-                apiKey, baseUrl, DEFAULT_CONNECT_TIMEOUT_SECONDS, DEFAULT_REQUEST_TIMEOUT_SECONDS);
-    }
-
-    /**
-     * Creates a new configuration with the specified API key, base URL, and timeouts.
-     *
-     * @param apiKey the API key
-     * @param region the region for the Instant API
-     * @param connectTimeoutSeconds the connection timeout in seconds
-     * @param requestTimeoutSeconds the request timeout in seconds
-     * @return a new configuration
-     */
-    public static InstantApiConfig create(
-            String apiKey, Region region, int connectTimeoutSeconds, int requestTimeoutSeconds) {
-        return InstantApiConfig.create(
-                apiKey, region.getBaseUrl(Api.INSTANT), connectTimeoutSeconds, requestTimeoutSeconds);
-    }
-
-    /**
-     * Creates a new configuration with the specified API key, base URL, and timeouts.
-     *
-     * @param apiKey the API key
-     * @param baseUrl the base URL of the Instant API
-     * @param connectTimeoutSeconds the connection timeout in seconds
-     * @param requestTimeoutSeconds the request timeout in seconds
-     * @return a new configuration
-     */
-    public static InstantApiConfig create(
-            String apiKey, URI baseUrl, int connectTimeoutSeconds, int requestTimeoutSeconds) {
+    public static Builder builder(String apiKey, URI baseUrl) {
         Objects.requireNonNull(apiKey, "apiKey cannot be null");
         Objects.requireNonNull(baseUrl, "baseUrl cannot be null");
-        return new InstantApiConfig(apiKey, baseUrl, connectTimeoutSeconds, requestTimeoutSeconds);
+        return new Builder(apiKey, baseUrl);
+    }
+
+    /** Builder for creating {@link InstantApiConfig} instances. */
+    public static final class Builder extends CdrApiConfig.Builder<Builder> {
+
+        /**
+         * Creates a new builder.
+         *
+         * @param apiKey the API key
+         * @param baseUrl the base URL of the Instant API
+         */
+        private Builder(String apiKey, URI baseUrl) {
+            super(apiKey, baseUrl);
+        }
+
+        @Override
+        protected Builder self() {
+            return this;
+        }
+
+        /**
+         * Builds the configuration.
+         *
+         * @return a new configuration
+         */
+        public InstantApiConfig build() {
+            return new InstantApiConfig(this);
+        }
     }
 }

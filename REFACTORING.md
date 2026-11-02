@@ -11,10 +11,10 @@ Line counts include Javadoc and license headers. "Shared" is the number of lines
 | Instant | Async | Lines (instant / async) | Shared | Nature of the overlap |
 |---|---|---|---|---|
 | `RequestOptions` | `RequestOptions` | 759 / 865 | 661 | Same JSON model (now shared; see 1) |
-| `InstantApiConfig` | `AsyncApiConfig` | 141 / 265 | 129 | Same fields; async adds polling |
+| `InstantApiConfig` | `AsyncApiConfig` | 141 / 265 | 129 | Same fields (now shared; see 4) |
 | `InstantApiException` | `AsyncApiException` | 142 / 153 | 91 | Same error JSON (now shared; see 3) |
-| `InstantApiResponse` | `AsyncApiResponse` | 130 / 127 | 95 | Status code, body, headers, `isSuccess()` |
-| `InstantApiClient` | `AsyncApiClient` | 132 / 469 | 94 | `HttpClient` setup, factory, `close()` |
+| `InstantApiResponse` | `AsyncApiResponse` | 130 / 127 | 95 | Status code, body, headers, `isSuccess()` (now shared; see 5) |
+| `InstantApiClient` | `AsyncApiClient` | 132 / 469 | 94 | `HttpClient` setup, factory, `close()` (now shared; see 5) |
 
 The tests repeat the same pattern: two `IntegrationTest` classes with the same environment variable handling, two local `HttpServer` fixtures, and two sets of mocked `HttpResponse` helpers.
 
@@ -41,44 +41,18 @@ The divergences were settled on the Async behavior, which changes the Instant AP
 
 One behavior changed for Instant: an error with a code but no message, name, or type now reports `"Unknown error"` / `"Unknown"` for the missing fields instead of `null`, as Async already did.
 
-## 4. Share configuration, and stop multiplying `create` overloads
+## 4. Share configuration, and stop multiplying `create` overloads (done)
 
-**Problem.** Each config class repeats the API key, base URL, connect timeout, request timeout, the `Region`-or-`URI` overload pair, and null checks. Every new setting doubles the overloads: `InstantApiConfig` has 4 `create` methods and `AsyncApiConfig` has 6. A seventh setting, such as a proxy or an executor, would make that 8. The timeouts are `int` seconds, which can't express sub-second polling and push the client tests to sleep for whole seconds. The async client tests take about 11 seconds for that reason.
+The shared settings live in the abstract `com.everfox.cdr.CdrApiConfig`: API key, base URL, and `Duration` connect and request timeouts. It has a self-typed builder, like `ProcessingOptions`, rather than the separate `ConnectionSettings` holder proposed here, so the getters stay on the config. `InstantApiConfig` adds nothing to it; `AsyncApiConfig` adds `Duration` poll interval and processing timeout. Each config has `create(apiKey, region)` and `builder(apiKey, region | uri)`, so a new setting is one builder method instead of a doubling of overloads.
 
-**Proposal.**
+All the `*Seconds` getters, `DEFAULT_*_SECONDS` constants, and multi-argument `create` overloads were removed. Sub-second polling brought the async client tests down from about 11 seconds to under 1.
 
-- Extract the shared settings into an immutable `ConnectionSettings` in `com.everfox.cdr`: API key, base URL, and timeouts. Both configs either hold one or extend a small base class.
-- Replace the overload matrix with a builder that matches the `RequestOptions` style. Keep `create(apiKey, region)` as the one-line shortcut:
+## 5. Share the HTTP plumbing (done)
 
-  ```java
-  AsyncApiConfig config = AsyncApiConfig.builder(apiKey, Region.US_WEST_2)
-          .requestTimeout(Duration.ofMinutes(10))
-          .pollInterval(Duration.ofMillis(500))
-          .build();
-  ```
-
-- Use `java.time.Duration` for all timeouts and intervals.
-
-## 5. Share the HTTP plumbing
-
-**Problem.** Each client builds its own `HttpClient`, converts headers into a `Map`, and turns status >= 400 into an exception. The two have diverged:
-
-| Behavior | Instant | Async |
-|---|---|---|
-| `close()` | No-op | Closes the `HttpClient` (`AutoCloseable` since Java 21) |
-| `getHeaders()` keys | Case-sensitive copy, so `get("X-Risks-Taken")` returns `null` and only lowercase keys work | Case-insensitive |
-| Redirects | `HttpClient` default (never followed) | Followed explicitly when downloading, without the link's credentials |
-
-**Proposal.** Add an internal helper package such as `com.everfox.cdr.internal`:
-
-- `HttpSupport.newClient(ConnectionSettings)`.
-- `HttpSupport.headers(HttpResponse<?>)`, which returns a case-insensitive, unmodifiable map.
-- `HttpSupport.throwIfError(HttpResponse<byte[]>, ExceptionFactory)`.
-- A shared `ApiResponse` base for `InstantApiResponse` and `AsyncApiResponse` (status code, defensively copied body, headers, `isSuccess()`).
-
-Settle each divergence once: `close()` closes the client, and header lookups are case-insensitive.
-
-An internal package is public in a plain JAR, so add a `module-info.java` that exports only `com.everfox.cdr`, `com.everfox.cdr.instant`, and `com.everfox.cdr.async`. NiFi loads extensions from the classpath, which ignores the module boundary, so also name the package `internal` and state in its `package-info` that it isn't API.
+- `com.everfox.cdr.internal.HttpSupport` has `newClient(config)` (never follows redirects), `newRequest(uri, config)` (applies the request timeout), and `throwIfError(response, ErrorFactory)`. Both clients and `AsyncApiStatus` use them.
+- The shared response base is `com.everfox.cdr.CdrApiResponse`, not an internal class: module users can only call inherited methods if the superclass is in an exported package. It takes the `HttpResponse` directly, so a large body isn't copied on construction, and it normalizes headers case-insensitively. That made the proposed `HttpSupport.headers()` unnecessary. `getHeader(name)` was added.
+- `InstantApiClient.close()` now closes its `HttpClient`, and Instant header lookups are case-insensitive.
+- `src/main/java/module-info.java` declares the module `com.everfox.cdr`. It exports `com.everfox.cdr`, `.instant`, `.async`, and `.options` (not `.internal`), and `requires transitive java.net.http` because `CdrApiResponse` takes an `HttpResponse`. Tests run inside the module, so the POM adds `jdk.httpserver` to test compilation and surefire.
 
 ## 6. Check `MediaType` and `Risk` against the published specs
 
@@ -118,5 +92,5 @@ Each step stands on its own and keeps `mvn clean verify` green:
 1. ~~**Region endpoints (2)** and **artifact rename (8)**~~: done.
 2. ~~**Error model (3)**~~: done.
 3. ~~**Options model (1)**~~: done.
-4. **Configuration (4)** and **HTTP plumbing (5)**: these depend on the shared settings type, so do them together, and add `module-info.java` with them.
+4. ~~**Configuration (4)** and **HTTP plumbing (5)**~~: done, including `module-info.java`.
 5. **Spec checks (6)** and **test support (7)**: these can be done at any time, and they get cheaper once steps 1–5 have removed the per-package copies.

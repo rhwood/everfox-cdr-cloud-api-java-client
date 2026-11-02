@@ -96,7 +96,8 @@ class InstantApiClientTest {
     private InstantApiClient createLocalClient() {
         URI baseUrl = URI.create("http://" + server.getAddress().getHostString() + ":"
                 + server.getAddress().getPort());
-        return InstantApiClient.create(InstantApiConfig.create("test-key", baseUrl));
+        return InstantApiClient.create(
+                InstantApiConfig.builder("test-key", baseUrl).build());
     }
 
     /**

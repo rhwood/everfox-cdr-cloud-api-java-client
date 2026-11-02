@@ -16,13 +16,15 @@ package com.everfox.cdr.async;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.everfox.cdr.Api;
+import com.everfox.cdr.CdrApiConfig;
 import com.everfox.cdr.Region;
 import java.net.URI;
+import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-/** Unit tests for {@link AsyncApiConfig}. */
+/** Unit tests for {@link AsyncApiConfig}. The shared settings are also tested in {@code InstantApiConfigTest}. */
 class AsyncApiConfigTest {
 
     /** A custom base URL for testing. */
@@ -46,55 +48,47 @@ class AsyncApiConfigTest {
                 AsyncApiConfig.create("key", region).getBaseUrl());
         assertEquals(
                 region.getBaseUrl(Api.ASYNC),
-                AsyncApiConfig.create("key", region, 1, 1, 1, 1).getBaseUrl());
-    }
-
-    /** Tests that a null region throws a NullPointerException. */
-    @Test
-    void testNullRegion() {
-        assertThrows(NullPointerException.class, () -> AsyncApiConfig.create("key", (Region) null));
+                AsyncApiConfig.builder("key", region).build().getBaseUrl());
     }
 
     /** Tests that the default timeouts and polling behavior are used when not specified. */
     @Test
     void testDefaults() {
-        AsyncApiConfig config = AsyncApiConfig.create("key", BASE_URL);
+        AsyncApiConfig config = AsyncApiConfig.builder("key", BASE_URL).build();
 
         assertEquals("key", config.getApiKey());
         assertEquals(BASE_URL, config.getBaseUrl());
-        assertEquals(AsyncApiConfig.DEFAULT_CONNECT_TIMEOUT_SECONDS, config.getConnectTimeoutSeconds());
-        assertEquals(AsyncApiConfig.DEFAULT_REQUEST_TIMEOUT_SECONDS, config.getRequestTimeoutSeconds());
-        assertEquals(AsyncApiConfig.DEFAULT_POLL_INTERVAL_SECONDS, config.getPollIntervalSeconds());
-        assertEquals(AsyncApiConfig.DEFAULT_PROCESSING_TIMEOUT_SECONDS, config.getProcessingTimeoutSeconds());
+        assertEquals(CdrApiConfig.DEFAULT_CONNECT_TIMEOUT, config.getConnectTimeout());
+        assertEquals(CdrApiConfig.DEFAULT_REQUEST_TIMEOUT, config.getRequestTimeout());
+        assertEquals(AsyncApiConfig.DEFAULT_POLL_INTERVAL, config.getPollInterval());
+        assertEquals(AsyncApiConfig.DEFAULT_PROCESSING_TIMEOUT, config.getProcessingTimeout());
     }
 
-    /** Tests that custom timeouts are used. */
+    /** Tests that shared and async-only settings can be chained in any order and are used. */
     @Test
-    void testCustomTimeouts() {
-        AsyncApiConfig config = AsyncApiConfig.create("key", Region.EU_WEST_1, 1, 2);
+    void testCustomSettings() {
+        AsyncApiConfig config = AsyncApiConfig.builder("key", Region.EU_WEST_2)
+                .pollInterval(Duration.ofMillis(250))
+                .connectTimeout(Duration.ofSeconds(1))
+                .processingTimeout(Duration.ofMinutes(30))
+                .requestTimeout(Duration.ofMinutes(5))
+                .build();
 
-        assertEquals(1, config.getConnectTimeoutSeconds());
-        assertEquals(2, config.getRequestTimeoutSeconds());
-        assertEquals(AsyncApiConfig.DEFAULT_POLL_INTERVAL_SECONDS, config.getPollIntervalSeconds());
+        assertEquals(Duration.ofSeconds(1), config.getConnectTimeout());
+        assertEquals(Duration.ofMinutes(5), config.getRequestTimeout());
+        assertEquals(Duration.ofMillis(250), config.getPollInterval());
+        assertEquals(Duration.ofMinutes(30), config.getProcessingTimeout());
     }
 
-    /** Tests that custom polling behavior is used. */
-    @Test
-    void testCustomPolling() {
-        AsyncApiConfig config = AsyncApiConfig.create("key", Region.EU_WEST_2, 1, 2, 3, 4);
-
-        assertEquals(1, config.getConnectTimeoutSeconds());
-        assertEquals(2, config.getRequestTimeoutSeconds());
-        assertEquals(3, config.getPollIntervalSeconds());
-        assertEquals(4, config.getProcessingTimeoutSeconds());
-    }
-
-    /** Tests that required arguments are validated. */
+    /** Tests that required arguments and durations are validated. */
     @Test
     void testValidation() {
-        assertThrows(NullPointerException.class, () -> AsyncApiConfig.create(null, BASE_URL));
-        assertThrows(NullPointerException.class, () -> AsyncApiConfig.create("key", (URI) null));
-        assertThrows(IllegalArgumentException.class, () -> AsyncApiConfig.create("key", BASE_URL, 1, 1, 0, 1));
-        assertThrows(IllegalArgumentException.class, () -> AsyncApiConfig.create("key", BASE_URL, 1, 1, 1, 0));
+        assertThrows(NullPointerException.class, () -> AsyncApiConfig.create("key", null));
+        assertThrows(NullPointerException.class, () -> AsyncApiConfig.builder(null, BASE_URL));
+        assertThrows(NullPointerException.class, () -> AsyncApiConfig.builder("key", (URI) null));
+        AsyncApiConfig.Builder builder = AsyncApiConfig.builder("key", BASE_URL);
+        assertThrows(IllegalArgumentException.class, () -> builder.pollInterval(Duration.ZERO));
+        assertThrows(IllegalArgumentException.class, () -> builder.processingTimeout(Duration.ofSeconds(-1)));
+        assertThrows(NullPointerException.class, () -> builder.pollInterval(null));
     }
 }

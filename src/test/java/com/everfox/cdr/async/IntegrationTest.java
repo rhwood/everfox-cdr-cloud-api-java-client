@@ -100,7 +100,7 @@ class IntegrationTest {
         if (apiRegion != null && !apiRegion.isEmpty()) {
             apiUri = Region.fromString(apiRegion).getBaseUrl(Api.ASYNC);
         }
-        return AsyncApiClient.create(AsyncApiConfig.create(apiKey, apiUri));
+        return AsyncApiClient.create(AsyncApiConfig.builder(apiKey, apiUri).build());
     }
 
     /**

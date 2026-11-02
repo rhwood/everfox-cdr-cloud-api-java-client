@@ -127,6 +127,18 @@ limitations under the License.
                 <configuration>
                     <release>21</release>
                 </configuration>
+                <executions>
+                    <!-- Tests are patched into the com.everfox.cdr module; let them use the JDK's HTTP server -->
+                    <execution>
+                        <id>default-testCompile</id>
+                        <configuration>
+                            <compilerArgs>
+                                <arg>--add-modules=jdk.httpserver</arg>
+                                <arg>--add-reads=com.everfox.cdr=jdk.httpserver</arg>
+                            </compilerArgs>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -148,7 +160,8 @@ limitations under the License.
                 <configuration>
                     <!-- Load Mockito as a Java agent instead of relying on self-attach (JEP 451);
                          disable CDS to silence the warning caused by the agent appending to the bootclasspath -->
-                    <argLine>@{argLine} -Xshare:off -javaagent:${org.mockito:mockito-core:jar}</argLine>
+                    <!-- The tests use the JDK's HTTP server, which the com.everfox.cdr module does not read -->
+                    <argLine>@{argLine} -Xshare:off -javaagent:${org.mockito:mockito-core:jar} --add-modules=jdk.httpserver --add-reads=com.everfox.cdr=jdk.httpserver</argLine>
                 </configuration>
             </plugin>
             <plugin>

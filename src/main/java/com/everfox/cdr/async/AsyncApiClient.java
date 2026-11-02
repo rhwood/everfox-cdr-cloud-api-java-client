@@ -15,6 +15,7 @@ package com.everfox.cdr.async;
 
 import com.everfox.cdr.CdrApiError;
 import com.everfox.cdr.MediaType;
+import com.everfox.cdr.internal.HttpSupport;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -64,10 +65,7 @@ public class AsyncApiClient implements AutoCloseable {
     private AsyncApiClient(AsyncApiConfig config) {
         this.config = config;
         // Redirects are followed by download() so the link's credentials are not sent to the redirect target
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(config.getConnectTimeoutSeconds()))
-                .followRedirects(HttpClient.Redirect.NEVER)
-                .build();
+        this.httpClient = HttpSupport.newClient(config);
     }
 
     /**
@@ -83,9 +81,7 @@ public class AsyncApiClient implements AutoCloseable {
             throws IOException, InterruptedException, AsyncApiException {
         Objects.requireNonNull(request, "request cannot be null");
 
-        HttpRequest httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(config.getBaseUrl() + "/initiate"))
-                .timeout(requestTimeout())
+        HttpRequest httpRequest = HttpSupport.newRequest(URI.create(config.getBaseUrl() + "/initiate"), config)
                 .header("x-api-key", config.getApiKey())
                 .header("Content-Type", MediaType.JSON.getMediaType())
                 .header("Accept", MediaType.JSON.getMediaType())
@@ -157,9 +153,7 @@ public class AsyncApiClient implements AutoCloseable {
         AsyncApiLink link = requireLink(status.getUploadLink(), "upload");
         HttpResponse<byte[]> response =
                 httpClient.send(linkRequest(link, body).build(), HttpResponse.BodyHandlers.ofByteArray());
-        if (response.statusCode() >= 400) {
-            throw AsyncApiException.create(response.statusCode(), response.body());
-        }
+        HttpSupport.throwIfError(response, AsyncApiException::create);
     }
 
     /**
@@ -178,8 +172,8 @@ public class AsyncApiClient implements AutoCloseable {
     }
 
     /**
-     * Polls the status of a job until processing is complete, waiting {@link AsyncApiConfig#getPollIntervalSeconds()}
-     * between requests for up to {@link AsyncApiConfig#getProcessingTimeoutSeconds()}.
+     * Polls the status of a job until processing is complete, waiting {@link AsyncApiConfig#getPollInterval()} between
+     * requests for up to {@link AsyncApiConfig#getProcessingTimeout()}.
      *
      * <p>The returned status may report a failure; check {@link AsyncApiStatus#isSuccess()}, or call {@code download},
      * which throws an {@link AsyncApiException} if processing failed.
@@ -195,14 +189,13 @@ public class AsyncApiClient implements AutoCloseable {
     public AsyncApiStatus waitForCompletion(AsyncApiStatus status)
             throws IOException, InterruptedException, AsyncApiException, TimeoutException {
         Objects.requireNonNull(status, "status cannot be null");
-        Duration pollInterval = Duration.ofSeconds(config.getPollIntervalSeconds());
-        long deadline = System.nanoTime()
-                + Duration.ofSeconds(config.getProcessingTimeoutSeconds()).toNanos();
+        Duration pollInterval = config.getPollInterval();
+        long deadline = System.nanoTime() + config.getProcessingTimeout().toNanos();
         AsyncApiStatus current = status;
         while (!current.isComplete()) {
             if (System.nanoTime() - deadline >= 0) {
-                throw new TimeoutException("Processing did not complete within " + config.getProcessingTimeoutSeconds()
-                        + " seconds (state: " + current.getState() + ")");
+                throw new TimeoutException("Processing did not complete within "
+                        + config.getProcessingTimeout().toMillis() + " ms (state: " + current.getState() + ")");
             }
             Thread.sleep(pollInterval);
             HttpResponse<byte[]> response = sendStatusRequest(current, true);
@@ -322,10 +315,7 @@ public class AsyncApiClient implements AutoCloseable {
             }
             URI location = request.uri()
                     .resolve(response.headers().firstValue("location").orElseThrow());
-            request = HttpRequest.newBuilder(location)
-                    .timeout(requestTimeout())
-                    .GET()
-                    .build();
+            request = HttpSupport.newRequest(location, config).GET().build();
         }
     }
 
@@ -350,7 +340,7 @@ public class AsyncApiClient implements AutoCloseable {
      */
     private HttpRequest.Builder linkRequest(AsyncApiLink link, HttpRequest.BodyPublisher body) {
         HttpRequest.Builder builder =
-                HttpRequest.newBuilder(link.getUrl()).timeout(requestTimeout()).method(link.getMethod(), body);
+                HttpSupport.newRequest(link.getUrl(), config).method(link.getMethod(), body);
         link.getHeaders().forEach((name, value) -> {
             if (!RESTRICTED_HEADERS.contains(name.toLowerCase(Locale.ROOT))) {
                 builder.header(name, value);
@@ -372,15 +362,6 @@ public class AsyncApiClient implements AutoCloseable {
             throw new IllegalStateException("Status has no " + name + " link");
         }
         return link;
-    }
-
-    /**
-     * Returns the request timeout.
-     *
-     * @return the request timeout
-     */
-    private Duration requestTimeout() {
-        return Duration.ofSeconds(config.getRequestTimeoutSeconds());
     }
 
     /**

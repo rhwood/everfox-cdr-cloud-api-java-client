@@ -13,6 +13,8 @@ This library provides a simple, type-safe interface for uploading files to the E
 - Java 21 or higher
 - Maven 3.6 or higher
 
+The JAR is a Java module named `com.everfox.cdr`, and it can also be used from the classpath (as Apache NiFi does).
+
 ## Installation
 
 The library hasn't been published to a Maven repository yet. Build and install it locally with `mvn clean install`, then add it to your `pom.xml`:
@@ -60,19 +62,21 @@ try (InstantApiClient client = InstantApiClient.create(config)) {
 
 | Class | Package | Purpose |
 |---|---|---|
-| `InstantApiConfig` | `com.everfox.cdr.instant` | API key, endpoint, and timeouts. Created with `InstantApiConfig.create(...)`. |
+| `InstantApiConfig` | `com.everfox.cdr.instant` | API key, endpoint, and timeouts. Created with `InstantApiConfig.create(...)` or `InstantApiConfig.builder(...)`. |
 | `InstantApiClient` | `com.everfox.cdr.instant` | Uploads files. Created with `InstantApiClient.create(config)`; implements `AutoCloseable`. |
 | `InstantApiRequest` | `com.everfox.cdr.instant` | File data, content type, accept type, and options. Created with `InstantApiRequest.create(...)`. |
 | `InstantApiResponse` | `com.everfox.cdr.instant` | Processed file, status code, headers, risks taken, and report. |
 | `InstantApiException` | `com.everfox.cdr.instant` | Error returned by the API (HTTP 4xx/5xx). |
 | `RequestOptions` | `com.everfox.cdr.instant` | Processing options sent in the `X-Options` header. Created with `RequestOptions.builder()`. |
-| `AsyncApiConfig` | `com.everfox.cdr.async` | API key, endpoint, timeouts, and polling interval and limit. Created with `AsyncApiConfig.create(...)`. |
+| `AsyncApiConfig` | `com.everfox.cdr.async` | API key, endpoint, timeouts, and polling interval and limit. Created with `AsyncApiConfig.create(...)` or `AsyncApiConfig.builder(...)`. |
 | `AsyncApiClient` | `com.everfox.cdr.async` | Initiates, uploads, polls, and downloads. Created with `AsyncApiClient.create(config)`; implements `AutoCloseable`. |
 | `AsyncApiRequest` | `com.everfox.cdr.async` | Content type and options for initiating a job. Created with `AsyncApiRequest.create(...)`. |
 | `AsyncApiStatus` | `com.everfox.cdr.async` | Job state, error, risks taken, and the links for the next step. |
 | `AsyncApiResponse` | `com.everfox.cdr.async` | Downloaded file, status code, headers, and the job's final status. |
 | `AsyncApiException` | `com.everfox.cdr.async` | Error returned by the API, or the error of a failed job. |
 | `RequestOptions` | `com.everfox.cdr.async` | Processing options sent in the initiate request. Created with `RequestOptions.builder()`. |
+| `CdrApiConfig` | `com.everfox.cdr` | Supertype of `InstantApiConfig` and `AsyncApiConfig`: API key, base URL, and timeouts. |
+| `CdrApiResponse` | `com.everfox.cdr` | Supertype of `InstantApiResponse` and `AsyncApiResponse`: status code, body, and case-insensitive headers. |
 | `CdrApiException` | `com.everfox.cdr` | Supertype of `InstantApiException` and `AsyncApiException`. |
 | `CdrApiError` | `com.everfox.cdr` | An error reported by an API: code, message, name, type, and sub-type. |
 | `ProcessingOptions` | `com.everfox.cdr.options` | Options shared by every API, extended by each `RequestOptions`. The option value types are in this package too. |
@@ -104,17 +108,22 @@ URI asyncUrl = region.getBaseUrl(Api.ASYNC); // https://eu-west-2.aws.async.cdr.
 ### Custom Endpoint
 
 ```java
-InstantApiConfig config = InstantApiConfig.create(apiKey, URI.create("https://us-west-2.aws.instant.cdr.everfox.com/v1"));
+InstantApiConfig config = InstantApiConfig.builder(apiKey, URI.create("https://us-west-2.aws.instant.cdr.everfox.com/v1"))
+        .build();
 ```
 
 ### Timeouts
 
-The connection timeout defaults to 10 seconds and the request timeout to 60 seconds. Either can be overridden with a `Region` or `URI`:
+The connection timeout defaults to 10 seconds and the request timeout to 60 seconds. Override either with the builder, which takes a `Region` or a `URI`:
 
 ```java
-// 5 second connection timeout, 120 second request timeout
-InstantApiConfig config = InstantApiConfig.create(apiKey, Region.US_WEST_2, 5, 120);
+InstantApiConfig config = InstantApiConfig.builder(apiKey, Region.US_WEST_2)
+        .connectTimeout(Duration.ofSeconds(5))
+        .requestTimeout(Duration.ofMinutes(2))
+        .build();
 ```
+
+Response headers can be looked up in any case, for example `response.getHeader("X-Risks-Taken")`. Close clients when you're done with them (they're `AutoCloseable`), which releases their HTTP connections.
 
 ## Making Requests
 
@@ -284,7 +293,7 @@ status = client.waitForCompletion(status); // polls until complete
 client.download(status, Path.of("large-safe.pdf")); // a result can only be downloaded once
 ```
 
-`waitForCompletion` polls every second for up to 10 minutes by default, and throws `java.util.concurrent.TimeoutException` if processing doesn't finish in time. Change these limits with `AsyncApiConfig.create(apiKey, region, connectTimeout, requestTimeout, pollInterval, processingTimeout)`. The request timeout applies to each upload and download, so increase it for large files.
+`waitForCompletion` polls every second for up to 10 minutes by default, and throws `java.util.concurrent.TimeoutException` if processing doesn't finish in time. Change these limits with the builder, for example `AsyncApiConfig.builder(apiKey, region).pollInterval(Duration.ofMillis(500)).processingTimeout(Duration.ofMinutes(20)).build()`. The request timeout applies to each upload and download, so increase it for large files.
 
 If processing fails, `download` and `process` throw an `AsyncApiException` that holds the job's error (for example `PROCESSING_NOT_RECOGNISED`), with HTTP status 200. Upload, status, and result links expire after a few minutes and contain credentials, so don't log them.
 

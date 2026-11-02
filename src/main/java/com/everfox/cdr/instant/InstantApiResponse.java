@@ -13,42 +13,23 @@
  */
 package com.everfox.cdr.instant;
 
+import com.everfox.cdr.CdrApiResponse;
+import com.everfox.cdr.internal.HttpSupport;
 import java.net.http.HttpResponse;
-import java.util.Map;
 
-/** Response from the Instant API. */
-public class InstantApiResponse {
-
-    /** The HTTP status code of the response. */
-    private final int statusCode;
-    /** The response body (processed file data). */
-    private final byte[] body;
-    /** The response headers. */
-    private final Map<String, String> headers;
-    /** The X-Risks-Taken header value. */
-    private final String risksTaken;
-    /** The X-Report header value. */
-    private final String report;
+/** Response from the Instant API: the processed file, and the risks taken and report from the response headers. */
+public final class InstantApiResponse extends CdrApiResponse {
 
     /**
-     * Creates a new response with the specified status code, body, headers, and optional headers.
+     * Creates a response from an HTTP response.
      *
      * <p>Note: This constructor is private to force the use of the static factory method
      * {@link #fromHttpResponse(HttpResponse)} so exceptions can be thrown without creating a new instance.
      *
-     * @param statusCode the HTTP status code
-     * @param body the response body (processed file data)
-     * @param headers the response headers
-     * @param risksTaken the X-Risks-Taken header value
-     * @param report the X-Report header value
+     * @param httpResponse the HTTP response
      */
-    private InstantApiResponse(
-            int statusCode, byte[] body, Map<String, String> headers, String risksTaken, String report) {
-        this.statusCode = statusCode;
-        this.body = body;
-        this.headers = headers;
-        this.risksTaken = risksTaken;
-        this.report = report;
+    private InstantApiResponse(HttpResponse<byte[]> httpResponse) {
+        super(httpResponse);
     }
 
     /**
@@ -59,46 +40,8 @@ public class InstantApiResponse {
      * @throws InstantApiException if the response indicates an error
      */
     static InstantApiResponse fromHttpResponse(HttpResponse<byte[]> httpResponse) throws InstantApiException {
-        int statusCode = httpResponse.statusCode();
-        byte[] body = httpResponse.body();
-        Map<String, String> headers = httpResponse.headers().map().entrySet().stream()
-                .collect(java.util.stream.Collectors.toMap(Map.Entry::getKey, e -> String.join(", ", e.getValue())));
-
-        String risksTaken = headers.get("x-risks-taken");
-        String report = headers.get("x-report");
-
-        if (statusCode >= 400) {
-            throw InstantApiException.create(statusCode, body);
-        }
-
-        return new InstantApiResponse(statusCode, body, headers, risksTaken, report);
-    }
-
-    /**
-     * Returns the HTTP status code.
-     *
-     * @return the status code
-     */
-    public int getStatusCode() {
-        return statusCode;
-    }
-
-    /**
-     * Returns the response body (processed file data).
-     *
-     * @return the body bytes
-     */
-    public byte[] getBody() {
-        return body.clone();
-    }
-
-    /**
-     * Returns all response headers.
-     *
-     * @return the headers map
-     */
-    public Map<String, String> getHeaders() {
-        return Map.copyOf(headers);
+        HttpSupport.throwIfError(httpResponse, InstantApiException::create);
+        return new InstantApiResponse(httpResponse);
     }
 
     /**
@@ -107,7 +50,7 @@ public class InstantApiResponse {
      * @return the risks taken, or null if not present
      */
     public String getRisksTaken() {
-        return risksTaken;
+        return getHeader("x-risks-taken");
     }
 
     /**
@@ -116,15 +59,6 @@ public class InstantApiResponse {
      * @return the processing report, or null if not present
      */
     public String getReport() {
-        return report;
-    }
-
-    /**
-     * Checks if the response is successful (status 200-299).
-     *
-     * @return true if successful
-     */
-    public boolean isSuccess() {
-        return statusCode >= 200 && statusCode < 300;
+        return getHeader("x-report");
     }
 }

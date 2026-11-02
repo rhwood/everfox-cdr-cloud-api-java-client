@@ -14,6 +14,7 @@
 package com.everfox.cdr.async;
 
 import com.everfox.cdr.CdrApiError;
+import com.everfox.cdr.internal.HttpSupport;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -243,11 +244,9 @@ public class AsyncApiStatus {
      * @throws AsyncApiException if the response indicates an error or does not contain a status
      */
     static AsyncApiStatus fromHttpResponse(HttpResponse<byte[]> httpResponse) throws AsyncApiException {
+        HttpSupport.throwIfError(httpResponse, AsyncApiException::create);
         int statusCode = httpResponse.statusCode();
         byte[] body = httpResponse.body();
-        if (statusCode >= 400) {
-            throw AsyncApiException.create(statusCode, body);
-        }
         try {
             return fromJson(
                     new String(body != null ? body : new byte[0], StandardCharsets.UTF_8),

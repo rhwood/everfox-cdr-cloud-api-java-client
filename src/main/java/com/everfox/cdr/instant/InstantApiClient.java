@@ -14,13 +14,13 @@
 package com.everfox.cdr.instant;
 
 import com.everfox.cdr.MediaType;
+import com.everfox.cdr.internal.HttpSupport;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
@@ -46,9 +46,7 @@ public class InstantApiClient implements AutoCloseable {
     // private to force use of the static factory method
     private InstantApiClient(InstantApiConfig config) {
         this.config = config;
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(config.getConnectTimeoutSeconds()))
-                .build();
+        this.httpClient = HttpSupport.newClient(config);
     }
 
     /**
@@ -69,9 +67,7 @@ public class InstantApiClient implements AutoCloseable {
                 new HashSet<>(Arrays.asList(request.getAcceptType().split(",")));
         acceptTypes.add(MediaType.JSON.getMediaType());
 
-        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                .uri(URI.create(endpoint))
-                .timeout(Duration.ofSeconds(config.getRequestTimeoutSeconds()))
+        HttpRequest.Builder requestBuilder = HttpSupport.newRequest(URI.create(endpoint), config)
                 .header("x-api-key", config.getApiKey())
                 .header("Content-Type", request.getContentType())
                 .header("Accept", String.join(", ", acceptTypes))
@@ -116,7 +112,7 @@ public class InstantApiClient implements AutoCloseable {
 
     @Override
     public void close() {
-        // HttpClient does not require explicit cleanup
+        httpClient.close();
     }
 
     /**

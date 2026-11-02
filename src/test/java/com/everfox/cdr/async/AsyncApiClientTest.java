@@ -31,6 +31,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
@@ -227,18 +228,24 @@ class AsyncApiClientTest {
      * @return the client
      */
     private AsyncApiClient createLocalClient() {
-        return createLocalClient(AsyncApiConfig.DEFAULT_PROCESSING_TIMEOUT_SECONDS);
+        return createLocalClient(AsyncApiConfig.DEFAULT_PROCESSING_TIMEOUT);
     }
 
     /**
      * Creates a client pointed at the local server.
      *
-     * @param processingTimeoutSeconds the processing timeout
+     * <p>The client polls every 10 ms so that tests don't wait for the default poll interval.
+     *
+     * @param processingTimeout the processing timeout
      * @return the client
      */
-    private AsyncApiClient createLocalClient(int processingTimeoutSeconds) {
-        return AsyncApiClient.create(
-                AsyncApiConfig.create("test-key", URI.create(base() + "/v1"), 5, 5, 1, processingTimeoutSeconds));
+    private AsyncApiClient createLocalClient(Duration processingTimeout) {
+        return AsyncApiClient.create(AsyncApiConfig.builder("test-key", URI.create(base() + "/v1"))
+                .connectTimeout(Duration.ofSeconds(5))
+                .requestTimeout(Duration.ofSeconds(5))
+                .pollInterval(Duration.ofMillis(10))
+                .processingTimeout(processingTimeout)
+                .build());
     }
 
     /**
@@ -467,7 +474,7 @@ class AsyncApiClientTest {
     void testWaitForCompletionTimeout() {
         statusReplies.clear();
         statusReplies.add(new Reply(200, processing(), null));
-        try (AsyncApiClient client = createLocalClient(1)) {
+        try (AsyncApiClient client = createLocalClient(Duration.ofMillis(200))) {
             TimeoutException exception = assertThrows(
                     TimeoutException.class, () -> client.waitForCompletion(AsyncApiStatus.fromJson(processing())));
 

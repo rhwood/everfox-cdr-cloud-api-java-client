@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -125,7 +126,7 @@ class IntegrationTest {
             Region region = Region.fromString(apiRegion);
             apiUri = region.getBaseUrl(Api.INSTANT);
         }
-        InstantApiConfig config = InstantApiConfig.create(apiKey, apiUri);
+        InstantApiConfig config = InstantApiConfig.builder(apiKey, apiUri).build();
 
         return InstantApiClient.create(config);
     }
@@ -398,8 +399,9 @@ class IntegrationTest {
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testInvalidApiKey() {
-        InstantApiConfig config = InstantApiConfig.create(
-                "invalid-api-key-12345", this.createClient().getConfig().getBaseUrl());
+        InstantApiConfig config = InstantApiConfig.builder(
+                        "invalid-api-key-12345", this.createClient().getConfig().getBaseUrl())
+                .build();
 
         try (InstantApiClient client = InstantApiClient.create(config)) {
             InstantApiRequest request = InstantApiRequest.create(PDF_TEST_DATA, "application/pdf", "application/pdf");
@@ -480,7 +482,10 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testCustomTimeouts() throws IOException, InterruptedException, InstantApiException {
         String apiKey = System.getenv(API_KEY_ENV);
-        InstantApiConfig config = InstantApiConfig.create(apiKey, Region.US_WEST_2, 5, 120); // Custom timeouts
+        InstantApiConfig config = InstantApiConfig.builder(apiKey, Region.US_WEST_2)
+                .connectTimeout(Duration.ofSeconds(5))
+                .requestTimeout(Duration.ofSeconds(120))
+                .build();
 
         try (InstantApiClient client = InstantApiClient.create(config)) {
             InstantApiRequest request = InstantApiRequest.create(PDF_TEST_DATA, "application/pdf", "application/pdf");

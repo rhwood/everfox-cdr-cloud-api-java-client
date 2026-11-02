@@ -13,21 +13,14 @@
  */
 package com.everfox.cdr.async;
 
+import com.everfox.cdr.CdrApiResponse;
+import com.everfox.cdr.internal.HttpSupport;
 import java.net.http.HttpResponse;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
-/** The processed file downloaded from the Async API. */
-public class AsyncApiResponse {
+/** The processed file downloaded from the Async API, with the status of the job that produced it. */
+public final class AsyncApiResponse extends CdrApiResponse {
 
-    /** The HTTP status code of the response. */
-    private final int statusCode;
-    /** The response body (processed file data). */
-    private final byte[] body;
-    /** The response headers. */
-    private final Map<String, String> headers;
     /** The status of the job that produced the file. */
     private final AsyncApiStatus status;
 
@@ -38,15 +31,11 @@ public class AsyncApiResponse {
      * {@link #fromHttpResponse(HttpResponse, AsyncApiStatus)} so exceptions can be thrown without creating a new
      * instance.
      *
-     * @param statusCode the HTTP status code
-     * @param body the response body (processed file data)
-     * @param headers the response headers
+     * @param httpResponse the HTTP response
      * @param status the status of the job that produced the file
      */
-    private AsyncApiResponse(int statusCode, byte[] body, Map<String, String> headers, AsyncApiStatus status) {
-        this.statusCode = statusCode;
-        this.body = body;
-        this.headers = headers;
+    private AsyncApiResponse(HttpResponse<byte[]> httpResponse, AsyncApiStatus status) {
+        super(httpResponse);
         this.status = status;
     }
 
@@ -60,42 +49,8 @@ public class AsyncApiResponse {
      */
     static AsyncApiResponse fromHttpResponse(HttpResponse<byte[]> httpResponse, AsyncApiStatus status)
             throws AsyncApiException {
-        int statusCode = httpResponse.statusCode();
-        byte[] body = httpResponse.body() != null ? httpResponse.body() : new byte[0];
-        if (statusCode >= 400) {
-            throw AsyncApiException.create(statusCode, body);
-        }
-        // Header names are case-insensitive, so look them up that way
-        Map<String, String> headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        httpResponse.headers().map().forEach((name, values) -> headers.put(name, String.join(", ", values)));
-        return new AsyncApiResponse(statusCode, body, headers, status);
-    }
-
-    /**
-     * Returns the HTTP status code.
-     *
-     * @return the status code
-     */
-    public int getStatusCode() {
-        return statusCode;
-    }
-
-    /**
-     * Returns the response body (processed file data).
-     *
-     * @return the body bytes
-     */
-    public byte[] getBody() {
-        return body.clone();
-    }
-
-    /**
-     * Returns all response headers. Header names are case-insensitive.
-     *
-     * @return the unmodifiable headers map
-     */
-    public Map<String, String> getHeaders() {
-        return Collections.unmodifiableMap(headers);
+        HttpSupport.throwIfError(httpResponse, AsyncApiException::create);
+        return new AsyncApiResponse(httpResponse, status);
     }
 
     /**
@@ -114,14 +69,5 @@ public class AsyncApiResponse {
      */
     public List<String> getRisksTaken() {
         return status.getRisksTaken();
-    }
-
-    /**
-     * Checks if the response is successful (status 200-299).
-     *
-     * @return true if successful
-     */
-    public boolean isSuccess() {
-        return statusCode >= 200 && statusCode < 300;
     }
 }
