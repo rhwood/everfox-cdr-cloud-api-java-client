@@ -2,6 +2,8 @@
 
 Java client library for the [Everfox CDR (Content Disarm and Reconstruction) Cloud API](https://cdr.everfox.com).
 
+> ⚠️ **Pre-release software.** This library is under active development and has not had a stable release. The API may change incompatibly between versions, and no artifacts have been published yet. Don't rely on it in production.
+
 ## Overview
 
 This library provides a simple, type-safe interface for uploading files to the Everfox CDR Cloud API service, which removes potential security threats and returns sanitized versions. It's designed for use with Apache NiFi 2.0.0+ but can be used in any Java 21+ application.
@@ -13,9 +15,7 @@ This library provides a simple, type-safe interface for uploading files to the E
 
 ## Installation
 
-⚠️ Publication location is TBD ⚠️
-
-Add to your `pom.xml`:
+The library hasn't been published to a Maven repository yet. Build and install it locally with `mvn clean install`, then add it to your `pom.xml`:
 
 ```xml
 <dependency>
