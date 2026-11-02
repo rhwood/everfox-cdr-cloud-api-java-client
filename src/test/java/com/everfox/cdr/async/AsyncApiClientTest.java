@@ -15,6 +15,7 @@ package com.everfox.cdr.async;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.everfox.cdr.CdrApiError;
 import com.everfox.cdr.MediaType;
 import com.everfox.cdr.Region;
 import com.everfox.cdr.Risk;
@@ -379,7 +380,7 @@ class AsyncApiClientTest {
                     AsyncApiException.class, () -> client.upload(AsyncApiStatus.fromJson(waitingForUpload()), FILE));
 
             assertEquals(403, exception.getHttpStatusCode());
-            assertEquals(AsyncApiError.UNKNOWN_CODE, exception.getApiStatusCode());
+            assertEquals(CdrApiError.UNKNOWN_CODE, exception.getApiStatusCode());
         }
     }
 
@@ -554,7 +555,7 @@ class AsyncApiClientTest {
             assertEquals(200, exception.getHttpStatusCode());
             assertEquals(3020, exception.getApiStatusCode());
             assertEquals("PROCESSING_NOT_RECOGNISED", exception.getName());
-            assertEquals(AsyncApiError.UNKNOWN_CODE, unknown.getApiStatusCode());
+            assertEquals(CdrApiError.UNKNOWN_CODE, unknown.getApiStatusCode());
             assertTrue(received.isEmpty());
         }
     }

@@ -16,6 +16,7 @@ package com.everfox.cdr.async;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.everfox.cdr.CdrApiError;
 import java.net.URI;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpResponse;
@@ -117,7 +118,7 @@ class AsyncApiStatusTest {
 
         assertTrue(status.isComplete());
         assertFalse(status.isSuccess());
-        AsyncApiError error = status.getError();
+        CdrApiError error = status.getError();
         assertEquals(3020, error.getCode());
         assertEquals("PROCESSING_NOT_RECOGNISED", error.getName());
         assertEquals("Not a PDF", error.getMessage());
@@ -199,7 +200,7 @@ class AsyncApiStatusTest {
                 () -> AsyncApiStatus.fromHttpResponse(response(200, "<html></html>", Map.of())));
 
         assertEquals(200, empty.getHttpStatusCode());
-        assertEquals(AsyncApiError.UNKNOWN_CODE, html.getApiStatusCode());
+        assertEquals(CdrApiError.UNKNOWN_CODE, html.getApiStatusCode());
     }
 
     /** Tests creating a link directly. */

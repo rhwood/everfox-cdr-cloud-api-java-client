@@ -15,6 +15,7 @@ package com.everfox.cdr.instant;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.everfox.cdr.CdrApiException;
 import org.junit.jupiter.api.Test;
 
 /** Unit tests for {@link InstantApiException}. */
@@ -45,6 +46,16 @@ class InstantApiExceptionTest {
         assertEquals("Error type", exception.getType());
         assertEquals(
                 "API Error: Error message (code: 1000, HTTP status: 1000, type: Error type)", exception.getMessage());
+    }
+
+    /** Tests that the error sub-type is parsed and the exception can be caught as a {@link CdrApiException}. */
+    @Test
+    void testExceptionSubTypeAndSupertype() {
+        CdrApiException exception = InstantApiException.create(
+                400, "{\"error\":{\"code\":6010,\"message\":\"Bad\",\"subType\":\"ValidationFailure\"}}".getBytes());
+
+        assertEquals("ValidationFailure", exception.getSubType());
+        assertEquals(6010, exception.getError().getCode());
     }
 
     /** Tests that creating an InstantApiException with a null body throws expected unknown error status. */

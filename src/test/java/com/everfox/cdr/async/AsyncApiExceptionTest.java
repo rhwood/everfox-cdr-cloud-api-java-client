@@ -15,83 +15,45 @@ package com.everfox.cdr.async;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.everfox.cdr.CdrApiError;
+import com.everfox.cdr.CdrApiException;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 
-/** Unit tests for {@link AsyncApiException} and {@link AsyncApiError}. */
+/** Unit tests for {@link AsyncApiException}. Error parsing is tested in {@code CdrApiErrorTest}. */
 class AsyncApiExceptionTest {
-
-    /** Valid error response body. */
-    private static final byte[] VALID_RESPONSE_BODY =
-            ("{\"error\":{\"code\":1000,\"message\":\"Error message\",\"name\":\"Error name\","
-                            + "\"type\":\"Error type\",\"subType\":\"Error subtype\"}}")
-                    .getBytes(StandardCharsets.UTF_8);
 
     /** Default constructor for the test class. */
     AsyncApiExceptionTest() {
         // Nothing to do here
     }
 
-    /**
-     * Asserts that an exception holds the unknown error.
-     *
-     * @param exception the exception
-     */
-    private static void assertUnknown(AsyncApiException exception) {
-        assertEquals(AsyncApiError.UNKNOWN_CODE, exception.getApiStatusCode());
-        assertEquals("Unknown error", exception.getApiMessage());
-        assertEquals("Unknown", exception.getName());
-        assertEquals("Unknown", exception.getType());
-        assertNull(exception.getSubType());
-    }
-
-    /** Tests that a valid error body is parsed. */
+    /** Tests creating an exception from a response body. */
     @Test
-    void testExceptionWithValidBody() {
-        AsyncApiException exception = AsyncApiException.create(400, VALID_RESPONSE_BODY);
+    void testExceptionFromBody() {
+        AsyncApiException exception = AsyncApiException.create(
+                400,
+                "{\"error\":{\"code\":1000,\"message\":\"Error message\",\"type\":\"Error type\"}}"
+                        .getBytes(StandardCharsets.UTF_8));
 
-        assertEquals(1000, exception.getApiStatusCode());
+        assertInstanceOf(CdrApiException.class, exception);
         assertEquals(400, exception.getHttpStatusCode());
-        assertEquals("Error message", exception.getApiMessage());
-        assertEquals("Error name", exception.getName());
-        assertEquals("Error type", exception.getType());
-        assertEquals("Error subtype", exception.getSubType());
-        assertEquals(1000, exception.getError().getCode());
+        assertEquals(1000, exception.getApiStatusCode());
         assertEquals(
                 "API Error: Error message (code: 1000, HTTP status: 400, type: Error type)", exception.getMessage());
-    }
-
-    /** Tests that a missing or invalid body results in the unknown error. */
-    @Test
-    void testExceptionWithInvalidBodies() {
-        assertUnknown(AsyncApiException.create(500, (byte[]) null));
-        assertUnknown(AsyncApiException.create(500, new byte[0]));
-        assertUnknown(AsyncApiException.create(500, "[}".getBytes(StandardCharsets.UTF_8)));
-        assertUnknown(AsyncApiException.create(500, "{}".getBytes(StandardCharsets.UTF_8)));
-        assertUnknown(AsyncApiException.create(500, "{\"error\":{\"code\":\"x\"}}".getBytes(StandardCharsets.UTF_8)));
-        assertUnknown(AsyncApiException.create(500, "<Error/>".getBytes(StandardCharsets.UTF_8)));
-    }
-
-    /** Tests that an error with only a code uses defaults for the other fields. */
-    @Test
-    void testExceptionWithPartialError() {
-        AsyncApiException exception =
-                AsyncApiException.create(403, "{\"error\":{\"code\":6070}}".getBytes(StandardCharsets.UTF_8));
-
-        assertEquals(6070, exception.getApiStatusCode());
-        assertEquals("Unknown error", exception.getApiMessage());
-        assertEquals("Unknown", exception.getName());
-        assertEquals("Unknown", exception.getType());
+        assertEquals(
+                CdrApiError.UNKNOWN_CODE,
+                AsyncApiException.create(500, (byte[]) null).getApiStatusCode());
     }
 
     /** Tests creating an exception from an error. */
     @Test
     void testExceptionFromError() {
-        AsyncApiError error = AsyncApiError.unknown();
+        CdrApiError error = CdrApiError.unknown();
         AsyncApiException exception = AsyncApiException.create(200, error);
 
         assertSame(error, exception.getError());
         assertEquals(200, exception.getHttpStatusCode());
-        assertThrows(NullPointerException.class, () -> AsyncApiException.create(200, (AsyncApiError) null));
+        assertThrows(NullPointerException.class, () -> AsyncApiException.create(200, (CdrApiError) null));
     }
 }

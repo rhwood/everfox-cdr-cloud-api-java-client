@@ -32,6 +32,8 @@ Three packages (see REFACTORING.md for the duplication between `instant` and `as
 ### `com.everfox.cdr`: shared enums
 - `Region`: `EU_WEST_1`, `EU_WEST_2`, `US_WEST_2`. `getBaseUrl(Api)` builds `https://{region}.aws.{api}.cdr.everfox.com/v1`. `fromString` is case-insensitive.
 - `Api`: `INSTANT`, `ASYNC`, `S3` (no S3 client yet); supplies the host subdomain.
+- `CdrApiError`: the shared `{"error": {code, message, name, type, subType}}` model. `fromJson(byte[])` is the one parser and holds the `-1` / `"Unknown"` fallback. It takes bytes so Jackson types stay out of the public API.
+- `CdrApiException`: abstract supertype of each client's exception, with the shared getters and message format. Its constructor doesn't validate (SpotBugs `CT_CONSTRUCTOR_THROW`), so subclass factories must pass a non-null error.
 - `MediaType`: MIME types the API accepts. `ALL` is `*/*`.
 - `Risk`: hierarchical risk identifiers (for example `exe/macro/ms/word`, `steg/image/png`) used in allow/deny lists.
 
@@ -40,14 +42,14 @@ Three packages (see REFACTORING.md for the duplication between `instant` and `as
 - `InstantApiConfig`: API key, base URL, connect/request timeouts (defaults 10s/60s). Built with static `create(...)` overloads that take either a `Region` or a `URI`.
 - `InstantApiRequest`: file bytes, content type, accept type, and optional `RequestOptions`. Built with static `create(...)` overloads that take either `MediaType` or `String`. **The client does not enforce the 4.5 MB API limit.**
 - `InstantApiResponse`: built by `fromHttpResponse` (package-private). Throws `InstantApiException` for status >= 400. Exposes the `x-risks-taken` and `x-report` headers.
-- `InstantApiException`: parses the API's `{"error": {code, message, name, type}}` body. If parsing fails, it falls back to code `-1` / `"Unknown"`.
+- `InstantApiException`: a `CdrApiException` built from the response body by `CdrApiError.fromJson`.
 - `RequestOptions`: serialized by Jackson into the `X-Options` header JSON. Use `RequestOptions.Builder`. Supports a report format, image quality preservation (`ImagesOptions`), redactions (`RedactionOptions`), format conversion (`ConversionOptions`, with its own builder), and risk allow/deny lists (a risk that is both allowed and denied makes `build()` throw).
 
 ### `com.everfox.cdr.async`: Async API client
 - `AsyncApiClient`: four HATEOAS steps, each taking the previous `AsyncApiStatus` because it holds the next link. `initiate` POSTs `{"mime-type", "options"}` JSON to `{baseUrl}/initiate` with `x-api-key`. `upload`, `getStatus`, and `download` use the link's URL, method, and headers as given (dropping headers `HttpClient` restricts). `waitForCompletion` polls with `If-None-Match` and retries 304/404/429. `download` follows the 302 itself without the link headers, because the target is a pre-signed URL. `process(...)` runs all steps. `close()` closes the `HttpClient`.
 - `AsyncApiConfig`: like `InstantApiConfig`, plus poll interval and processing timeout. Region overloads use `region.getBaseUrl(Api.ASYNC)`.
-- `AsyncApiStatus` / `AsyncApiLink` / `AsyncApiError`: parsed from JSON trees (not data-bound). `AsyncApiStatus.fromJson` is public so SNS messages can be parsed.
-- `AsyncApiException`: wraps an `AsyncApiError`. Used both for HTTP errors and for failed jobs (HTTP status 200).
+- `AsyncApiStatus` / `AsyncApiLink`: parsed from JSON trees (not data-bound). `AsyncApiStatus.fromJson` is public so SNS messages can be parsed.
+- `AsyncApiException`: a `CdrApiException`, used both for HTTP errors and for failed jobs (HTTP status 200). The status's `error` is a `CdrApiError`.
 - `RequestOptions`: a separate copy of the Instant options, plus `costs` (large-file environment) and `status` (SNS and `userData`). Builder-only, insertion-ordered, and repeated `allowRisks`/`denyRisks` calls accumulate.
 
 ### Conventions

@@ -13,6 +13,7 @@
  */
 package com.everfox.cdr.async;
 
+import com.everfox.cdr.CdrApiError;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -45,7 +46,7 @@ public class AsyncApiStatus {
     /** The user data given in the request options. */
     private final String userData;
     /** The error if processing completed unsuccessfully. */
-    private final AsyncApiError error;
+    private final CdrApiError error;
     /** The risks taken during processing. */
     private final List<String> risksTaken;
     /** The link to upload the file to. */
@@ -76,7 +77,7 @@ public class AsyncApiStatus {
         this.success =
                 status.path("success").isBoolean() ? status.path("success").booleanValue() : null;
         this.userData = text(root, "userData");
-        this.error = root.path("error").isObject() ? AsyncApiError.fromJson(root.path("error")) : null;
+        this.error = root.path("error").isObject() ? CdrApiError.fromJson(json.getBytes(StandardCharsets.UTF_8)) : null;
         List<String> taken = new ArrayList<>();
         root.path("risks").path("taken").values().forEach(risk -> {
             if (risk.isString()) {
@@ -142,7 +143,7 @@ public class AsyncApiStatus {
      *
      * @return the error, or null if not present
      */
-    public AsyncApiError getError() {
+    public CdrApiError getError() {
         return error;
     }
 

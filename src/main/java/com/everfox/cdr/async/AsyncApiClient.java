@@ -13,6 +13,7 @@
  */
 package com.everfox.cdr.async;
 
+import com.everfox.cdr.CdrApiError;
 import com.everfox.cdr.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
@@ -285,8 +286,7 @@ public class AsyncApiClient implements AutoCloseable {
     private static AsyncApiLink requireResultLink(AsyncApiStatus status) throws AsyncApiException {
         Objects.requireNonNull(status, "status cannot be null");
         if (status.isComplete() && !status.isSuccess()) {
-            throw AsyncApiException.create(
-                    200, status.getError() != null ? status.getError() : AsyncApiError.unknown());
+            throw AsyncApiException.create(200, status.getError() != null ? status.getError() : CdrApiError.unknown());
         }
         if (!status.isComplete()) {
             throw new IllegalStateException("Processing is not complete (state: " + status.getState() + ")");

@@ -12,7 +12,7 @@ Line counts include Javadoc and license headers. "Shared" is the number of lines
 |---|---|---|---|---|
 | `RequestOptions` | `RequestOptions` | 759 / 865 | 661 | Same JSON model; async adds `costs` and `status` |
 | `InstantApiConfig` | `AsyncApiConfig` | 141 / 265 | 129 | Same fields; async adds polling |
-| `InstantApiException` | `AsyncApiException` + `AsyncApiError` | 142 / 303 | 91 | Same error JSON; async adds `subType` |
+| `InstantApiException` | `AsyncApiException` | 142 / 153 | 91 | Same error JSON (now shared; see 3) |
 | `InstantApiResponse` | `AsyncApiResponse` | 130 / 127 | 95 | Status code, body, headers, `isSuccess()` |
 | `InstantApiClient` | `AsyncApiClient` | 132 / 469 | 94 | `HttpClient` setup, factory, `close()` |
 
@@ -68,20 +68,11 @@ An alternative is composition with `@JsonUnwrapped`, where the async options hol
 
 `Region.getBaseUrl(Api)` now builds each API's endpoint (`https://{region}.aws.{api}.cdr.everfox.com/v1`), with a new `Api` enum (`INSTANT`, `ASYNC`, `S3`). Both config classes use it, and the `AsyncApiConfig.getBaseUrl(Region)` stopgap has been removed. The no-argument `Region.getBaseUrl()`, which always returned the Instant URL, has been removed.
 
-## 3. Share the error model and give errors a common supertype
+## 3. Share the error model and give errors a common supertype (done)
 
-**Problem.** Both APIs return `{"error": {code, message, name, type, subType}}`. The two exceptions parse it differently:
+`AsyncApiError` moved to `com.everfox.cdr` as `CdrApiError`, whose `fromJson(byte[])` is the only parser of the `{"error": {...}}` body and the only place that has the `-1` / `"Unknown"` fallback. `InstantApiException` and `AsyncApiException` now extend the abstract `com.everfox.cdr.CdrApiException`, which has the shared getters, including `getSubType()` and `getError()`, and the message format. Instant errors now include `subType`.
 
-- `InstantApiException` casts values from a `Map` and drops `subType`.
-- `AsyncApiException` parses a JSON tree into an `AsyncApiError` value object, which also represents the `error` property of a failed Async status.
-
-The exceptions have no common supertype, so code that uses both clients, such as a NiFi processor that offers either API, needs two `catch` blocks that do the same thing.
-
-**Proposal.**
-
-- Move `AsyncApiError` to `com.everfox.cdr` as `CdrApiError`, and use it from both packages, which adds `subType` to Instant errors.
-- Add `public class CdrApiException extends Exception` with the shared getters (`getHttpStatusCode`, `getApiStatusCode`, `getApiMessage`, `getName`, `getType`, `getSubType`, `getError`). Make `InstantApiException` and `AsyncApiException` subclasses, so callers can catch either the specific type or the common one.
-- Keep the `-1` / `"Unknown"` fallback in one place.
+One behavior changed for Instant: an error with a code but no message, name, or type now reports `"Unknown error"` / `"Unknown"` for the missing fields instead of `null`, as Async already did.
 
 ## 4. Share configuration, and stop multiplying `create` overloads
 
@@ -158,7 +149,7 @@ Merging the clients into a single class isn't worth it. The Instant API is one s
 Each step stands on its own and keeps `mvn clean verify` green:
 
 1. ~~**Region endpoints (2)** and **artifact rename (8)**~~: done.
-2. **Error model (3)**: small, and it gives users the common exception supertype early.
+2. ~~**Error model (3)**~~: done.
 3. **Options model (1)**: the largest reduction (about 660 duplicated lines), and it should land before an S3 client is started.
 4. **Configuration (4)** and **HTTP plumbing (5)**: these depend on the shared settings type, so do them together, and add `module-info.java` with them.
 5. **Spec checks (6)** and **test support (7)**: these can be done at any time, and they get cheaper once steps 1–5 have removed the per-package copies.

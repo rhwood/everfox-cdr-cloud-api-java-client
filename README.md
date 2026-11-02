@@ -73,6 +73,8 @@ try (InstantApiClient client = InstantApiClient.create(config)) {
 | `AsyncApiResponse` | `com.everfox.cdr.async` | Downloaded file, status code, headers, and the job's final status. |
 | `AsyncApiException` | `com.everfox.cdr.async` | Error returned by the API, or the error of a failed job. |
 | `RequestOptions` | `com.everfox.cdr.async` | Processing options sent in the initiate request. Created with `RequestOptions.builder()`. |
+| `CdrApiException` | `com.everfox.cdr` | Supertype of `InstantApiException` and `AsyncApiException`. |
+| `CdrApiError` | `com.everfox.cdr` | An error reported by an API: code, message, name, type, and sub-type. |
 | `MediaType` | `com.everfox.cdr` | Media types supported by the API. |
 | `Region` | `com.everfox.cdr` | Regions, and the endpoint of each API in them. |
 | `Api` | `com.everfox.cdr` | The Everfox CDR Cloud APIs, used to look up a region's endpoint. |
@@ -137,7 +139,7 @@ try (InputStream input = Files.newInputStream(Path.of("document.docx"));
 
 ## Handling Errors
 
-API errors are thrown as `InstantApiException`, which exposes the details from the API's JSON error response:
+API errors are thrown as `InstantApiException` (or `AsyncApiException` from the Async client), which exposes the details from the API's JSON error response:
 
 ```java
 try {
@@ -148,8 +150,11 @@ try {
     String name = e.getName(); // e.g. "RISK_NOT_ALLOWED"
     String type = e.getType(); // e.g. "BadRequest"
     String message = e.getApiMessage(); // human readable description
+    String subType = e.getSubType(); // e.g. "ValidationFailure", or null
 }
 ```
+
+Both exceptions extend `com.everfox.cdr.CdrApiException`, so code that uses either client can catch errors the same way. If the API doesn't return a valid error (for example, a proxy returns HTML), the code is `CdrApiError.UNKNOWN_CODE` (`-1`) and the message, name, and type are `"Unknown error"`, `"Unknown"`, and `"Unknown"`.
 
 ## Request Options
 

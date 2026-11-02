@@ -11,25 +11,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.everfox.cdr.async;
+package com.everfox.cdr;
 
 import java.io.Serializable;
 import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
- * An error reported by the Async API.
+ * An error reported by an Everfox CDR Cloud API, which is a JSON object of the form <code>
+ * {"error": {"code": ..., "message": ..., "name": ..., "type": ..., "subType": ...}}</code>.
  *
- * <p>The API reports errors in two places: in the body of a failed HTTP response, and in the {@code error} property of
- * a status when processing completes unsuccessfully. Both have the same shape. See the <a
- * href="https://cdr.everfox.com/api/errors">error glossary</a> for the codes.
+ * <p>All the APIs return this in the body of a failed HTTP response. The Async API also returns it in the status of a
+ * job that completes unsuccessfully. See the <a href="https://cdr.everfox.com/api/errors">error glossary</a> for the
+ * codes.
  */
-public class AsyncApiError implements Serializable {
+public class CdrApiError implements Serializable {
 
     /** The serialization version. */
     private static final long serialVersionUID = 1L;
 
     /** The code used when the API did not return a valid error. */
     public static final int UNKNOWN_CODE = -1;
+
+    /** The Jackson object mapper used to parse errors. */
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     /** The error code. */
     private final int code;
@@ -52,7 +57,7 @@ public class AsyncApiError implements Serializable {
      * @param subType the sub-category of the error
      */
     // private to force use of the static factory methods
-    private AsyncApiError(int code, String message, String name, String type, String subType) {
+    private CdrApiError(int code, String message, String name, String type, String subType) {
         this.code = code;
         this.message = message;
         this.name = name;
@@ -113,8 +118,26 @@ public class AsyncApiError implements Serializable {
      *
      * @return the unknown error
      */
-    public static AsyncApiError unknown() {
-        return new AsyncApiError(UNKNOWN_CODE, "Unknown error", "Unknown", "Unknown", null);
+    public static CdrApiError unknown() {
+        return new CdrApiError(UNKNOWN_CODE, "Unknown error", "Unknown", "Unknown", null);
+    }
+
+    /**
+     * Creates an error from a response body or status containing an {@code error} property.
+     *
+     * @param json the JSON document, which may be null
+     * @return the error, or {@link #unknown()} if the document is not JSON or has no valid {@code error} property
+     */
+    public static CdrApiError fromJson(byte[] json) {
+        if (json == null || json.length == 0) {
+            return unknown();
+        }
+        try {
+            return fromErrorNode(MAPPER.readTree(json).get("error"));
+        } catch (Exception e) {
+            // Not JSON (for example, an XML error from a storage service), so the error is unknown
+            return unknown();
+        }
     }
 
     /**
@@ -123,11 +146,11 @@ public class AsyncApiError implements Serializable {
      * @param error the JSON error object
      * @return the error, or {@link #unknown()} if the object does not contain a numeric code
      */
-    static AsyncApiError fromJson(JsonNode error) {
+    private static CdrApiError fromErrorNode(JsonNode error) {
         if (error == null || !error.path("code").isIntegralNumber()) {
             return unknown();
         }
-        return new AsyncApiError(
+        return new CdrApiError(
                 error.path("code").asInt(),
                 text(error, "message", "Unknown error"),
                 text(error, "name", "Unknown"),
