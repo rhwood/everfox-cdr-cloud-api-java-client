@@ -15,11 +15,14 @@ package com.everfox.cdr.async;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.everfox.cdr.MediaType;
 import com.everfox.cdr.Risk;
+import com.everfox.cdr.options.ReportFormat;
 import org.junit.jupiter.api.Test;
 
-/** Unit tests for the async {@link RequestOptions} class. */
+/**
+ * Unit tests for the async {@link RequestOptions}: the async-only options, and that they combine with the shared ones.
+ * The shared options are tested in {@code ProcessingOptionsTest}.
+ */
 class RequestOptionsTest {
 
     /** Default constructor. */
@@ -27,117 +30,29 @@ class RequestOptionsTest {
         // Nothing to do
     }
 
-    /** Tests that no options serialize to an empty JSON object. */
+    /** Tests that shared and async-only builder methods chain in any order, and serialize after the shared options. */
     @Test
-    void testNoOptions() {
-        assertEquals("{}", RequestOptions.builder().build().toJson());
-    }
-
-    /** Tests the report format. */
-    @Test
-    void testReportFormat() {
+    void testBuilderChaining() {
         RequestOptions options = RequestOptions.builder()
-                .reportFormat(RequestOptions.ReportFormat.FULL)
-                .build();
-
-        assertEquals("{\"report\":{\"format\":\"full\"}}", options.toJson());
-        assertEquals("full", RequestOptions.ReportFormat.FULL.toString());
-    }
-
-    /** Tests that repeated risk calls add to the lists and keep their order. */
-    @Test
-    void testRisks() {
-        RequestOptions options = RequestOptions.builder()
-                .allowRisks(Risk.POLY_TEXT_JSON)
-                .allowRisks(Risk.STRUCTURED_NO_SCHEMA_JSON)
-                .denyRisks(Risk.EXE)
+                .userData("mine")
+                .reportFormat(ReportFormat.NONE)
+                .largeFileEnvironment(true)
+                .allowRisks(Risk.EXE)
                 .build();
 
         assertEquals(
-                "{\"risks\":{\"allow\":[\"poly/text/json\",\"structured/no-schema/json\"],\"deny\":[\"exe\"]}}",
+                "{\"report\":{\"format\":\"none\"},\"risks\":{\"allow\":[\"exe\"]},"
+                        + "\"costs\":{\"environment\":{\"large\":{\"enabled\":true}}},"
+                        + "\"status\":{\"userData\":\"mine\"}}",
                 options.toJson());
-        assertEquals(
-                "{\"risks\":{\"deny\":[\"exe\"]}}",
-                RequestOptions.builder().denyRisks(Risk.EXE).build().toJson());
+        assertEquals("{}", new RequestOptions.Builder().build().toJson());
     }
 
-    /** Tests that a risk that is both allowed and denied is rejected. */
+    /** Tests that the shared validation runs when building async options. */
     @Test
-    void testConflictingRisks() {
+    void testBuilderValidates() {
         RequestOptions.Builder builder =
                 RequestOptions.builder().allowRisks(Risk.EXE).denyRisks(Risk.EXE);
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, builder::build);
-        assertEquals("Risks cannot be both allowed and denied: [exe]", exception.getMessage());
-    }
-
-    /** Tests the image options. */
-    @Test
-    void testImages() {
-        assertEquals(
-                "{\"images\":{\"quality\":{\"preserve\":[\"image/png\",\"image/gif\"]}}}",
-                RequestOptions.builder()
-                        .imagesOptions(new RequestOptions.ImagesOptions(MediaType.IMAGE_PNG, MediaType.IMAGE_GIF))
-                        .build()
-                        .toJson());
-        assertEquals(
-                "{\"images\":{}}",
-                RequestOptions.builder()
-                        .imagesOptions(new RequestOptions.ImagesOptions(new String[0]))
-                        .build()
-                        .toJson());
-    }
-
-    /** Tests the redaction options. */
-    @Test
-    void testRedactions() {
-        assertEquals(
-                "{\"redactions\":{\"extension\":\".txt\",\"mime\":\"text/plain\",\"text\":\"Removed\"}}",
-                RequestOptions.builder()
-                        .redactionOptions(new RequestOptions.RedactionOptions(".txt", MediaType.TEXT_PLAIN, "Removed"))
-                        .build()
-                        .toJson());
-        assertEquals(
-                "{\"redactions\":{\"text\":\"Removed\"}}",
-                RequestOptions.builder()
-                        .redactionOptions(new RequestOptions.RedactionOptions(null, (String) null, "Removed"))
-                        .build()
-                        .toJson());
-    }
-
-    /** Tests the format conversion options. */
-    @Test
-    void testConversion() {
-        RequestOptions.ConversionOptions conversion = RequestOptions.ConversionOptions.builder()
-                .from(MediaType.MSWORD)
-                .enableMethods(RequestOptions.ConversionMethod.LIBREOFFICE)
-                .disableMethods(RequestOptions.ConversionMethod.DEFAULT)
-                .enableMediaTypeConversion(MediaType.MSWORD, MediaType.PDF)
-                .disableMediaTypeConversion(MediaType.MS_EXCEL, MediaType.PDF)
-                .build();
-
-        assertEquals(
-                "{\"conversion\":{\"from\":{\"mime-type\":\"application/msword\"},"
-                        + "\"methods\":{\"enabled\":[\"libreoffice\"],\"disabled\":[\"default\"]},"
-                        + "\"mime_types\":{\"enabled\":[{\"from\":\"application/msword\",\"to\":\"application/pdf\"}],"
-                        + "\"disabled\":[{\"from\":\"application/vnd.ms-excel\",\"to\":\"application/pdf\"}]}}}",
-                RequestOptions.builder().conversionOptions(conversion).build().toJson());
-        assertEquals(
-                "{\"conversion\":{}}",
-                RequestOptions.builder()
-                        .conversionOptions(
-                                RequestOptions.ConversionOptions.builder().build())
-                        .build()
-                        .toJson());
-        assertEquals("text-extraction", RequestOptions.ConversionMethod.TEXT_EXTRACTION.toString());
-    }
-
-    /** Tests that a conversion method that is both enabled and disabled is rejected. */
-    @Test
-    void testConflictingConversionMethods() {
-        RequestOptions.ConversionOptions.Builder builder = RequestOptions.ConversionOptions.builder()
-                .enableMethods(RequestOptions.ConversionMethod.REPORT)
-                .disableMethods(RequestOptions.ConversionMethod.REPORT);
 
         assertThrows(IllegalArgumentException.class, builder::build);
     }
@@ -163,9 +78,6 @@ class RequestOptionsTest {
                         .userData("mine")
                         .build()
                         .toJson());
-        assertEquals(
-                "{\"status\":{\"userData\":\"mine\"}}",
-                RequestOptions.builder().userData("mine").build().toJson());
         assertEquals(
                 "{\"status\":{\"sns\":{\"topicArn\":\"topic\",\"roleArn\":\"role\"}}}",
                 RequestOptions.builder().snsStatus("topic", "role").build().toJson());

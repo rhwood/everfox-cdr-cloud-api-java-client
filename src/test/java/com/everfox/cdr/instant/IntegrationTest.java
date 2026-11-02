@@ -19,6 +19,11 @@ import com.everfox.cdr.Api;
 import com.everfox.cdr.MediaType;
 import com.everfox.cdr.Region;
 import com.everfox.cdr.Risk;
+import com.everfox.cdr.options.ConversionMethod;
+import com.everfox.cdr.options.ConversionOptions;
+import com.everfox.cdr.options.ImagesOptions;
+import com.everfox.cdr.options.RedactionOptions;
+import com.everfox.cdr.options.ReportFormat;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -281,7 +286,8 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadWithOptions() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            RequestOptions options = new RequestOptions(RequestOptions.ReportFormat.FULL, null, null, null, null, null);
+            RequestOptions options =
+                    RequestOptions.builder().reportFormat(ReportFormat.FULL).build();
 
             InstantApiRequest request =
                     InstantApiRequest.create(PDF_TEST_DATA, "application/pdf", "application/pdf", options);
@@ -313,7 +319,7 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadWithImageQualityPreserveJpeg() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            RequestOptions.ImagesOptions imagesOptions = new RequestOptions.ImagesOptions(MediaType.IMAGE_JPEG);
+            ImagesOptions imagesOptions = new ImagesOptions(MediaType.IMAGE_JPEG);
             RequestOptions options = RequestOptions.builder()
                     .imagesOptions(imagesOptions)
                     .allowRisks(Risk.STEG_IMAGE_JPEG)
@@ -342,8 +348,9 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadWithImageQualityPreserveEmptyArray() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            RequestOptions.ImagesOptions imagesOptions = new RequestOptions.ImagesOptions(new String[0]);
-            RequestOptions options = new RequestOptions(null, null, imagesOptions, null, null, null);
+            ImagesOptions imagesOptions = new ImagesOptions(new String[0]);
+            RequestOptions options =
+                    RequestOptions.builder().imagesOptions(imagesOptions).build();
 
             InstantApiRequest request =
                     InstantApiRequest.create(JPEG_TEST_DATA, MediaType.IMAGE_JPEG, MediaType.IMAGE_JPEG, options);
@@ -496,12 +503,11 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testAllRequestOptions() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            RequestOptions.ImagesOptions images =
-                    new RequestOptions.ImagesOptions(MediaType.IMAGE_JPEG, MediaType.IMAGE_PNG);
+            ImagesOptions images = new ImagesOptions(MediaType.IMAGE_JPEG, MediaType.IMAGE_PNG);
             RequestOptions options = RequestOptions.builder()
                     .allowRisks(Risk.EXE, Risk.EXE_MACRO, Risk.STEG, Risk.POLY)
                     // Configure reporting
-                    .reportFormat(RequestOptions.ReportFormat.FULL)
+                    .reportFormat(ReportFormat.FULL)
                     // Configure image quality
                     .imagesOptions(images)
                     .build();
@@ -518,7 +524,7 @@ class IntegrationTest {
             JsonNode report = MAPPER.readTree(response.getReport());
             assertEquals(2, report.size());
             assertEquals(
-                    RequestOptions.ReportFormat.FULL.getFormat(),
+                    ReportFormat.FULL.getFormat(),
                     report.get("settings").get("format").asString());
             JsonNode structure = report.get("structure").asArray();
             assertEquals(1, structure.size());
@@ -568,7 +574,7 @@ class IntegrationTest {
     void testUploadZipFileWithRedaction() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
             RequestOptions options = RequestOptions.builder()
-                    .redactionOptions(new RequestOptions.RedactionOptions(".txt", MediaType.TEXT_PLAIN, "Redacted"))
+                    .redactionOptions(new RedactionOptions(".txt", MediaType.TEXT_PLAIN, "Redacted"))
                     .build();
             InstantApiRequest request = InstantApiRequest.create(ZIP_TEST_DATA, MediaType.ZIP, MediaType.ZIP, options);
 
@@ -594,9 +600,8 @@ class IntegrationTest {
     void testUploadPdfFileWithAutomaticConversion() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
             RequestOptions options = RequestOptions.builder()
-                    .conversionOptions(RequestOptions.ConversionOptions.builder()
-                            .from(MediaType.PDF)
-                            .build())
+                    .conversionOptions(
+                            ConversionOptions.builder().from(MediaType.PDF).build())
                     .build();
             InstantApiRequest request =
                     InstantApiRequest.create(PDF_TEST_DATA, MediaType.OCTET_STREAM, MediaType.PDF, options);
@@ -631,10 +636,8 @@ class IntegrationTest {
     void testUploadDocxFileWithTextExtraction() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
             RequestOptions options = RequestOptions.builder()
-                    .conversionOptions(RequestOptions.ConversionOptions.builder()
-                            .enableMethods(
-                                    RequestOptions.ConversionMethod.TEXT_EXTRACTION,
-                                    RequestOptions.ConversionMethod.REPORT)
+                    .conversionOptions(ConversionOptions.builder()
+                            .enableMethods(ConversionMethod.TEXT_EXTRACTION, ConversionMethod.REPORT)
                             .build())
                     .build();
             InstantApiRequest request = InstantApiRequest.create(

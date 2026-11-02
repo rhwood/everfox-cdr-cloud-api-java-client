@@ -10,7 +10,7 @@ Line counts include Javadoc and license headers. "Shared" is the number of lines
 
 | Instant | Async | Lines (instant / async) | Shared | Nature of the overlap |
 |---|---|---|---|---|
-| `RequestOptions` | `RequestOptions` | 759 / 865 | 661 | Same JSON model; async adds `costs` and `status` |
+| `RequestOptions` | `RequestOptions` | 759 / 865 | 661 | Same JSON model (now shared; see 1) |
 | `InstantApiConfig` | `AsyncApiConfig` | 141 / 265 | 129 | Same fields; async adds polling |
 | `InstantApiException` | `AsyncApiException` | 142 / 153 | 91 | Same error JSON (now shared; see 3) |
 | `InstantApiResponse` | `AsyncApiResponse` | 130 / 127 | 95 | Status code, body, headers, `isSuccess()` |
@@ -20,49 +20,16 @@ The tests repeat the same pattern: two `IntegrationTest` classes with the same e
 
 The Everfox S3 API (`/s3`, `/validate`) takes the same `options` object, plus `emails` and `costs.environment.large.force`. A third client would make every item below a three-way copy.
 
-## 1. Share one options model (highest value)
+## 1. Share one options model (done)
 
-**Problem.** The two `RequestOptions` classes serialize the same `report`, `conversion`, `images`, `redactions`, and `risks` JSON. They have already diverged in ways a user would trip over when switching APIs:
+The shared options now live in `com.everfox.cdr.options`: the abstract `ProcessingOptions`, its self-typed `Builder`, and the value types `ReportFormat`, `ConversionMethod`, `ConversionOptions`, `MediaTypeConversion`, `ImagesOptions`, `RedactionOptions`, and `ReportOptions`. `instant.RequestOptions` adds nothing to it; `async.RequestOptions` adds `costs` and `status`. One `ProcessingOptionsTest` covers the shared JSON.
 
-| Behavior | `instant.RequestOptions` | `async.RequestOptions` |
-|---|---|---|
-| `allowRisks(...)` / `denyRisks(...)` called twice | The second call replaces the first, although the Javadoc says "Adds" | The second call adds to the first |
-| Order of risks and keys in the JSON | Not deterministic (`HashSet`, `Map.of`) | Insertion order (`LinkedHashSet`, `LinkedHashMap`) |
-| Construction | Public 6-argument constructor and builder | Builder only |
+The divergences were settled on the Async behavior, which changes the Instant API:
 
-Every new option, such as a new `ConversionMethod` or `ReportFormat`, has to be added and tested twice.
-
-**Proposal.** Move the shared model into a new package such as `com.everfox.cdr.options`:
-
-- The nested value types move unchanged to top-level classes: `ReportFormat`, `ConversionMethod`, `ConversionOptions` (with its builder), `MediaTypeConversion`, `ImagesOptions`, and `RedactionOptions`.
-- An abstract `ProcessingOptions` holds the shared fields and getters, and has a self-typed builder, so subclass builders keep fluent chaining without overriding every method:
-
-  ```java
-  public abstract class ProcessingOptions {
-      protected abstract static class Builder<B extends Builder<B>> {
-          public B reportFormat(ReportFormat format) { ...; return self(); }
-          public B allowRisks(Risk... risks) { ...; return self(); }
-          protected abstract B self();
-      }
-  }
-
-  // com.everfox.cdr.instant
-  public final class RequestOptions extends ProcessingOptions { ... }
-
-  // com.everfox.cdr.async
-  public final class RequestOptions extends ProcessingOptions {
-      public static final class Builder extends ProcessingOptions.Builder<Builder> {
-          public Builder largeFileEnvironment(boolean enabled) { ... }
-          public Builder snsStatus(String topicArn, String roleArn) { ... }
-          public Builder userData(String userData) { ... }
-      }
-  }
-  ```
-
-- Settle each divergence once, in the base class. The async behavior is the better default: accumulate risks, keep insertion order, and expose only the builder.
-- One shared `ProcessingOptionsTest` covers the shared JSON. The per-API tests cover only `X-Options` versus `options`, and the async-only fields.
-
-An alternative is composition with `@JsonUnwrapped`, where the async options hold a shared options object. It needs less inheritance, but users then build two objects or the async builder has to delegate every shared method. That brings back the duplication in a different place.
+- Repeated `allowRisks(...)` / `denyRisks(...)` calls now add to the risks already given instead of replacing them.
+- Risks, image formats, and top-level keys are serialized in a fixed or insertion order, instead of an unpredictable one.
+- The public `RequestOptions` and `ConversionOptions` constructors were removed; use the builders. The constructors' silent "denied wins" handling of a risk that is both allowed and denied went with them, so `build()` always rejects it.
+- The nested types moved, so `RequestOptions.ReportFormat` is now `com.everfox.cdr.options.ReportFormat`, and the same applies to the other nested types.
 
 ## 2. Make `Region` know about every API (done)
 
@@ -150,6 +117,6 @@ Each step stands on its own and keeps `mvn clean verify` green:
 
 1. ~~**Region endpoints (2)** and **artifact rename (8)**~~: done.
 2. ~~**Error model (3)**~~: done.
-3. **Options model (1)**: the largest reduction (about 660 duplicated lines), and it should land before an S3 client is started.
+3. ~~**Options model (1)**~~: done.
 4. **Configuration (4)** and **HTTP plumbing (5)**: these depend on the shared settings type, so do them together, and add `module-info.java` with them.
 5. **Spec checks (6)** and **test support (7)**: these can be done at any time, and they get cheaper once steps 1–5 have removed the per-package copies.

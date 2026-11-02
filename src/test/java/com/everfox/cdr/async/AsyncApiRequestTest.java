@@ -16,6 +16,7 @@ package com.everfox.cdr.async;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.everfox.cdr.MediaType;
+import com.everfox.cdr.options.ReportFormat;
 import org.junit.jupiter.api.Test;
 
 /** Unit tests for {@link AsyncApiRequest}. */
@@ -40,9 +41,8 @@ class AsyncApiRequestTest {
     /** Tests that a request with options serializes them under the options key. */
     @Test
     void testWithOptions() {
-        RequestOptions options = RequestOptions.builder()
-                .reportFormat(RequestOptions.ReportFormat.NONE)
-                .build();
+        RequestOptions options =
+                RequestOptions.builder().reportFormat(ReportFormat.NONE).build();
         AsyncApiRequest request = AsyncApiRequest.create(MediaType.OCTET_STREAM, options);
 
         assertSame(options, request.getOptions());

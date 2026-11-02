@@ -75,6 +75,7 @@ try (InstantApiClient client = InstantApiClient.create(config)) {
 | `RequestOptions` | `com.everfox.cdr.async` | Processing options sent in the initiate request. Created with `RequestOptions.builder()`. |
 | `CdrApiException` | `com.everfox.cdr` | Supertype of `InstantApiException` and `AsyncApiException`. |
 | `CdrApiError` | `com.everfox.cdr` | An error reported by an API: code, message, name, type, and sub-type. |
+| `ProcessingOptions` | `com.everfox.cdr.options` | Options shared by every API, extended by each `RequestOptions`. The option value types are in this package too. |
 | `MediaType` | `com.everfox.cdr` | Media types supported by the API. |
 | `Region` | `com.everfox.cdr` | Regions, and the endpoint of each API in them. |
 | `Api` | `com.everfox.cdr` | The Everfox CDR Cloud APIs, used to look up a region's endpoint. |
@@ -158,11 +159,11 @@ Both exceptions extend `com.everfox.cdr.CdrApiException`, so code that uses eith
 
 ## Request Options
 
-Processing options are built with `RequestOptions.builder()` and passed when creating the request:
+Processing options are built with `RequestOptions.builder()` and passed when creating the request. The option types (`ReportFormat`, `ConversionOptions`, `ConversionMethod`, `ImagesOptions`, and `RedactionOptions`) are in `com.everfox.cdr.options` and are shared by both APIs. Repeated `allowRisks` and `denyRisks` calls add to the risks already given, and options are sent in the order given:
 
 ```java
 RequestOptions options = RequestOptions.builder()
-        .reportFormat(RequestOptions.ReportFormat.FULL)
+        .reportFormat(ReportFormat.FULL)
         .allowRisks(Risk.POLY_TEXT_JSON, Risk.STRUCTURED_NO_SCHEMA_JSON)
         .build();
 
@@ -177,7 +178,7 @@ See the [Everfox CDR documentation](https://cdr.everfox.com/documentation/risks)
 
 ```java
 RequestOptions options = RequestOptions.builder()
-        .reportFormat(RequestOptions.ReportFormat.FULL)
+        .reportFormat(ReportFormat.FULL)
         .build();
 ```
 
@@ -200,7 +201,7 @@ Preserve image quality for specific image types:
 
 ```java
 RequestOptions options = RequestOptions.builder()
-        .imagesOptions(new RequestOptions.ImagesOptions(MediaType.IMAGE_JPEG, MediaType.IMAGE_PNG))
+        .imagesOptions(new ImagesOptions(MediaType.IMAGE_JPEG, MediaType.IMAGE_PNG))
         .allowRisks(Risk.STEG_IMAGE_JPEG, Risk.STEG_IMAGE_PNG)
         .build();
 ```
@@ -211,7 +212,7 @@ Archive contents that can't be processed are replaced with a redacted file. Cust
 
 ```java
 RequestOptions options = RequestOptions.builder()
-        .redactionOptions(new RequestOptions.RedactionOptions(".txt", MediaType.TEXT_PLAIN, "Redacted"))
+        .redactionOptions(new RedactionOptions(".txt", MediaType.TEXT_PLAIN, "Redacted"))
         .build();
 ```
 
@@ -219,11 +220,11 @@ With these options, an unsupported `minimal.json` in a ZIP archive is replaced w
 
 ### Format Conversion
 
-Conversion options are built with `RequestOptions.ConversionOptions.builder()`. Use `from(...)` to give the original format of a file to convert, for example to convert a Word 97 document to `.docx`:
+Conversion options are built with `ConversionOptions.builder()`. Use `from(...)` to give the original format of a file to convert, for example to convert a Word 97 document to `.docx`:
 
 ```java
 RequestOptions options = RequestOptions.builder()
-        .conversionOptions(RequestOptions.ConversionOptions.builder()
+        .conversionOptions(ConversionOptions.builder()
                 .from(MediaType.MSWORD)
                 .build())
         .build();
@@ -239,8 +240,8 @@ Conversion methods (`DEFAULT`, `LIBREOFFICE`, `REPORT`, `TEXT_EXTRACTION`) can b
 
 ```java
 RequestOptions options = RequestOptions.builder()
-        .conversionOptions(RequestOptions.ConversionOptions.builder()
-                .enableMethods(RequestOptions.ConversionMethod.TEXT_EXTRACTION, RequestOptions.ConversionMethod.REPORT)
+        .conversionOptions(ConversionOptions.builder()
+                .enableMethods(ConversionMethod.TEXT_EXTRACTION, ConversionMethod.REPORT)
                 .build())
         .build();
 ```
