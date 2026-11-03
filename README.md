@@ -166,6 +166,8 @@ try {
 
 Both exceptions extend `com.everfox.cdr.CdrApiException`, so code that uses either client can catch errors the same way. If the API doesn't return a valid error (for example, a proxy returns HTML), the code is `CdrApiError.UNKNOWN_CODE` (`-1`) and the message, name, and type are `"Unknown error"`, `"Unknown"`, and `"Unknown"`.
 
+The Instant and Async APIs don't always report the same error in the same way (see [Known API Behavior](#known-api-behavior)). Branch on the code, name, or type separately for each API, and don't expect the same values from both.
+
 ## Request Options
 
 Processing options are built with `RequestOptions.builder()` and passed when creating the request. The option types (`ReportFormat`, `ConversionOptions`, `ConversionMethod`, `ImagesOptions`, and `RedactionOptions`) are in `com.everfox.cdr.options` and are shared by both APIs. Repeated `allowRisks` and `denyRisks` calls add to the risks already given, and options are sent in the order given:
@@ -326,6 +328,47 @@ Some formats can't be sent as their own media type, and must be sent as `MediaTy
 MediaType.MSWORD.isAcceptedAsContentType();     // false: send as OCTET_STREAM with conversion.from
 MediaType.MSWORD.isAcceptedAsConversionSource(); // true
 ```
+
+The flags follow the Async API spec, which matches both live APIs. The clients don't check them before sending, because the APIs validate the media types anyway.
+
+## Known API Behavior
+
+These behaviors were confirmed against the production Instant and Async APIs (us-west-2) on 2–3 November 2026, using a genuine file for every format. The `MediaTypeIntegrationTest` classes check them, so they fail if Everfox changes an API.
+
+### Media Types
+
+- **Both APIs accept the same 61 media types** as a file's own type: the Instant `Content-Type` header and the Async `mime-type`. The Async spec lists exactly these. The Instant spec doesn't: it lists 11 types that the Instant API rejects with `1000 CONTENT_TYPE_UNSUPPORTED`, and omits `application/octet-stream`, `application/ms-tnef`, and `text/css`, which it accepts. Use `MediaType`'s flags rather than the Instant spec.
+- **Ten formats work only as `conversion.from`.** Both APIs reject them as a file's own type, but convert them to Office Open XML when they're sent as `OCTET_STREAM` with the format as `conversion.from`, giving the same output from either API:
+
+  | Constants | Output |
+  |---|---|
+  | `MSWORD`, `RTF`, `TEXT_RTF`, `OASIS_OPENDOCUMENT_TEXT` | .docx |
+  | `MS_EXCEL`, `MS_EXCEL_SHEET_BINARY_MACROENABLED_12` (in either capitalization), `OASIS_OPENDOCUMENT_SPREADSHEET`, `TEXT_CSV` | .xlsx |
+  | `MS_POWERPOINT`, `OASIS_OPENDOCUMENT_PRESENTATION` | .pptx |
+
+  Office Open XML files sent as their own type come back in the same format.
+- **`TEXT_PLAIN` isn't accepted as a file's type** by either API, either as its own type or as `conversion.from`. It's still valid as the media type of a redaction replacement. `ALL` (`*/*`) is only meaningful as an `Accept` type.
+- **Converted output isn't byte-for-byte reproducible.** Converting the same file twice can give output a few bytes different, on either API. Check the output's media type and format, not its size or checksum.
+- **A valid `.ppt` file can fail conversion** with `3060 PROCESSING_CONVERSION_FAILED` on both APIs. A copy of the test presentation re-saved in PowerPoint for Mac failed this way, although the original save converts.
+
+### The Instant `Accept` Header
+
+The Instant API checks the `Accept` header before most other validation:
+
+- `OCTET_STREAM` without `conversion.from` returns `1020 ACCEPT_HEADER_INVALID`, unless `Accept` includes `application/octet-stream` or `*/*`. With one of those, it returns `1090 CONVERSION_UNSUPPORTED`, as the Async API does.
+- The `Content-Type` is matched case-insensitively, but the `Accept` header is compared case-sensitively. `MediaType.MS_EXCEL_SHEET_BINARY_MACROENABLED_12` is lower case, so an `.xlsb` `Accept` type must be given as the string `application/vnd.ms-excel.sheet.binary.macroEnabled.12`.
+
+### Differences Between the APIs
+
+These have been reported to Everfox ([#41](https://github.com/rhwood/everfox-cdr-cloud-api-java-client/issues/41)). Don't depend on them until Everfox answers:
+
+- An unsupported media type returns `1000 CONTENT_TYPE_UNSUPPORTED` from Instant, but `6010 APIGATEWAY_BAD_REQUEST_BODY` (sub-type `ValidationFailure`) from Async.
+- `3020 PROCESSING_NOT_RECOGNISED` has type `BadRequest` from Instant, but type `PROCESSING` and sub-type `Invalid data` from Async.
+- Instant accepts `conversion.from: text/css`; Async rejects it. Neither spec lists it.
+
+### Risks
+
+`Risk` matches the risk lists in both specs exactly.
 
 ## Building
 

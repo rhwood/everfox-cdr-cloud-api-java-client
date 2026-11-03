@@ -29,7 +29,7 @@ import org.junit.jupiter.params.provider.ValueSource;
  * Checks {@link Risk} and {@link MediaType} against the checked-in OpenAPI specs ({@link ApiSpec}).
  *
  * <p>Media types are checked against the Async spec, which matches the live APIs. The Instant spec's
- * {@code Content-Type} list is known to be wrong (see REFACTORING.md section 6), and
+ * {@code Content-Type} list is known to be wrong (see "Known API Behavior" in README.md), and
  * {@link #testInstantSpecContentTypesStillDiffer()} fails when Everfox changes it. If a test here fails after
  * refreshing a spec, update {@code MediaType} or {@code Risk} to match.
  */
@@ -123,7 +123,7 @@ class SpecConformanceTest {
     /**
      * Tests that the Instant spec's {@code Content-Type} list still differs from the live APIs (and the Async spec) in
      * the known way. When this fails, Everfox has changed the Instant spec: check whether it now matches the Async
-     * spec, and update this test and REFACTORING.md section 6.
+     * spec, and update this test and "Known API Behavior" in README.md.
      */
     @Test
     void testInstantSpecContentTypesStillDiffer() {
