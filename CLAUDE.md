@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Java client library for the Everfox CDR (Content Disarm and Reconstruction) Instant and Async APIs. Callers upload a file; the service strips potential threats and returns a sanitized version.
 
 - **Target platform:** Apache NiFi 2.0.0+, so the library targets **Java 21** (`maven.compiler.release=21`). CI builds on Java 21 and 25.
+- **API specs (OpenAPI 3.0.3):** `https://cdr.everfox.com/static/everfox-cdr-{instant,async,s3}-api-OpenAPI.json`. The documentation pages are a JavaScript app and can't be fetched as text, so use these.
 - **Only runtime dependency:** Jackson 3 (`tools.jackson.core:jackson-databind`). Keep the dependency footprint minimal.
 
 ## Build Commands

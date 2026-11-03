@@ -54,15 +54,36 @@ All the `*Seconds` getters, `DEFAULT_*_SECONDS` constants, and multi-argument `c
 - `InstantApiClient.close()` now closes its `HttpClient`, and Instant header lookups are case-insensitive.
 - `src/main/java/module-info.java` declares the module `com.everfox.cdr`. It exports `com.everfox.cdr`, `.instant`, `.async`, and `.options` (not `.internal`), and `requires transitive java.net.http` because `CdrApiResponse` takes an `HttpResponse`. Tests run inside the module, so the POM adds `jdk.httpserver` to test compilation and surefire.
 
-## 6. Check `MediaType` and `Risk` against the published specs
+## 6. Check `MediaType` and `Risk` against the live APIs, not just the specs
 
-**Problem.** `MediaType` is the union of the types the APIs accept, but each API accepts a different subset. For example, Async `/initiate` rejects `application/msword`, `application/vnd.ms-excel`, `application/rtf`, `text/csv`, `text/plain`, and the OpenDocument types. Those must be sent as `application/octet-stream` with `conversion.from`. `ALL` (`*/*`) is only meaningful as an Accept type. Nothing tells users which constants work where, and nothing catches drift when Everfox changes an API.
+**Problem.** `MediaType` lists types that the live APIs reject, and the published Instant spec can't be used to catch that, because it is wrong. Probes against both production APIs (us-west-2, 2 November 2026) found the following:
+
+- **Both live APIs accept the same 61 primary media types**: the Instant `Content-Type` header and the Async `/initiate` `mime-type`. The Async spec matches that list. The Instant spec doesn't: it lists 11 types the live `/upload` rejects (`1000 CONTENT_TYPE_UNSUPPORTED`), and omits `application/octet-stream`, `application/ms-tnef`, and `text/css`, which it accepts.
+- **Ten `MediaType` constants are rejected by both APIs as the primary type**, but accepted as `conversion.from` with `application/octet-stream` as the primary type: `MSWORD`, `MS_EXCEL`, `MS_EXCEL_SHEET_BINARY_MACROENABLED_12`, `MS_POWERPOINT`, `RTF`, `TEXT_RTF`, `TEXT_CSV`, and the three `OASIS_OPENDOCUMENT_*` types. Through that route, both APIs return the same output: .doc, .rtf, and .odt become .docx, and .csv becomes .xlsx. So `InstantApiRequest.create(data, MediaType.MSWORD, ...)` fails against the live API, although the Instant spec says it is valid.
+- **`TEXT_PLAIN` is accepted by neither API as a file's type**, either as the primary type or as `conversion.from`. It is still valid as the media type of a redaction replacement (`RedactionOptions`), which the Instant integration tests use. `ALL` (`*/*`) is only meaningful as an Accept type.
+- **Every type the live APIs accept has a `MediaType` constant.**
+- **`Risk` matches both specs' risk enums exactly.**
+
+The probes also found differences between the two APIs that have been reported to Everfox, and that client code shouldn't depend on until Everfox answers:
+
+- The same unsupported type returns `1000 CONTENT_TYPE_UNSUPPORTED` from Instant but `6010 APIGATEWAY_BAD_REQUEST_BODY` (subType `ValidationFailure`) from Async.
+- Instant accepts `conversion.from: text/css`; Async rejects it. Neither spec lists it.
+- `3020 PROCESSING_NOT_RECOGNISED` has type `BadRequest` from Instant, but type `PROCESSING` and subType `Invalid data` from Async.
+
+Nothing in the build catches drift when Everfox changes an API, and nothing tells users which constants work where.
 
 **Proposal.**
 
-- Check in the OpenAPI documents under `src/test/resources`. Everfox doesn't publish them at a standalone URL. They're embedded in the documentation site's JavaScript bundle (`https://cdr.everfox.com/static/js/main.*.js`, as a `JSON.parse('[{"apiName":"instant",...},{"apiName":"async",...},{"apiName":"s3",...}]')` literal), which is how the Async client was written.
-- Add a unit test that asserts `Risk` matches the specs' risk enums exactly (today it does), and reports `MediaType` constants that no API accepts.
-- Either document each constant's support in Javadoc, or add `boolean isAcceptedBy(Api api)`, which the `/initiate` and `/upload` paths could then check before sending.
+- **Check in the OpenAPI documents** under `src/test/resources`. Everfox publishes them at `https://cdr.everfox.com/static/everfox-cdr-{instant,async,s3}-api-OpenAPI.json`. Treat the Async spec as the reference for media types until Everfox fixes the Instant one.
+- **Add unit tests against the checked-in specs.**
+  - Assert that `Risk` matches the specs' risk enums exactly.
+  - Report `MediaType` constants that no API accepts as a primary type or as `conversion.from`, using the Async enums.
+- **Add an opt-in integration test**, gated on the API keys like the existing ones, that sends an unsupported type to each API. It should parse the list of allowed types from the error message and compare it with the checked-in spec. This is how the Instant spec error was found, and it catches the same kind of drift.
+- **Document each constant's support.**
+  - Javadoc each of the ten conversion-only constants with "use as `conversion.from` with `OCTET_STREAM`".
+  - Javadoc `TEXT_PLAIN` and `ALL` with where they are valid: redaction replacements and the Accept header, respectively.
+  - Alternatively, add `boolean isAcceptedAsContentType()` and `boolean isAcceptedAsConversionSource()`, which the `/upload` and `/initiate` paths could check before sending.
+- **Error codes:** while Everfox hasn't confirmed whether they're meant to differ, branch on `CdrApiException.getName()` and `getType()` only per API, not across the two.
 
 ## 7. Share test support
 
@@ -93,4 +114,4 @@ Each step stands on its own and keeps `mvn clean verify` green:
 2. ~~**Error model (3)**~~: done.
 3. ~~**Options model (1)**~~: done.
 4. ~~**Configuration (4)** and **HTTP plumbing (5)**~~: done, including `module-info.java`.
-5. **Spec checks (6)** and **test support (7)**: these can be done at any time, and they get cheaper once steps 1–5 have removed the per-package copies.
+5. **Spec checks (6)** and **test support (7)**: these can be done at any time. Do the `MediaType` fixes in 6 first, because ten constants fail against both live APIs today.
