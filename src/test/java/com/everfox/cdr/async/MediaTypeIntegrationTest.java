@@ -35,9 +35,9 @@ import org.junit.jupiter.params.provider.EnumSource;
  * Integration tests that pin down how the live Async API handles media types, as confirmed on 2–3 November 2026.
  *
  * <p>The Async API matches its published spec for media types, but differs from the Instant API in error codes and in
- * {@code conversion.from} validation. Those differences have been reported to Everfox; see REFACTORING.md section 6. If
- * a test here starts failing, check whether Everfox has changed the API before changing the client. These tests run
- * only when {@code CDR_ASYNC_API_KEY} is set; see {@link LiveApi}.
+ * {@code conversion.from} validation. Those differences have been reported to Everfox; see "Known API Behavior" in
+ * README.md. If a test here starts failing, check whether Everfox has changed the API before changing the client. These
+ * tests run only when {@code CDR_ASYNC_API_KEY} is set; see {@link LiveApi}.
  */
 @EnabledIfEnvironmentVariable(named = LiveApi.ASYNC_KEY_ENV, matches = ".+")
 class MediaTypeIntegrationTest {

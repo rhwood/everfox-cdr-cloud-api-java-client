@@ -17,6 +17,11 @@ package com.everfox.cdr;
  * Exception thrown when an Everfox CDR Cloud API reports an error.
  *
  * <p>Each API's client throws its own subclass. Catch this class to handle errors from any of them the same way.
+ *
+ * <p>The APIs don't always report the same error with the same code, name, or type. For example, an unsupported media
+ * type is {@code 1000 CONTENT_TYPE_UNSUPPORTED} from the Instant API but {@code 6010 APIGATEWAY_BAD_REQUEST_BODY} from
+ * the Async API. Branch on {@link #getApiStatusCode()}, {@link #getName()}, or {@link #getType()} separately for each
+ * API.
  */
 public abstract class CdrApiException extends Exception {
 

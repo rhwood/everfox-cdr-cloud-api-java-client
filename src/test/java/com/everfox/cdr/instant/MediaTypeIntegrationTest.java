@@ -34,8 +34,8 @@ import org.junit.jupiter.params.provider.EnumSource;
  * Integration tests that pin down how the live Instant API handles media types, as confirmed on 2–3 November 2026.
  *
  * <p>Several of these behaviors contradict the published Instant API spec, or differ from the Async API, and have been
- * reported to Everfox; see REFACTORING.md section 6. If a test here starts failing, check whether Everfox has changed
- * the API before changing the client. These tests run only when {@code CDR_INSTANT_API_KEY} is set; see
+ * reported to Everfox; see "Known API Behavior" in README.md. If a test here starts failing, check whether Everfox has
+ * changed the API before changing the client. These tests run only when {@code CDR_INSTANT_API_KEY} is set; see
  * {@link LiveApi}.
  */
 @EnabledIfEnvironmentVariable(named = LiveApi.INSTANT_KEY_ENV, matches = ".+")

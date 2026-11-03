@@ -28,7 +28,7 @@ mvn site                         # build the project site (README.md becomes the
 
 ## Architecture
 
-Four packages (see REFACTORING.md for the remaining duplication between `instant` and `async`):
+Four packages. Shared code lives in `com.everfox.cdr` and `com.everfox.cdr.options`; keep the `instant` and `async` packages limited to what differs between the APIs:
 
 ### `com.everfox.cdr`: shared enums
 - `Region`: `EU_WEST_1`, `EU_WEST_2`, `US_WEST_2`. `getBaseUrl(Api)` builds `https://{region}.aws.{api}.cdr.everfox.com/v1`. `fromString` is case-insensitive.
@@ -84,7 +84,7 @@ Four packages (see REFACTORING.md for the remaining duplication between `instant
   mvn test -Dtest='*IntegrationTest'
   ```
   With both keys set, `mvn verify` runs them too, which adds about two and a half minutes (mostly Async jobs) and is billed per MB. Never commit API keys.
-- `MediaTypeIntegrationTest` pins the media type behavior confirmed against the live APIs, including where it contradicts the Instant spec (REFACTORING.md section 6). Its formats come from `com.everfox.cdr.ConvertibleFormat`. If it starts failing, check whether Everfox changed the API before changing the client.
+- `MediaTypeIntegrationTest` pins the media type behavior confirmed against the live APIs, including where it contradicts the Instant spec ("Known API Behavior" in README.md, and issue #41). Its formats come from `com.everfox.cdr.ConvertibleFormat`. If it starts failing, check whether Everfox changed the API before changing the client.
 - `SpecConformanceTest` checks `Risk` and the `MediaType` flags against the checked-in OpenAPI specs in `src/test/resources/com/everfox/cdr/openapi/`, read through `com.everfox.cdr.ApiSpec`. To refresh a spec, download it again from the URL above and run the tests. `SpecIntegrationTest` fails when a checked-in spec no longer matches the published one, listing the JSON paths that differ. It needs network access but no API key, so it runs in every build, and it's skipped if the specs can't be downloaded. Its name puts it in `-Dtest='*IntegrationTest'` and out of `-Dtest='!*IntegrationTest'`. `testInstantSpecContentTypesStillDiffer` fails when Everfox changes the Instant spec's known-wrong `Content-Type` list.
 - Shared unit-test helpers in `com.everfox.cdr`: `MockHttp.response(...)` builds mock `HttpResponse`s, and `FakeServer` is a local HTTP server. It routes by the longest path prefix, plays queued replies in order (repeating the last), and records requests. Use them rather than writing new fixtures.
 - Sample files shared by all tests are in `src/test/resources/com/everfox/cdr/`; load them with `com.everfox.cdr.TestResources.load(name)`. Most were saved from Microsoft Office; `test.odt` was generated with macOS `textutil`.
