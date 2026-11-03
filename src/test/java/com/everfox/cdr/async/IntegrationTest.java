@@ -16,13 +16,10 @@ package com.everfox.cdr.async;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.everfox.cdr.Api;
+import com.everfox.cdr.LiveApi;
 import com.everfox.cdr.MediaType;
-import com.everfox.cdr.Region;
 import com.everfox.cdr.Risk;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.net.URI;
+import com.everfox.cdr.TestResources;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -45,13 +42,9 @@ import org.junit.jupiter.api.io.TempDir;
 class IntegrationTest {
 
     /** Environment variable name for the API key. */
-    private static final String API_KEY_ENV = "CDR_ASYNC_API_KEY";
-    /** Environment variable name for the API URL. */
-    private static final String API_URL_ENV = "CDR_ASYNC_API_URL";
-    /** Environment variable name for the API region. */
-    private static final String API_REGION_ENV = "CDR_ASYNC_API_REGION";
-    /** Simple PDF content for testing, shared with the Instant API tests. */
-    private static final byte[] PDF_TEST_DATA = loadResource("/com/everfox/cdr/instant/test.pdf");
+    private static final String API_KEY_ENV = LiveApi.ASYNC_KEY_ENV;
+    /** Simple PDF content for testing. */
+    private static final byte[] PDF_TEST_DATA = TestResources.load("test.pdf");
     /** Minimal valid JSON content for testing. */
     private static final byte[] JSON_TEST_DATA = "[]".getBytes(StandardCharsets.UTF_8);
     /** Temporary directory for file tests. */
@@ -64,43 +57,13 @@ class IntegrationTest {
     }
 
     /**
-     * Loads a test resource from the classpath.
-     *
-     * @param name the absolute name of the resource
-     * @return the contents of the resource
-     * @throws IllegalStateException if the resource is not found
-     * @throws UncheckedIOException if the resource cannot be read
-     */
-    private static byte[] loadResource(String name) {
-        try (InputStream in = IntegrationTest.class.getResourceAsStream(name)) {
-            if (in == null) {
-                throw new IllegalStateException("Test resource not found: " + name);
-            }
-            return in.readAllBytes();
-        } catch (IOException e) {
-            throw new UncheckedIOException("Unable to read test resource: " + name, e);
-        }
-    }
-
-    /**
      * Creates a client configured from environment variables.
      *
      * @return a configured Async API client
      */
     private AsyncApiClient createClient() {
-        URI apiUri = Region.US_WEST_2.getBaseUrl(Api.ASYNC);
-        String apiKey = System.getenv(API_KEY_ENV);
-        assertNotNull(apiKey, "CDR_ASYNC_API_KEY environment variable must be set");
-
-        String apiUrl = System.getenv(API_URL_ENV);
-        if (apiUrl != null && !apiUrl.isEmpty()) {
-            apiUri = assertDoesNotThrow(() -> new URI(apiUrl), "Invalid API URL");
-        }
-        String apiRegion = System.getenv(API_REGION_ENV);
-        if (apiRegion != null && !apiRegion.isEmpty()) {
-            apiUri = Region.fromString(apiRegion).getBaseUrl(Api.ASYNC);
-        }
-        return AsyncApiClient.create(AsyncApiConfig.builder(apiKey, apiUri).build());
+        return AsyncApiClient.create(AsyncApiConfig.builder(LiveApi.apiKey(Api.ASYNC), LiveApi.baseUrl(Api.ASYNC))
+                .build());
     }
 
     /**

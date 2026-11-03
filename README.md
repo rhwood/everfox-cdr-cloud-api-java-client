@@ -333,16 +333,17 @@ mvn clean package
 mvn clean install
 ```
 
-Integration tests run against the live API when an API key is set, and are skipped otherwise:
+Integration tests run against the live APIs when an API key is set, and are skipped otherwise. Each API has its own key:
 
 ```bash
-export CDR_INSTANT_API_KEY=your-api-key-here
-mvn test -Dtest=IntegrationTest
+export CDR_INSTANT_API_KEY=your-instant-key
+export CDR_ASYNC_API_KEY=your-async-key
+mvn test -Dtest='*IntegrationTest'
 ```
 
-Integration tests use `Region.US_WEST_2` by default. Set `CDR_INSTANT_API_REGION` to a region name (e.g. `eu_west_1`) or `CDR_INSTANT_API_URL` to a base URL to use a different endpoint. If both are set, the region takes precedence.
+Integration tests use `Region.US_WEST_2` by default. Set `CDR_INSTANT_API_REGION` (or `CDR_ASYNC_API_REGION`) to a region name (e.g. `eu_west_1`), or `CDR_INSTANT_API_URL` (or `CDR_ASYNC_API_URL`) to a base URL, to use a different endpoint. If both are set, the region takes precedence.
 
-The Async API integration tests (`com.everfox.cdr.async.IntegrationTest`) work the same way, using `CDR_ASYNC_API_KEY`, `CDR_ASYNC_API_REGION`, and `CDR_ASYNC_API_URL`.
+The `MediaTypeIntegrationTest` classes check how each API handles legacy formats such as `.doc`, `.xls`, and `.odt`. Both APIs reject these as a file's own media type. Send them as `MediaType.OCTET_STREAM` with the format as `conversion.from`, and they are returned as `.docx`, `.xlsx`, or `.pptx`.
 
 ## License
 

@@ -77,13 +77,15 @@ Four packages (see REFACTORING.md for the remaining duplication between `instant
 - JUnit 6 (Jupiter) and Mockito; JaCoCo generates coverage reports during `test`.
 - Tests run inside the `com.everfox.cdr` module. The client tests use the JDK's `com.sun.net.httpserver`, so the POM passes `--add-modules=jdk.httpserver --add-reads=com.everfox.cdr=jdk.httpserver` to both test compilation and surefire; extend those flags if tests need another module.
 - Unit tests sit next to each class (`*Test.java`) and focus on validation, edge cases, and JSON output for options.
-- `IntegrationTest` calls the real API. It runs only when `CDR_INSTANT_API_KEY` is set, and it also reads `CDR_INSTANT_API_URL` or `CDR_INSTANT_API_REGION`:
+- Integration tests call the real APIs: `IntegrationTest` and `MediaTypeIntegrationTest`, in both `instant` and `async`. Each API's tests run only when `CDR_<API>_API_KEY` is set. They use US_WEST_2 unless `CDR_<API>_API_URL` or `CDR_<API>_API_REGION` is set; `com.everfox.cdr.LiveApi` resolves these, and the region takes precedence:
   ```bash
-  export CDR_INSTANT_API_KEY=your-api-key-here
-  export CDR_INSTANT_API_REGION=EU_WEST_2
-  mvn test -Dtest=IntegrationTest
+  export CDR_INSTANT_API_KEY=your-instant-key
+  export CDR_ASYNC_API_KEY=your-async-key
+  mvn test -Dtest='*IntegrationTest'
   ```
-  `com.everfox.cdr.async.IntegrationTest` uses `CDR_ASYNC_API_KEY`, `CDR_ASYNC_API_URL`, and `CDR_ASYNC_API_REGION` in the same way. Never commit API keys.
+  With both keys set, `mvn verify` runs them too, which adds about two and a half minutes (mostly Async jobs) and is billed per MB. Never commit API keys.
+- `MediaTypeIntegrationTest` pins the media type behavior confirmed against the live APIs, including where it contradicts the Instant spec (REFACTORING.md section 6). Its formats come from `com.everfox.cdr.ConvertibleFormat`. If it starts failing, check whether Everfox changed the API before changing the client.
+- Sample files shared by all tests are in `src/test/resources/com/everfox/cdr/`; load them with `com.everfox.cdr.TestResources.load(name)`. Most were saved from Microsoft Office; `test.odt` was generated with macOS `textutil`.
 
 ## NiFi Usage Notes
 

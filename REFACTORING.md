@@ -16,7 +16,7 @@ Line counts include Javadoc and license headers. "Shared" is the number of lines
 | `InstantApiResponse` | `AsyncApiResponse` | 130 / 127 | 95 | Status code, body, headers, `isSuccess()` (now shared; see 5) |
 | `InstantApiClient` | `AsyncApiClient` | 132 / 469 | 94 | `HttpClient` setup, factory, `close()` (now shared; see 5) |
 
-The tests repeat the same pattern: two `IntegrationTest` classes with the same environment variable handling, two local `HttpServer` fixtures, and two sets of mocked `HttpResponse` helpers.
+The tests repeat the same pattern: two local `HttpServer` fixtures and two sets of mocked `HttpResponse` helpers. The integration tests' environment handling and resource loading are now shared; see 7.
 
 The Everfox S3 API (`/s3`, `/validate`) takes the same `options` object, plus `emails` and `costs.environment.large.force`. A third client would make every item below a three-way copy.
 
@@ -56,47 +56,66 @@ All the `*Seconds` getters, `DEFAULT_*_SECONDS` constants, and multi-argument `c
 
 ## 6. Check `MediaType` and `Risk` against the live APIs, not just the specs
 
-**Problem.** `MediaType` lists types that the live APIs reject, and the published Instant spec can't be used to catch that, because it is wrong. Probes against both production APIs (us-west-2, 2 November 2026) found the following:
+**Problem.** `MediaType` lists types that the live APIs reject, and the published Instant spec can't be used to catch that, because it is wrong. Probes against both production APIs (us-west-2, 2–3 November 2026), using a genuine file for every format, found the following:
 
-- **Both live APIs accept the same 61 primary media types**: the Instant `Content-Type` header and the Async `/initiate` `mime-type`. The Async spec matches that list. The Instant spec doesn't: it lists 11 types the live `/upload` rejects (`1000 CONTENT_TYPE_UNSUPPORTED`), and omits `application/octet-stream`, `application/ms-tnef`, and `text/css`, which it accepts.
-- **Ten `MediaType` constants are rejected by both APIs as the primary type**, but accepted as `conversion.from` with `application/octet-stream` as the primary type: `MSWORD`, `MS_EXCEL`, `MS_EXCEL_SHEET_BINARY_MACROENABLED_12`, `MS_POWERPOINT`, `RTF`, `TEXT_RTF`, `TEXT_CSV`, and the three `OASIS_OPENDOCUMENT_*` types. Through that route, both APIs return the same output: .doc, .rtf, and .odt become .docx, and .csv becomes .xlsx. So `InstantApiRequest.create(data, MediaType.MSWORD, ...)` fails against the live API, although the Instant spec says it is valid.
+- **Both live APIs accept the same 61 primary media types**: the Instant `Content-Type` header and the Async `/initiate` `mime-type`. The Async spec matches that list. The Instant spec doesn't: it lists 11 types the live `/upload` rejects (`1000 CONTENT_TYPE_UNSUPPORTED`), and omits `application/octet-stream`, `application/ms-tnef`, and `text/css`, which it accepts. So, read strictly, the Instant spec has no valid way to send the 11 types.
+- **Ten `MediaType` constants are rejected by both APIs as the primary type**, but converted to Office Open XML when sent as `OCTET_STREAM` with the type as `conversion.from`. Both APIs produce the same output:
+
+  | Constants | Output |
+  |---|---|
+  | `MSWORD`, `RTF`, `TEXT_RTF`, `OASIS_OPENDOCUMENT_TEXT` | .docx |
+  | `MS_EXCEL`, `MS_EXCEL_SHEET_BINARY_MACROENABLED_12` (and the `macroEnabled` spelling), `OASIS_OPENDOCUMENT_SPREADSHEET`, `TEXT_CSV` | .xlsx |
+  | `MS_POWERPOINT`, `OASIS_OPENDOCUMENT_PRESENTATION` | .pptx |
+
+  So `InstantApiRequest.create(data, MediaType.MSWORD, ...)` fails against the live API, although the Instant spec says it is valid. Office Open XML files sent as their own type come back in the same format.
 - **`TEXT_PLAIN` is accepted by neither API as a file's type**, either as the primary type or as `conversion.from`. It is still valid as the media type of a redaction replacement (`RedactionOptions`), which the Instant integration tests use. `ALL` (`*/*`) is only meaningful as an Accept type.
+- **The Instant API checks the `Accept` header before most other validation.**
+  - `OCTET_STREAM` without `conversion.from` returns `1020 ACCEPT_HEADER_INVALID`, unless the `Accept` header includes `application/octet-stream` or `*/*`. With one of those, it returns `1090 CONVERSION_UNSUPPORTED`, as Async does.
+  - The API matches the `Content-Type` case-insensitively, but compares the `Accept` header case-sensitively. A lower-case `.xlsb` `Content-Type` is read as `...macroEnabled.12`, and an `Accept` with the same lower-case type is then rejected with `1020`. `MediaType.MS_EXCEL_SHEET_BINARY_MACROENABLED_12` is lower case, so it can't be used as an Instant Accept type.
 - **Every type the live APIs accept has a `MediaType` constant.**
 - **`Risk` matches both specs' risk enums exactly.**
+- **Converted output isn't byte-for-byte reproducible.** Converting the same file twice gives output that differs by a few bytes, on either API. For example, the same `.ppt` gave 7,494 and then 7,491 bytes from Instant. So tests should check the output's media type and format, not its size or checksum.
+- **A valid `.ppt` can fail conversion on both APIs.** A copy of `test.ppt` re-saved in PowerPoint for Mac failed with `3060 PROCESSING_CONVERSION_FAILED` on both APIs, although the original save of the same presentation converts. That copy isn't in the repository. It's worth sending to Everfox if `.ppt` conversion failures turn up in practice.
 
-The probes also found differences between the two APIs that have been reported to Everfox, and that client code shouldn't depend on until Everfox answers:
+The probes also found differences between the two APIs, which have been reported to Everfox. Client code shouldn't depend on them until Everfox answers:
 
 - The same unsupported type returns `1000 CONTENT_TYPE_UNSUPPORTED` from Instant but `6010 APIGATEWAY_BAD_REQUEST_BODY` (subType `ValidationFailure`) from Async.
 - Instant accepts `conversion.from: text/css`; Async rejects it. Neither spec lists it.
 - `3020 PROCESSING_NOT_RECOGNISED` has type `BadRequest` from Instant, but type `PROCESSING` and subType `Invalid data` from Async.
 
-Nothing in the build catches drift when Everfox changes an API, and nothing tells users which constants work where.
+**Done.**
 
-**Proposal.**
+- `instant.MediaTypeIntegrationTest` and `async.MediaTypeIntegrationTest` cover every confirmed behavior above against the live APIs.
+- The tests are driven by the shared `com.everfox.cdr.ConvertibleFormat` table: each format's media type, sample file, and Office Open XML output.
+- They run whenever the API keys are set, and they assert the current error codes. If Everfox changes an API, they fail and point to the change.
+
+**Remaining.**
 
 - **Check in the OpenAPI documents** under `src/test/resources`. Everfox publishes them at `https://cdr.everfox.com/static/everfox-cdr-{instant,async,s3}-api-OpenAPI.json`. Treat the Async spec as the reference for media types until Everfox fixes the Instant one.
 - **Add unit tests against the checked-in specs.**
   - Assert that `Risk` matches the specs' risk enums exactly.
   - Report `MediaType` constants that no API accepts as a primary type or as `conversion.from`, using the Async enums.
-- **Add an opt-in integration test**, gated on the API keys like the existing ones, that sends an unsupported type to each API. It should parse the list of allowed types from the error message and compare it with the checked-in spec. This is how the Instant spec error was found, and it catches the same kind of drift.
+- **Compare the live allowed lists with the spec.** Extend the media type integration tests to parse the list of allowed types from each API's rejection message, and compare it with the checked-in spec. This is how the Instant spec error was found, and it would catch a type being added or removed. It wasn't done yet because it depends on the wording of the error messages.
 - **Document each constant's support.**
   - Javadoc each of the ten conversion-only constants with "use as `conversion.from` with `OCTET_STREAM`".
   - Javadoc `TEXT_PLAIN` and `ALL` with where they are valid: redaction replacements and the Accept header, respectively.
+  - Note on `MS_EXCEL_SHEET_BINARY_MACROENABLED_12` that the Instant `Accept` header needs the `macroEnabled` capitalization.
   - Alternatively, add `boolean isAcceptedAsContentType()` and `boolean isAcceptedAsConversionSource()`, which the `/upload` and `/initiate` paths could check before sending.
 - **Error codes:** while Everfox hasn't confirmed whether they're meant to differ, branch on `CdrApiException.getName()` and `getType()` only per API, not across the two.
 
-## 7. Share test support
+## 7. Share test support (partly done)
 
-**Problem.** The two `IntegrationTest` classes repeat the logic that resolves the API key, URL, and region from environment variables, along with `loadResource`. The two client tests each build a local `HttpServer` fixture, and the response tests each mock `HttpResponse` the same way.
+**Done.**
 
-**Proposal.** Add a test-only package `com.everfox.cdr.testing` with:
+- The sample files are in `src/test/resources/com/everfox/cdr/`, and both APIs' tests load them with `com.everfox.cdr.TestResources.load(name)`.
+- The sample files have been checked for personal metadata (author names and absolute file paths), and the name fields scrubbed where needed. Check any new Office file the same way before committing it, and search the decompressed ZIP entries as well as the raw bytes. Office for Mac can't always remove the author on save. Scrubbing `test.doc`, `test.ppt`, `test.pptx`, and `test.odp` didn't change any API result.
+- `com.everfox.cdr.LiveApi` resolves each API's key (`apiKey(Api)`) and endpoint (`baseUrl(Api)`) from `CDR_<API>_API_KEY`, `_URL`, and `_REGION`. Both `IntegrationTest` classes and both `MediaTypeIntegrationTest` classes use it.
+- The helpers are in `com.everfox.cdr`, not a separate `testing` package, so they sit next to the shared main classes.
 
-- `LiveApi.config(String prefix)`, which reads `CDR_<PREFIX>_API_KEY`, `_URL`, and `_REGION`.
-- `TestResources.load(name)`.
+**Remaining.** The two client tests each build a local `HttpServer` fixture, and the response tests each mock `HttpResponse` the same way. Add:
+
 - `MockHttp.response(status, body, headers)`.
 - A small `FakeServer` that records requests and replies from a queue.
-
-Move the shared test files (`test.pdf` and the others) to a neutral location such as `src/test/resources/com/everfox/cdr/`. The async integration test currently loads them from the `instant` resource folder.
 
 ## 8. Rename the artifact (done)
 
@@ -114,4 +133,4 @@ Each step stands on its own and keeps `mvn clean verify` green:
 2. ~~**Error model (3)**~~: done.
 3. ~~**Options model (1)**~~: done.
 4. ~~**Configuration (4)** and **HTTP plumbing (5)**~~: done, including `module-info.java`.
-5. **Spec checks (6)** and **test support (7)**: these can be done at any time. Do the `MediaType` fixes in 6 first, because ten constants fail against both live APIs today.
+5. **Spec checks (6)** and **test support (7)**: partly done (live behavior tests, shared test resources and helpers). Do the remaining `MediaType` fixes in 6 first, because ten constants fail against both live APIs today.

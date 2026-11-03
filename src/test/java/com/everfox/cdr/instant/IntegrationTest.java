@@ -16,9 +16,11 @@ package com.everfox.cdr.instant;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.everfox.cdr.Api;
+import com.everfox.cdr.LiveApi;
 import com.everfox.cdr.MediaType;
 import com.everfox.cdr.Region;
 import com.everfox.cdr.Risk;
+import com.everfox.cdr.TestResources;
 import com.everfox.cdr.options.ConversionMethod;
 import com.everfox.cdr.options.ConversionOptions;
 import com.everfox.cdr.options.ImagesOptions;
@@ -26,9 +28,6 @@ import com.everfox.cdr.options.RedactionOptions;
 import com.everfox.cdr.options.ReportFormat;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.HashMap;
@@ -65,19 +64,17 @@ class IntegrationTest {
     /** JSON object mapper for parsing API responses. */
     private static final ObjectMapper MAPPER = new ObjectMapper();
     /** Environment variable name for the API key. */
-    private static final String API_KEY_ENV = "CDR_INSTANT_API_KEY";
-    /** Environment variable name for the API URL. */
-    private static final String API_URL_ENV = "CDR_INSTANT_API_URL";
+    private static final String API_KEY_ENV = LiveApi.INSTANT_KEY_ENV;
     /** Environment variable name for the API region. */
     private static final String API_REGION_ENV = "CDR_INSTANT_API_REGION";
     /** Simple PDF content for testing (minimal valid PDF) */
-    private static final byte[] PDF_TEST_DATA = loadResource("test.pdf");
+    private static final byte[] PDF_TEST_DATA = TestResources.load("test.pdf");
     /** Simple DOCX content for testing (minimal valid Word document containing "This is a test.") */
-    private static final byte[] DOCX_TEST_DATA = loadResource("test.docx");
+    private static final byte[] DOCX_TEST_DATA = TestResources.load("test.docx");
     /** Simple JPEG content for testing (minimal valid JPEG) */
-    private static final byte[] JPEG_TEST_DATA = loadResource("test.jpg");
+    private static final byte[] JPEG_TEST_DATA = TestResources.load("test.jpg");
     /** ZIP archive for testing that cannot be processed unless unsupported content is redacted */
-    private static final byte[] ZIP_TEST_DATA = loadResource("test.zip");
+    private static final byte[] ZIP_TEST_DATA = TestResources.load("test.zip");
     /** Minimal valid JSON content for testing */
     private static final byte[] JSON_TEST_DATA = "[]".getBytes();
     /** Minimal invalid JSON content for testing */
@@ -89,46 +86,14 @@ class IntegrationTest {
     }
 
     /**
-     * Loads a test resource from the classpath.
-     *
-     * @param name the name of the resource, relative to this class's package
-     * @return the contents of the resource
-     * @throws IllegalStateException if the resource is not found
-     * @throws UncheckedIOException if the resource cannot be read
-     */
-    private static byte[] loadResource(String name) {
-        try (InputStream in = IntegrationTest.class.getResourceAsStream(name)) {
-            if (in == null) {
-                throw new IllegalStateException("Test resource not found: " + name);
-            }
-            return in.readAllBytes();
-        } catch (IOException e) {
-            throw new UncheckedIOException("Unable to read test resource: " + name, e);
-        }
-    }
-
-    /**
      * Creates a client configured for testing using the API key and optional API URL from environment variables.
      *
      * @return a configured Instant API client
      */
     private InstantApiClient createClient() {
-        URI apiUri = Region.US_WEST_2.getBaseUrl(Api.INSTANT);
-        String apiKey = System.getenv(API_KEY_ENV);
-        assertNotNull(apiKey, "CDR_INSTANT_API_KEY environment variable must be set");
-
-        String apiUrl = System.getenv(API_URL_ENV);
-        if (apiUrl != null && !apiUrl.isEmpty()) {
-            apiUri = assertDoesNotThrow(() -> new URI(apiUrl), "Invalid API URL");
-        }
-        String apiRegion = System.getenv(API_REGION_ENV);
-        if (apiRegion != null && !apiRegion.isEmpty()) {
-            Region region = Region.fromString(apiRegion);
-            apiUri = region.getBaseUrl(Api.INSTANT);
-        }
-        InstantApiConfig config = InstantApiConfig.builder(apiKey, apiUri).build();
-
-        return InstantApiClient.create(config);
+        return InstantApiClient.create(
+                InstantApiConfig.builder(LiveApi.apiKey(Api.INSTANT), LiveApi.baseUrl(Api.INSTANT))
+                        .build());
     }
 
     /**
