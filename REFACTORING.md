@@ -87,7 +87,7 @@ The probes also found differences between the two APIs, which have been reported
 
 - **Live behavior tests:** `instant.MediaTypeIntegrationTest` and `async.MediaTypeIntegrationTest` cover every confirmed behavior above against the live APIs. They are driven by the shared `com.everfox.cdr.ConvertibleFormat` table: each format's media type, sample file, and Office Open XML output. They run whenever the API keys are set, and they assert the current error codes. If Everfox changes an API, they fail and point to the change.
 - **Live allowed lists:** the same tests parse the list of allowed types from each API's rejection message, and compare it with the checked-in Async spec. That covers the Instant `Content-Type`, the Async `mime-type`, and the Async `conversion.from`. These depend on the wording of the error messages (`LiveApi.mediaTypesAfter`), so a change in wording fails them too.
-- **Checked-in specs:** the Instant and Async specs are in `src/test/resources/com/everfox/cdr/openapi/`, as published, and are read through `com.everfox.cdr.ApiSpec`.
+- **Checked-in specs:** the Instant and Async specs are in `src/test/resources/com/everfox/cdr/openapi/`, as published, and are read through `com.everfox.cdr.ApiSpec`. `SpecIntegrationTest` downloads the published specs and fails, listing the JSON paths that differ, when a checked-in copy is out of date. That's the signal to refresh the copy and rerun `SpecConformanceTest`.
 - **`SpecConformanceTest`** (unit tests, no API keys needed):
   - `Risk` matches both specs' `allow` and `deny` lists exactly.
   - Every `MediaType` constant's flags agree with the specs.

@@ -17,7 +17,6 @@ import com.everfox.cdr.MediaType;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
-import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 /**
@@ -77,11 +76,8 @@ public class AsyncApiRequest {
         if (options != null) {
             body.put("options", options);
         }
-        try {
-            return MAPPER.writeValueAsString(body);
-        } catch (JacksonException e) {
-            throw new IllegalStateException("Failed to serialize request to JSON", e);
-        }
+        // Can't fail: the body holds only a string and RequestOptions, which is final and has plain getters
+        return MAPPER.writeValueAsString(body);
     }
 
     /**

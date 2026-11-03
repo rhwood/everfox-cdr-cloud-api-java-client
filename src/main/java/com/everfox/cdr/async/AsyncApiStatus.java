@@ -230,7 +230,8 @@ public class AsyncApiStatus {
         } catch (JacksonException e) {
             throw new IllegalArgumentException("Status is not valid JSON", e);
         }
-        if (root == null || !root.isObject()) {
+        // readTree never returns null; empty input gives a MissingNode
+        if (!root.isObject()) {
             throw new IllegalArgumentException("Status is not a JSON object");
         }
         return new AsyncApiStatus(root, json, etag);

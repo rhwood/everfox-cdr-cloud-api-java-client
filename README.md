@@ -350,6 +350,12 @@ mvn test -Dtest='*IntegrationTest'
 
 Integration tests use `Region.US_WEST_2` by default. Set `CDR_INSTANT_API_REGION` (or `CDR_ASYNC_API_REGION`) to a region name (e.g. `eu_west_1`), or `CDR_INSTANT_API_URL` (or `CDR_ASYNC_API_URL`) to a base URL, to use a different endpoint. If both are set, the region takes precedence.
 
+`SpecIntegrationTest` checks that the OpenAPI specs checked in as test resources still match the ones Everfox publishes. It needs network access but no API key, and it's skipped if the specs can't be downloaded. To run only the tests that don't use the network, exclude all the integration tests:
+
+```bash
+mvn test -Dtest='!*IntegrationTest'
+```
+
 The `MediaTypeIntegrationTest` classes check how each API handles legacy formats such as `.doc`, `.xls`, and `.odt`. Both APIs reject these as a file's own media type. Send them as `MediaType.OCTET_STREAM` with the format as `conversion.from`, and they are returned as `.docx`, `.xlsx`, or `.pptx`.
 
 ## License

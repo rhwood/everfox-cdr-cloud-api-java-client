@@ -13,6 +13,7 @@
  */
 package com.everfox.cdr;
 
+import java.net.URI;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -23,8 +24,8 @@ import tools.jackson.databind.ObjectMapper;
 /**
  * The published OpenAPI spec of an API, checked in under {@code src/test/resources/com/everfox/cdr/openapi/}.
  *
- * <p>To refresh a spec, download it again from
- * {@code https://cdr.everfox.com/static/everfox-cdr-{instant,async}-api-OpenAPI.json} and run the tests.
+ * <p>To refresh a spec, download it again from its {@link #publishedUrl()} and run the tests.
+ * {@code SpecIntegrationTest} fails when the checked-in copy no longer matches the published one.
  */
 public enum ApiSpec {
     /** The Instant API spec. */
@@ -38,6 +39,11 @@ public enum ApiSpec {
             "/components/schemas/CreateUploadUrlsRequest/properties/options/properties",
             "/components/schemas/CreateUploadUrlsRequest/properties/mime-type/enum");
 
+    /** Where Everfox publishes the specs. */
+    private static final String PUBLISHED_AT = "https://cdr.everfox.com/static/";
+
+    /** The spec file name, which is also its published name. */
+    private final String fileName;
     /** The parsed spec. */
     private final JsonNode spec;
     /** JSON pointer to the properties of the processing options. */
@@ -53,9 +59,28 @@ public enum ApiSpec {
      * @param contentTypesPointer JSON pointer to the file's media type
      */
     ApiSpec(String fileName, String optionsPointer, String contentTypesPointer) {
+        this.fileName = fileName;
         this.spec = new ObjectMapper().readTree(TestResources.load("openapi/" + fileName));
         this.optionsPointer = optionsPointer;
         this.contentTypesPointer = contentTypesPointer;
+    }
+
+    /**
+     * Returns the URL Everfox publishes this spec at.
+     *
+     * @return the published URL
+     */
+    public URI publishedUrl() {
+        return URI.create(PUBLISHED_AT + fileName);
+    }
+
+    /**
+     * Returns the checked-in spec.
+     *
+     * @return the parsed spec
+     */
+    public JsonNode json() {
+        return spec;
     }
 
     /**

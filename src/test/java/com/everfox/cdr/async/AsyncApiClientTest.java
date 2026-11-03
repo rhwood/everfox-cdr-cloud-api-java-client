@@ -512,6 +512,45 @@ class AsyncApiClientTest {
     }
 
     /**
+     * Tests that a redirect without a {@code Location} header is returned rather than followed: as an unsuccessful
+     * response when downloading to memory, and as an error when downloading to a file.
+     *
+     * @throws Exception if the request fails
+     */
+    @Test
+    void testDownloadRedirectWithoutLocation() throws Exception {
+        server.route("/download/", reply(302, "", null));
+        try (AsyncApiClient client = createLocalClient()) {
+            AsyncApiStatus status = AsyncApiStatus.fromJson(complete(true));
+            AsyncApiResponse response = client.download(status);
+            AsyncApiException exception =
+                    assertThrows(AsyncApiException.class, () -> client.download(status, tempDir.resolve("out")));
+
+            assertEquals(302, response.getStatusCode());
+            assertFalse(response.isSuccess());
+            assertEquals(302, exception.getHttpStatusCode());
+            assertTrue(receivedFor("/storage/").isEmpty());
+        }
+    }
+
+    /**
+     * Tests that a 304 is never followed as a redirect, even with a {@code Location} header.
+     *
+     * @throws Exception if the request fails
+     */
+    @Test
+    void testDownloadNotModifiedNotFollowed() throws Exception {
+        server.route("/download/", reply(304, "", null).withHeader("Location", "/storage/1"));
+        try (AsyncApiClient client = createLocalClient()) {
+            AsyncApiResponse response = client.download(AsyncApiStatus.fromJson(complete(true)));
+
+            assertEquals(304, response.getStatusCode());
+            assertFalse(response.isSuccess());
+            assertTrue(receivedFor("/storage/").isEmpty());
+        }
+    }
+
+    /**
      * Tests processing a file in one call.
      *
      * @throws Exception if the request fails
