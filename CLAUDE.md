@@ -37,7 +37,7 @@ Four packages (see REFACTORING.md for the remaining duplication between `instant
 - `CdrApiConfig`: abstract supertype of each client's config. It holds the API key, base URL, and `Duration` connect/request timeouts (defaults 10 s/60 s), and has a self-typed `Builder` like `ProcessingOptions`. Subclass `builder(...)` factories null-check the key and URL, because the base builder's constructor doesn't validate (SpotBugs `CT_CONSTRUCTOR_THROW`).
 - `CdrApiResponse`: abstract supertype of each client's response, with the status code, body, case-insensitive headers (`getHeader`), and `isSuccess()`. Its constructor takes the `HttpResponse` so the body isn't copied.
 - `CdrApiException`: abstract supertype of each client's exception, with the shared getters and message format. Its constructor doesn't validate (SpotBugs `CT_CONSTRUCTOR_THROW`), so subclass factories must pass a non-null error.
-- `MediaType`: MIME types the API accepts. `ALL` is `*/*`.
+- `MediaType`: MIME types the APIs accept. `ALL` is `*/*`. `isAcceptedAsContentType()` and `isAcceptedAsConversionSource()` record where each constant can be used, following the Async spec, which matches the live APIs. Ten legacy and OpenDocument formats work only as `conversion.from`, and `ALL` and `TEXT_PLAIN` work in neither place. `SpecConformanceTest` keeps these flags in step with the checked-in spec.
 - `Risk`: hierarchical risk identifiers (for example `exe/macro/ms/word`, `steg/image/png`) used in allow/deny lists.
 
 ### `com.everfox.cdr.options`: shared processing options
@@ -85,6 +85,8 @@ Four packages (see REFACTORING.md for the remaining duplication between `instant
   ```
   With both keys set, `mvn verify` runs them too, which adds about two and a half minutes (mostly Async jobs) and is billed per MB. Never commit API keys.
 - `MediaTypeIntegrationTest` pins the media type behavior confirmed against the live APIs, including where it contradicts the Instant spec (REFACTORING.md section 6). Its formats come from `com.everfox.cdr.ConvertibleFormat`. If it starts failing, check whether Everfox changed the API before changing the client.
+- `SpecConformanceTest` checks `Risk` and the `MediaType` flags against the checked-in OpenAPI specs in `src/test/resources/com/everfox/cdr/openapi/`, read through `com.everfox.cdr.ApiSpec`. To refresh a spec, download it again from the URL above and run the tests. `testInstantSpecContentTypesStillDiffer` fails when Everfox changes the Instant spec's known-wrong `Content-Type` list.
+- Shared unit-test helpers in `com.everfox.cdr`: `MockHttp.response(...)` builds mock `HttpResponse`s, and `FakeServer` is a local HTTP server. It routes by the longest path prefix, plays queued replies in order (repeating the last), and records requests. Use them rather than writing new fixtures.
 - Sample files shared by all tests are in `src/test/resources/com/everfox/cdr/`; load them with `com.everfox.cdr.TestResources.load(name)`. Most were saved from Microsoft Office; `test.odt` was generated with macOS `textutil`.
 
 ## NiFi Usage Notes

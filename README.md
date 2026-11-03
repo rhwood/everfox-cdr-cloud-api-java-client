@@ -320,6 +320,13 @@ The API supports 60+ file formats including:
 - Archives: ZIP
 - Email: RFC822, Outlook MSG
 
+Some formats can't be sent as their own media type, and must be sent as `MediaType.OCTET_STREAM` with the format as `conversion.from` (see [Format Conversion](#format-conversion)). These are `.doc`, `.xls`, `.xlsb`, `.ppt`, `.rtf`, `.csv`, and the OpenDocument formats. `MediaType.isAcceptedAsContentType()` and `isAcceptedAsConversionSource()` say where each constant can be used:
+
+```java
+MediaType.MSWORD.isAcceptedAsContentType();     // false: send as OCTET_STREAM with conversion.from
+MediaType.MSWORD.isAcceptedAsConversionSource(); // true
+```
+
 ## Building
 
 ```bash

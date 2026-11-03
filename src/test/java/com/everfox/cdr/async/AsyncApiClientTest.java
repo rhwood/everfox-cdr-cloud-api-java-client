@@ -16,26 +16,20 @@ package com.everfox.cdr.async;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.everfox.cdr.CdrApiError;
+import com.everfox.cdr.FakeServer;
 import com.everfox.cdr.MediaType;
 import com.everfox.cdr.Region;
 import com.everfox.cdr.Risk;
-import com.sun.net.httpserver.Headers;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpServer;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,37 +48,8 @@ class AsyncApiClientTest {
     /** The file uploaded in tests. */
     private static final byte[] FILE = "unsafe".getBytes(StandardCharsets.UTF_8);
 
-    /**
-     * A request received by the local server.
-     *
-     * @param method the HTTP method
-     * @param path the request path
-     * @param headers the request headers
-     * @param body the request body
-     */
-    private record Received(String method, String path, Headers headers, byte[] body) {}
-
-    /**
-     * A response for the local server to send.
-     *
-     * @param status the HTTP status
-     * @param body the response body
-     * @param etag the ETag header, or null
-     */
-    private record Reply(int status, String body, String etag) {}
-
     /** Local HTTP server standing in for the Async API and its storage service. */
-    private HttpServer server;
-    /** Requests received by the server, in order. */
-    private final List<Received> received = new CopyOnWriteArrayList<>();
-    /** Responses to status requests, in order; the last is repeated once the others are used. */
-    private final Deque<Reply> statusReplies = new ArrayDeque<>();
-    /** Response to initiate requests. */
-    private Reply initiateReply;
-    /** Response to upload requests. */
-    private Reply uploadReply;
-    /** Response to download requests; a 302 redirects to the storage service. */
-    private Reply downloadReply;
+    private FakeServer server;
     /** Temporary directory for file tests. */
     @TempDir
     Path tempDir;
@@ -101,64 +66,32 @@ class AsyncApiClientTest {
      */
     @BeforeEach
     void startServer() throws IOException {
-        server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
-        initiateReply = new Reply(202, waitingForUpload(), "e0");
-        uploadReply = new Reply(200, "", null);
-        downloadReply = new Reply(302, "", null);
-        statusReplies.add(new Reply(200, complete(true), "e1"));
-        server.createContext("/", exchange -> {
-            String path = exchange.getRequestURI().getPath();
-            received.add(new Received(
-                    exchange.getRequestMethod(),
-                    path,
-                    exchange.getRequestHeaders(),
-                    exchange.getRequestBody().readAllBytes()));
-            if (path.equals("/v1/initiate")) {
-                send(exchange, initiateReply);
-            } else if (path.startsWith("/upload/")) {
-                send(exchange, uploadReply);
-            } else if (path.startsWith("/status/")) {
-                send(exchange, statusReplies.size() > 1 ? statusReplies.poll() : statusReplies.peek());
-            } else if (path.startsWith("/download/")) {
-                exchange.getResponseHeaders().add("Location", "/storage/1?X-Amz-Signature=abc");
-                send(exchange, downloadReply);
-            } else if (path.startsWith("/storage/")) {
-                exchange.sendResponseHeaders(200, RESULT.length);
-                exchange.getResponseBody().write(RESULT);
-                exchange.close();
-            } else if (path.startsWith("/loop/")) {
-                exchange.getResponseHeaders().add("Location", "/loop/1");
-                send(exchange, new Reply(302, "", null));
-            } else {
-                send(exchange, new Reply(404, "", null));
-            }
-        });
-        server.start();
+        server = FakeServer.start();
+        server.route("/v1/initiate", reply(202, waitingForUpload(), "e0"))
+                .route("/upload/", reply(200, "", null))
+                .route("/status/", reply(200, complete(true), "e1"))
+                .route("/download/", reply(302, "", null).withHeader("Location", "/storage/1?X-Amz-Signature=abc"))
+                .route("/storage/", new FakeServer.Reply(200, RESULT, Map.of()))
+                .route("/loop/", reply(302, "", null).withHeader("Location", "/loop/1"));
     }
 
     /** Stops the local HTTP server. */
     @AfterEach
     void stopServer() {
-        server.stop(0);
+        server.close();
     }
 
     /**
-     * Sends a reply.
+     * Creates a reply.
      *
-     * @param exchange the exchange
-     * @param reply the reply
-     * @throws IOException if the reply cannot be sent
+     * @param status the HTTP status
+     * @param body the response body
+     * @param etag the ETag header, or null
+     * @return the reply
      */
-    private static void send(HttpExchange exchange, Reply reply) throws IOException {
-        byte[] body = reply.body().getBytes(StandardCharsets.UTF_8);
-        if (reply.etag() != null) {
-            exchange.getResponseHeaders().add("ETag", reply.etag());
-        }
-        exchange.sendResponseHeaders(reply.status(), body.length == 0 ? -1 : body.length);
-        if (body.length > 0) {
-            exchange.getResponseBody().write(body);
-        }
-        exchange.close();
+    private static FakeServer.Reply reply(int status, String body, String etag) {
+        FakeServer.Reply reply = FakeServer.Reply.of(status, body);
+        return etag != null ? reply.withHeader("ETag", etag) : reply;
     }
 
     /**
@@ -167,8 +100,7 @@ class AsyncApiClientTest {
      * @return the base URL
      */
     private String base() {
-        return "http://" + server.getAddress().getHostString() + ":"
-                + server.getAddress().getPort();
+        return server.baseUrl().toString();
     }
 
     /**
@@ -254,8 +186,8 @@ class AsyncApiClientTest {
      * @param prefix the path prefix
      * @return the matching requests
      */
-    private List<Received> receivedFor(String prefix) {
-        return received.stream().filter(r -> r.path().startsWith(prefix)).toList();
+    private List<FakeServer.Request> receivedFor(String prefix) {
+        return server.requests(prefix);
     }
 
     /** Tests that creating a client with a null configuration throws a NullPointerException. */
@@ -307,7 +239,7 @@ class AsyncApiClientTest {
         try (AsyncApiClient client = createLocalClient()) {
             AsyncApiStatus status = client.initiate(AsyncApiRequest.create(MediaType.PDF, options));
 
-            Received request = received.get(0);
+            FakeServer.Request request = server.requests().get(0);
             assertEquals("POST", request.method());
             assertEquals("test-key", request.headers().getFirst("x-api-key"));
             assertEquals("application/json", request.headers().getFirst("Content-Type"));
@@ -325,11 +257,13 @@ class AsyncApiClientTest {
     /** Tests that an initiate error is thrown as an {@link AsyncApiException}. */
     @Test
     void testInitiateError() {
-        initiateReply = new Reply(
-                400,
-                "{\"error\":{\"code\":6010,\"message\":\"Bad type\",\"name\":\"APIGATEWAY_BAD_REQUEST_BODY\","
-                        + "\"type\":\"BadRequest\",\"subType\":\"ValidationFailure\"}}",
-                null);
+        server.route(
+                "/v1/initiate",
+                reply(
+                        400,
+                        "{\"error\":{\"code\":6010,\"message\":\"Bad type\",\"name\":\"APIGATEWAY_BAD_REQUEST_BODY\","
+                                + "\"type\":\"BadRequest\",\"subType\":\"ValidationFailure\"}}",
+                        null));
         try (AsyncApiClient client = createLocalClient()) {
             AsyncApiException exception =
                     assertThrows(AsyncApiException.class, () -> client.initiate(AsyncApiRequest.create("bad/type")));
@@ -350,7 +284,7 @@ class AsyncApiClientTest {
         try (AsyncApiClient client = createLocalClient()) {
             client.upload(AsyncApiStatus.fromJson(waitingForUpload()), FILE);
 
-            Received request = receivedFor("/upload/").get(0);
+            FakeServer.Request request = receivedFor("/upload/").get(0);
             assertEquals("PUT", request.method());
             assertEquals("application/pdf", request.headers().getFirst("Content-Type"));
             assertEquals(String.valueOf(FILE.length), request.headers().getFirst("Content-Length"));
@@ -371,7 +305,7 @@ class AsyncApiClientTest {
             client.upload(status, file);
             client.upload(status, new ByteArrayInputStream(FILE));
 
-            List<Received> uploads = receivedFor("/upload/");
+            List<FakeServer.Request> uploads = receivedFor("/upload/");
             assertEquals(2, uploads.size());
             assertArrayEquals(FILE, uploads.get(0).body());
             assertArrayEquals(FILE, uploads.get(1).body());
@@ -381,7 +315,7 @@ class AsyncApiClientTest {
     /** Tests that a rejected upload with a non-JSON body is thrown with an unknown error. */
     @Test
     void testUploadError() {
-        uploadReply = new Reply(403, "<Error><Code>AccessDenied</Code></Error>", null);
+        server.route("/upload/", reply(403, "<Error><Code>AccessDenied</Code></Error>", null));
         try (AsyncApiClient client = createLocalClient()) {
             AsyncApiException exception = assertThrows(
                     AsyncApiException.class, () -> client.upload(AsyncApiStatus.fromJson(waitingForUpload()), FILE));
@@ -416,7 +350,7 @@ class AsyncApiClientTest {
         try (AsyncApiClient client = createLocalClient()) {
             AsyncApiStatus status = client.getStatus(AsyncApiStatus.fromJson(waitingForUpload()));
 
-            Received request = receivedFor("/status/").get(0);
+            FakeServer.Request request = receivedFor("/status/").get(0);
             assertEquals("GET", request.method());
             assertEquals("application/json", request.headers().getFirst("Accept"));
             assertEquals("sigv4", request.headers().getFirst("Authorization"));
@@ -438,7 +372,7 @@ class AsyncApiClientTest {
             AsyncApiStatus status = AsyncApiStatus.fromJson(complete(true));
 
             assertSame(status, client.waitForCompletion(status));
-            assertTrue(received.isEmpty());
+            assertTrue(server.requests().isEmpty());
         }
     }
 
@@ -449,17 +383,18 @@ class AsyncApiClientTest {
      */
     @Test
     void testWaitForCompletionPolls() throws Exception {
-        statusReplies.clear();
-        statusReplies.add(new Reply(429, "", null));
-        statusReplies.add(new Reply(200, processing(), "e2"));
-        statusReplies.add(new Reply(304, "", null));
-        statusReplies.add(new Reply(200, complete(true), "e3"));
+        server.route(
+                "/status/",
+                reply(429, "", null),
+                reply(200, processing(), "e2"),
+                reply(304, "", null),
+                reply(200, complete(true), "e3"));
         try (AsyncApiClient client = createLocalClient()) {
             AsyncApiStatus initiated = AsyncApiStatus.fromJson(waitingForUpload());
             AsyncApiStatus status = client.waitForCompletion(initiated);
 
             assertTrue(status.isSuccess());
-            List<Received> polls = receivedFor("/status/");
+            List<FakeServer.Request> polls = receivedFor("/status/");
             assertEquals(4, polls.size());
             // The initiated status was parsed without an ETag, so the first poll is unconditional
             assertNull(polls.get(0).headers().getFirst("If-None-Match"));
@@ -472,8 +407,7 @@ class AsyncApiClientTest {
     /** Tests that polling throws a TimeoutException if processing does not complete in time. */
     @Test
     void testWaitForCompletionTimeout() {
-        statusReplies.clear();
-        statusReplies.add(new Reply(200, processing(), null));
+        server.route("/status/", reply(200, processing(), null));
         try (AsyncApiClient client = createLocalClient(Duration.ofMillis(200))) {
             TimeoutException exception = assertThrows(
                     TimeoutException.class, () -> client.waitForCompletion(AsyncApiStatus.fromJson(processing())));
@@ -485,8 +419,7 @@ class AsyncApiClientTest {
     /** Tests that a status error while polling is thrown as an {@link AsyncApiException}. */
     @Test
     void testWaitForCompletionError() {
-        statusReplies.clear();
-        statusReplies.add(new Reply(500, "{\"error\":{\"code\":5000,\"message\":\"Oops\"}}", null));
+        server.route("/status/", reply(500, "{\"error\":{\"code\":5000,\"message\":\"Oops\"}}", null));
         try (AsyncApiClient client = createLocalClient()) {
             AsyncApiException exception = assertThrows(
                     AsyncApiException.class, () -> client.waitForCompletion(AsyncApiStatus.fromJson(processing())));
@@ -534,7 +467,8 @@ class AsyncApiClientTest {
     /** Tests that downloading a result twice is thrown as an {@link AsyncApiException}. */
     @Test
     void testDownloadAlreadyDownloaded() {
-        downloadReply = new Reply(410, "{\"error\":{\"code\":4010,\"message\":\"Gone\",\"type\":\"Gone\"}}", null);
+        server.route(
+                "/download/", reply(410, "{\"error\":{\"code\":4010,\"message\":\"Gone\",\"type\":\"Gone\"}}", null));
         try (AsyncApiClient client = createLocalClient()) {
             AsyncApiStatus status = AsyncApiStatus.fromJson(complete(true));
             AsyncApiException bytes = assertThrows(AsyncApiException.class, () -> client.download(status));
@@ -563,7 +497,7 @@ class AsyncApiClientTest {
             assertEquals(3020, exception.getApiStatusCode());
             assertEquals("PROCESSING_NOT_RECOGNISED", exception.getName());
             assertEquals(CdrApiError.UNKNOWN_CODE, unknown.getApiStatusCode());
-            assertTrue(received.isEmpty());
+            assertTrue(server.requests().isEmpty());
         }
     }
 
@@ -591,7 +525,7 @@ class AsyncApiClientTest {
             assertArrayEquals(FILE, receivedFor("/upload/").get(0).body());
             assertEquals(
                     List.of("/v1/initiate", "/upload/1", "/status/1", "/download/1", "/storage/1"),
-                    received.stream().map(Received::path).toList());
+                    server.requests().stream().map(FakeServer.Request::path).toList());
         }
     }
 
@@ -608,7 +542,9 @@ class AsyncApiClientTest {
             assertArrayEquals(RESULT, response.getBody());
             assertEquals(
                     "application/pdf",
-                    MAPPER.readTree(received.get(0).body()).get("mime-type").stringValue());
+                    MAPPER.readTree(server.requests().get(0).body())
+                            .get("mime-type")
+                            .stringValue());
         }
     }
 
@@ -633,8 +569,7 @@ class AsyncApiClientTest {
     /** Tests that processing throws the processing error when processing fails. */
     @Test
     void testProcessFailure() {
-        statusReplies.clear();
-        statusReplies.add(new Reply(200, complete(false), null));
+        server.route("/status/", reply(200, complete(false), null));
         try (AsyncApiClient client = createLocalClient()) {
             AsyncApiException exception = assertThrows(
                     AsyncApiException.class, () -> client.process(AsyncApiRequest.create(MediaType.PDF), FILE));

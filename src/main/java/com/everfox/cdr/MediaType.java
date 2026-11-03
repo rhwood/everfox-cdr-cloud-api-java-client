@@ -13,7 +13,15 @@
  */
 package com.everfox.cdr;
 
-/** Available content types for file uploads and downloads. */
+import java.util.EnumSet;
+import java.util.Set;
+
+/**
+ * Available content types for file uploads and downloads.
+ *
+ * <p>Not every constant is valid everywhere: see {@link #isAcceptedAsContentType()} and
+ * {@link #isAcceptedAsConversionSource()}.
+ */
 public enum MediaType {
     /** Content type for Windows Enhanced Metafile files. */
     EMF("application/emf"),
@@ -21,21 +29,44 @@ public enum MediaType {
     JSON("application/json"),
     /** Content type for MP4 files. */
     MP4("application/mp4"),
-    /** Content type for Microsoft Outlook TNEF (winmail.dat) files. */
+    /**
+     * Content type for Microsoft Outlook TNEF (winmail.dat) files. Both APIs process it only in preview mode, which
+     * requires allowing the {@code preview/application/ms-tnef} risk.
+     */
     MS_TNEF("application/ms-tnef"),
-    /** Content type for Microsoft Word documents. */
+    /**
+     * Content type for Microsoft Word documents. Neither API accepts it as a file's media type; send the file as
+     * {@link #OCTET_STREAM} with this type as {@code conversion.from}, which converts it to Office Open XML.
+     */
     MSWORD("application/msword"),
-    /** Content type for arbitrary binary data, used to request automatic format conversion. */
+    /**
+     * Content type for arbitrary binary data, used to request format conversion. Both APIs accept it only with a
+     * {@code conversion.from} media type, which says what the file really is.
+     */
     OCTET_STREAM("application/octet-stream"),
     /** Content type for PDF files. */
     PDF("application/pdf"),
-    /** Content type for RTF files. */
+    /**
+     * Content type for RTF files. Neither API accepts it as a file's media type; send the file as {@link #OCTET_STREAM}
+     * with this type as {@code conversion.from}, which converts it to Office Open XML.
+     */
     RTF("application/rtf"),
-    /** Content type for Microsoft Excel 97 spreadsheets. */
+    /**
+     * Content type for Microsoft Excel 97 spreadsheets. Neither API accepts it as a file's media type; send the file as
+     * {@link #OCTET_STREAM} with this type as {@code conversion.from}, which converts it to Office Open XML.
+     */
     MS_EXCEL("application/vnd.ms-excel"),
     /** Content type for Microsoft Excel addins with macros. */
     MS_EXCEL_ADDIN_MACROENABLED_12("application/vnd.ms-excel.addin.macroenabled.12"),
-    /** Content type for Microsoft Excel sheets with binary macros. */
+    /**
+     * Content type for Microsoft Excel binary workbooks (.xlsb). Neither API accepts it as a file's media type; send
+     * the file as {@link #OCTET_STREAM} with this type as {@code conversion.from}, which converts it to Office Open
+     * XML.
+     *
+     * <p>The Instant API compares the {@code Accept} header case-sensitively against
+     * {@code application/vnd.ms-excel.sheet.binary.macroEnabled.12}, so don't use this lower-case constant as an
+     * Instant accept type.
+     */
     MS_EXCEL_SHEET_BINARY_MACROENABLED_12("application/vnd.ms-excel.sheet.binary.macroenabled.12"),
     /** Content type for Microsoft Excel sheets with macros. */
     MS_EXCEL_SHEET_MACROENABLED_12("application/vnd.ms-excel.sheet.macroenabled.12"),
@@ -43,7 +74,10 @@ public enum MediaType {
     MS_EXCEL_TEMPLATE_MACROENABLED_12("application/vnd.ms-excel.template.macroenabled.12"),
     /** Content type for Microsoft Outlook files. */
     MS_OUTLOOK("application/vnd.ms-outlook"),
-    /** Content type for Microsoft PowerPoint files. */
+    /**
+     * Content type for Microsoft PowerPoint files. Neither API accepts it as a file's media type; send the file as
+     * {@link #OCTET_STREAM} with this type as {@code conversion.from}, which converts it to Office Open XML.
+     */
     MS_POWERPOINT("application/vnd.ms-powerpoint"),
     /** Content type for Microsoft PowerPoint addins with macros. */
     MS_POWERPOINT_ADDIN_MACROENABLED_12("application/vnd.ms-powerpoint.addin.macroenabled.12"),
@@ -61,11 +95,20 @@ public enum MediaType {
     MS_WORD_DOCUMENT_MACROENABLED_12("application/vnd.ms-word.document.macroenabled.12"),
     /** Content type for Microsoft Word templates with macros. */
     MS_WORD_TEMPLATE_MACROENABLED_12("application/vnd.ms-word.template.macroenabled.12"),
-    /** Content type for OASIS OpenDocument presentations. */
+    /**
+     * Content type for OASIS OpenDocument presentations. Neither API accepts it as a file's media type; send the file
+     * as {@link #OCTET_STREAM} with this type as {@code conversion.from}, which converts it to Office Open XML.
+     */
     OASIS_OPENDOCUMENT_PRESENTATION("application/vnd.oasis.opendocument.presentation"),
-    /** Content type for OASIS OpenDocument spreadsheets. */
+    /**
+     * Content type for OASIS OpenDocument spreadsheets. Neither API accepts it as a file's media type; send the file as
+     * {@link #OCTET_STREAM} with this type as {@code conversion.from}, which converts it to Office Open XML.
+     */
     OASIS_OPENDOCUMENT_SPREADSHEET("application/vnd.oasis.opendocument.spreadsheet"),
-    /** Content type for OASIS OpenDocument text documents. */
+    /**
+     * Content type for OASIS OpenDocument text documents. Neither API accepts it as a file's media type; send the file
+     * as {@link #OCTET_STREAM} with this type as {@code conversion.from}, which converts it to Office Open XML.
+     */
     OASIS_OPENDOCUMENT_TEXT("application/vnd.oasis.opendocument.text"),
     /** Content type for OpenXML Presentation files. */
     OPENXMLFORMATS_OFFICEDOCUMENT_PRESENTATIONML_PRESENTATION(
@@ -134,13 +177,25 @@ public enum MediaType {
     IMAGE_X_MS_BMP("image/x-ms-bmp"),
     /** Content type for RFC822 messages. */
     MESSAGE_RFC822("message/rfc822"),
-    /** Content type for CSS text files. */
+    /**
+     * Content type for CSS text files. It isn't accepted as {@code conversion.from} by the Async API or either spec,
+     * although the Instant API accepts it there.
+     */
     TEXT_CSS("text/css"),
-    /** Content type for CSV text files. */
+    /**
+     * Content type for CSV text files. Neither API accepts it as a file's media type; send the file as
+     * {@link #OCTET_STREAM} with this type as {@code conversion.from}, which converts it to Office Open XML.
+     */
     TEXT_CSV("text/csv"),
-    /** Content type for plain text files. */
+    /**
+     * Content type for plain text files. Neither API accepts it as a file's media type or as {@code conversion.from};
+     * use it as the media type of a redaction replacement ({@code RedactionOptions}).
+     */
     TEXT_PLAIN("text/plain"),
-    /** Content type for RTF text files. */
+    /**
+     * Content type for RTF text files. Neither API accepts it as a file's media type; send the file as
+     * {@link #OCTET_STREAM} with this type as {@code conversion.from}, which converts it to Office Open XML.
+     */
     TEXT_RTF("text/rtf"),
     /** Content type for vCard text files. */
     TEXT_VCARD("text/vcard"),
@@ -148,8 +203,26 @@ public enum MediaType {
     TEXT_XML("text/xml"),
     /** Content type for MP4 video files. */
     VIDEO_MP4("video/mp4"),
-    /** Catch-all content type for all files. */
+    /** Catch-all content type, for use as an accept type only. */
     ALL("*/*");
+
+    /** Types the APIs reject as a file's media type. */
+    private static final Set<MediaType> NOT_CONTENT_TYPES = EnumSet.of(
+            MSWORD,
+            RTF,
+            MS_EXCEL,
+            MS_EXCEL_SHEET_BINARY_MACROENABLED_12,
+            MS_POWERPOINT,
+            OASIS_OPENDOCUMENT_PRESENTATION,
+            OASIS_OPENDOCUMENT_SPREADSHEET,
+            OASIS_OPENDOCUMENT_TEXT,
+            TEXT_CSV,
+            TEXT_RTF,
+            TEXT_PLAIN,
+            ALL);
+    /** Types the APIs reject as {@code conversion.from}. */
+    private static final Set<MediaType> NOT_CONVERSION_SOURCES =
+            EnumSet.of(MS_TNEF, OCTET_STREAM, TEXT_CSS, TEXT_PLAIN, ALL);
 
     /** The string representation of the content type. */
     private final String mediaType;
@@ -170,6 +243,28 @@ public enum MediaType {
      */
     public String getMediaType() {
         return mediaType;
+    }
+
+    /**
+     * Returns whether the APIs accept this as a file's media type: the Instant API's {@code Content-Type} header, and
+     * the Async API's {@code mime-type}. This follows the live APIs and the Async spec; the published Instant spec also
+     * lists types the live Instant API rejects.
+     *
+     * @return true if accepted as a file's media type
+     */
+    public boolean isAcceptedAsContentType() {
+        return !NOT_CONTENT_TYPES.contains(this);
+    }
+
+    /**
+     * Returns whether the APIs accept this as {@code conversion.from}, the original format of a file sent as
+     * {@link #OCTET_STREAM}. This follows the Async spec, which both APIs enforce except that the Instant API also
+     * accepts {@link #TEXT_CSS}.
+     *
+     * @return true if accepted as a conversion source
+     */
+    public boolean isAcceptedAsConversionSource() {
+        return !NOT_CONVERSION_SOURCES.contains(this);
     }
 
     @Override

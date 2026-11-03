@@ -13,14 +13,11 @@
  */
 package com.everfox.cdr.async;
 
+import static com.everfox.cdr.MockHttp.response;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 import com.everfox.cdr.CdrApiError;
 import java.net.URI;
-import java.net.http.HttpHeaders;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -50,23 +47,6 @@ class AsyncApiStatusTest {
     /** Default constructor for the test class. */
     AsyncApiStatusTest() {
         // Nothing to do here
-    }
-
-    /**
-     * Creates a mock HTTP response.
-     *
-     * @param statusCode the HTTP status code
-     * @param body the response body
-     * @param headers the response headers
-     * @return the mock response
-     */
-    private static HttpResponse<byte[]> response(int statusCode, String body, Map<String, List<String>> headers) {
-        @SuppressWarnings("unchecked") // unavoidable when mocking due to HttpResponse being generic
-        HttpResponse<byte[]> httpResponse = mock(HttpResponse.class);
-        when(httpResponse.statusCode()).thenReturn(statusCode);
-        when(httpResponse.body()).thenReturn(body != null ? body.getBytes(StandardCharsets.UTF_8) : null);
-        when(httpResponse.headers()).thenReturn(HttpHeaders.of(headers, (k, v) -> true));
-        return httpResponse;
     }
 
     /** Tests parsing an initiated status and its links. */
@@ -194,7 +174,7 @@ class AsyncApiStatusTest {
     @Test
     void testFromHttpResponseNotStatus() {
         AsyncApiException empty = assertThrows(
-                AsyncApiException.class, () -> AsyncApiStatus.fromHttpResponse(response(200, null, Map.of())));
+                AsyncApiException.class, () -> AsyncApiStatus.fromHttpResponse(response(200, (String) null, Map.of())));
         AsyncApiException html = assertThrows(
                 AsyncApiException.class,
                 () -> AsyncApiStatus.fromHttpResponse(response(200, "<html></html>", Map.of())));

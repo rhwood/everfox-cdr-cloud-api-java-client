@@ -16,6 +16,7 @@ package com.everfox.cdr.async;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.everfox.cdr.Api;
+import com.everfox.cdr.ApiSpec;
 import com.everfox.cdr.ConvertibleFormat;
 import com.everfox.cdr.LiveApi;
 import com.everfox.cdr.MediaType;
@@ -117,6 +118,28 @@ class MediaTypeIntegrationTest {
     void testRejectedAsMimeType(ConvertibleFormat format) {
         assertValidationFailure(assertThrows(
                 AsyncApiException.class, () -> client.initiate(AsyncApiRequest.create(format.getMediaType()))));
+    }
+
+    /** Tests that the allowed {@code mime-type} values listed in the rejection message are exactly the spec's. */
+    @Test
+    void testAllowedMimeTypesMatchSpec() {
+        AsyncApiException exception = assertThrows(
+                AsyncApiException.class,
+                () -> client.initiate(AsyncApiRequest.create(ConvertibleFormat.DOC.getMediaType())));
+
+        assertEquals(
+                ApiSpec.ASYNC.contentTypes(), LiveApi.mediaTypesAfter(exception.getApiMessage(), "possible values:"));
+    }
+
+    /** Tests that the allowed {@code conversion.from} values listed in the rejection message are exactly the spec's. */
+    @Test
+    void testAllowedConversionSourcesMatchSpec() {
+        AsyncApiException exception = assertThrows(
+                AsyncApiException.class, () -> client.initiate(convertFrom(MediaType.TEXT_CSS.getMediaType())));
+
+        assertEquals(
+                ApiSpec.ASYNC.conversionSources(),
+                LiveApi.mediaTypesAfter(exception.getApiMessage(), "possible values:"));
     }
 
     /**

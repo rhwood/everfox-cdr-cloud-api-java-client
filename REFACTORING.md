@@ -16,7 +16,7 @@ Line counts include Javadoc and license headers. "Shared" is the number of lines
 | `InstantApiResponse` | `AsyncApiResponse` | 130 / 127 | 95 | Status code, body, headers, `isSuccess()` (now shared; see 5) |
 | `InstantApiClient` | `AsyncApiClient` | 132 / 469 | 94 | `HttpClient` setup, factory, `close()` (now shared; see 5) |
 
-The tests repeat the same pattern: two local `HttpServer` fixtures and two sets of mocked `HttpResponse` helpers. The integration tests' environment handling and resource loading are now shared; see 7.
+The tests repeated the same pattern, which is now shared; see 7.
 
 The Everfox S3 API (`/s3`, `/validate`) takes the same `options` object, plus `emails` and `costs.environment.large.force`. A third client would make every item below a three-way copy.
 
@@ -54,7 +54,7 @@ All the `*Seconds` getters, `DEFAULT_*_SECONDS` constants, and multi-argument `c
 - `InstantApiClient.close()` now closes its `HttpClient`, and Instant header lookups are case-insensitive.
 - `src/main/java/module-info.java` declares the module `com.everfox.cdr`. It exports `com.everfox.cdr`, `.instant`, `.async`, and `.options` (not `.internal`), and `requires transitive java.net.http` because `CdrApiResponse` takes an `HttpResponse`. Tests run inside the module, so the POM adds `jdk.httpserver` to test compilation and surefire.
 
-## 6. Check `MediaType` and `Risk` against the live APIs, not just the specs
+## 6. Check `MediaType` and `Risk` against the live APIs, not just the specs (done, pending Everfox)
 
 **Problem.** `MediaType` lists types that the live APIs reject, and the published Instant spec can't be used to catch that, because it is wrong. Probes against both production APIs (us-west-2, 2–3 November 2026), using a genuine file for every format, found the following:
 
@@ -85,25 +85,23 @@ The probes also found differences between the two APIs, which have been reported
 
 **Done.**
 
-- `instant.MediaTypeIntegrationTest` and `async.MediaTypeIntegrationTest` cover every confirmed behavior above against the live APIs.
-- The tests are driven by the shared `com.everfox.cdr.ConvertibleFormat` table: each format's media type, sample file, and Office Open XML output.
-- They run whenever the API keys are set, and they assert the current error codes. If Everfox changes an API, they fail and point to the change.
+- **Live behavior tests:** `instant.MediaTypeIntegrationTest` and `async.MediaTypeIntegrationTest` cover every confirmed behavior above against the live APIs. They are driven by the shared `com.everfox.cdr.ConvertibleFormat` table: each format's media type, sample file, and Office Open XML output. They run whenever the API keys are set, and they assert the current error codes. If Everfox changes an API, they fail and point to the change.
+- **Live allowed lists:** the same tests parse the list of allowed types from each API's rejection message, and compare it with the checked-in Async spec. That covers the Instant `Content-Type`, the Async `mime-type`, and the Async `conversion.from`. These depend on the wording of the error messages (`LiveApi.mediaTypesAfter`), so a change in wording fails them too.
+- **Checked-in specs:** the Instant and Async specs are in `src/test/resources/com/everfox/cdr/openapi/`, as published, and are read through `com.everfox.cdr.ApiSpec`.
+- **`SpecConformanceTest`** (unit tests, no API keys needed):
+  - `Risk` matches both specs' `allow` and `deny` lists exactly.
+  - Every `MediaType` constant's flags agree with the specs.
+  - Every type the Async spec accepts has a constant.
+  - Only `ALL` and `TEXT_PLAIN` are accepted nowhere.
+  - The Instant spec's `Content-Type` list still differs from the Async spec in exactly the known way: 11 extra types, and 3 missing. That test fails when Everfox changes the Instant spec.
+- **`MediaType` documents its support.** `isAcceptedAsContentType()` and `isAcceptedAsConversionSource()` record where each constant can be used, following the Async spec. Javadoc on the ten conversion-only constants, `OCTET_STREAM`, `MS_TNEF`, `TEXT_CSS`, `TEXT_PLAIN`, and `ALL` says how to use them. `MS_EXCEL_SHEET_BINARY_MACROENABLED_12` notes that the Instant `Accept` header needs the `macroEnabled` capitalization. The clients don't check the flags before sending, because the APIs validate anyway and requests can also be made with media type strings.
 
 **Remaining.**
 
-- **Check in the OpenAPI documents** under `src/test/resources`. Everfox publishes them at `https://cdr.everfox.com/static/everfox-cdr-{instant,async,s3}-api-OpenAPI.json`. Treat the Async spec as the reference for media types until Everfox fixes the Instant one.
-- **Add unit tests against the checked-in specs.**
-  - Assert that `Risk` matches the specs' risk enums exactly.
-  - Report `MediaType` constants that no API accepts as a primary type or as `conversion.from`, using the Async enums.
-- **Compare the live allowed lists with the spec.** Extend the media type integration tests to parse the list of allowed types from each API's rejection message, and compare it with the checked-in spec. This is how the Instant spec error was found, and it would catch a type being added or removed. It wasn't done yet because it depends on the wording of the error messages.
-- **Document each constant's support.**
-  - Javadoc each of the ten conversion-only constants with "use as `conversion.from` with `OCTET_STREAM`".
-  - Javadoc `TEXT_PLAIN` and `ALL` with where they are valid: redaction replacements and the Accept header, respectively.
-  - Note on `MS_EXCEL_SHEET_BINARY_MACROENABLED_12` that the Instant `Accept` header needs the `macroEnabled` capitalization.
-  - Alternatively, add `boolean isAcceptedAsContentType()` and `boolean isAcceptedAsConversionSource()`, which the `/upload` and `/initiate` paths could check before sending.
-- **Error codes:** while Everfox hasn't confirmed whether they're meant to differ, branch on `CdrApiException.getName()` and `getType()` only per API, not across the two.
+- **Error codes:** while Everfox hasn't confirmed whether they're meant to differ, branch on `CdrApiException.getName()` and `getType()` only per API, not across the two. This is guidance for client code, not a change to make.
+- **When Everfox replies:** update the `MediaType` flags, `SpecConformanceTest`, the `MediaTypeIntegrationTest` assertions, and this section to match.
 
-## 7. Share test support (partly done)
+## 7. Share test support (done)
 
 **Done.**
 
@@ -112,10 +110,8 @@ The probes also found differences between the two APIs, which have been reported
 - `com.everfox.cdr.LiveApi` resolves each API's key (`apiKey(Api)`) and endpoint (`baseUrl(Api)`) from `CDR_<API>_API_KEY`, `_URL`, and `_REGION`. Both `IntegrationTest` classes and both `MediaTypeIntegrationTest` classes use it.
 - The helpers are in `com.everfox.cdr`, not a separate `testing` package, so they sit next to the shared main classes.
 
-**Remaining.** The two client tests each build a local `HttpServer` fixture, and the response tests each mock `HttpResponse` the same way. Add:
-
-- `MockHttp.response(status, body, headers)`.
-- A small `FakeServer` that records requests and replies from a queue.
+- `com.everfox.cdr.MockHttp.response(...)` builds the mock `HttpResponse`s used by the response, status, and `HttpSupport` tests.
+- `com.everfox.cdr.FakeServer` replaced both client tests' `HttpServer` fixtures. It routes by the longest matching path prefix, plays queued replies in order (repeating the last), and records every request.
 
 ## 8. Rename the artifact (done)
 
@@ -133,4 +129,4 @@ Each step stands on its own and keeps `mvn clean verify` green:
 2. ~~**Error model (3)**~~: done.
 3. ~~**Options model (1)**~~: done.
 4. ~~**Configuration (4)** and **HTTP plumbing (5)**~~: done, including `module-info.java`.
-5. **Spec checks (6)** and **test support (7)**: partly done (live behavior tests, shared test resources and helpers). Do the remaining `MediaType` fixes in 6 first, because ten constants fail against both live APIs today.
+5. ~~**Spec checks (6)** and **test support (7)**~~: done. What's left in 6 depends on Everfox's answer.

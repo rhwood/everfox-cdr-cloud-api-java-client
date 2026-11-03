@@ -1,0 +1,1443 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "The Async API",
+    "version": "latest",
+    "description": "",
+    "x-logo": {
+      "url": "https://cdr.everfox.com/static/content-threat-removal.png"
+    }
+  },
+  "paths": {
+    "/initiate": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUploadUrlsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted (status)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Forbidden (authentication failure)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (authorisation failure)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests (try again later)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThrottleResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api-key": []
+          }
+        ],
+        "tags": [
+          "Initiate"
+        ],
+        "summary": "Request a URL to upload your content to",
+        "description": "This API requires at least four calls - initiate, upload, status, download. This page describes all of these except the upload, which is straightforward and detailed in the initiate response.\n### Steps required\n1. Send a simple JSON request to this endpoint, which will return an `upload` link and a `status` link. Please see the Links section on the Async Documentation page for more detail.\n2. Upload your file to the `upload` link\n3. Periodically request the `status` until it is `complete`, which will include a `result` link\n4. Download your new file from the `result` link\n",
+        "parameters": [
+          {
+            "name": "Accept",
+            "description": "Content types acceptable for the response",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "application/json"
+              ]
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "abc123def456fed789cba"
+          }
+        ],
+        "x-codeSamples": [
+          {
+            "lang": "Curl (automatic conversion)",
+            "source": "#!/bin/bash\ncurl \\\n--request POST \\\n--url '${URL}/initiate' \\\n--header 'content-type: application/json' \\\n--header 'x-api-key: ABC----YOUR_APIKEY----789' \\\n--data '{\"mime-type\":\"application/octet-stream\", \"options\": { \"conversion\": { \"from\": { \"mime-type\": \"application/msword\" }}}}' \\\n--fail\n\n# and then upload, based on values from status return from above\n\n"
+          },
+          {
+            "lang": "Curl (fixed types)",
+            "source": "#!/bin/bash\ncurl \\\n--request POST \\\n--url '${URL}/initiate' \\\n--header 'content-type: application/json' \\\n--header 'x-api-key: ABC----YOUR_APIKEY----789' \\\n--data '{\"mime-type\":\"application/pdf\"}' \\\n--fail\n\n# and then upload, based on values from status return from above\n\ncurl \\\n--request '[links.upload.method]' \\\n--url '[links.upload.url]' \\\n# recreate all headers from links.upload.headers\n--header 'name1: value1' \\\n--data '{\"mime-type\":\"application/pdf\"}'\n--upload-file 'unsafe-document.pdf' \\\n--fail"
+          },
+          {
+            "lang": "Curl (risks)",
+            "source": "#!/bin/bash\ncurl \\\n--request POST \\\n--url '${URL}/initiate' \\\n--header 'content-type: application/json' \\\n--header 'x-api-key: ABC----YOUR_APIKEY----789' \\\n--data '{\"mime-type\":\"application/octet-stream\", \"options\": { \"risks\": { \"allow\": [ \"exe/macro/ms/word\" ]}}}' \\\n--fail\n\n# and then upload, based on values from status return from above\n"
+          },
+          {
+            "lang": "javascript",
+            "label": "JavaScript",
+            "source": "const axios = require('axios')\nconst fs = require('fs').promises\n\n/*********************************************************\n *\n * SETUP:\n *\n * Create a new directory e.g. code-samples\n * Copy this whole file and save to code-samples/threat_removal_instant.js\n * Copy 'USAGE:' code to code-samples/instant.js\n * Update code-samples/instant.js with your API KEY and paths for input and output\n * > cd code-samples\n * > npm install axios\n * > node instant.js\n *\n * USAGE:\n *\n * const threat_removal_async = require('./threat_removal_async')\n * threat_removal_async.start('${URL}',\n *     'ABC----YOUR_APIKEY----789',\n *     'input.pdf',\n *     'output.pdf',\n *     'application/pdf')\n * .then(({filename, metadata}) => {\n *     console.log(`Success: ${filename}`)\n *     console.log(metadata)\n * })\n * .catch(err => {\n *     if (!err.response || !err.response.data) {\n *         console.error(err.message)\n *     } else console.error('Response data:', err.response.data);\n * });\n *\n ********************************************************/\nconst STATUS_CHECK_INTERVAL = 1000\nconst promiseTimeout = (delay) => new Promise(resolve => setTimeout(resolve, delay))\n\nexports.start = async (apiEndpointBase, apiKey, inputFilename, targetFilename, mimeType, convertFrom) => {\n\n    const initResponse = await init(apiKey, apiEndpointBase, mimeType, convertFrom)\n    await upload(initResponse.data.links.upload, inputFilename)\n\n    const statusCheck = pollStatus(initResponse.data.links.status)\n    let statusResponse = await statusCheck.next()\n    while (!statusResponse.done) {\n        await promiseTimeout(STATUS_CHECK_INTERVAL)\n        statusResponse = await statusCheck.next()\n    }\n    const downloadResponse = await download(statusResponse.value.links.result)\n\n    await fs.writeFile(targetFilename, downloadResponse.data)\n\n    return { filename: targetFilename, metadata: statusResponse.value._metadata }\n}\n\nasync function init(apiKey, apiEndpointBase, mimeType, convertFrom) {\n    const headers = {\n        'x-api-key': apiKey,\n        'Content-Type': 'application/json'\n    }\n    const data = {\n        'mime-type': mimeType\n    }\n\n    if (convertFrom) data.options = { conversion: { from: { \"mime-type\": convertFrom } } }\n\n    return await axios({\n        method: 'POST',\n        url: apiEndpointBase + '/initiate',\n        headers: headers,\n        data: data\n    })\n}\n\nasync function upload(uploadLink, inputFilename) {\n    const data = await fs.readFile(inputFilename)\n\n    const response = await axios({\n        method: uploadLink.method,\n        headers: uploadLink.headers,\n        url: uploadLink.url,\n        maxContentLength: Math.max(20000, data.length),\n        data: data\n    })\n\n    return response\n}\n\nasync function* pollStatus(statusLink, etag) {\n    let response = {}\n    while (!response.data || !response.data.status || !response.data.status.complete) {\n        response = await axios({\n            validateStatus: status => status < 400 || status == 404,\n            headers: Object.assign({ 'If-None-Match' : etag || '' }, statusLink.headers),\n            url: statusLink.url,\n            method: statusLink.method\n        })\n\n        if (response.status != 304) {\n            if (response.data.status && response.data.status.complete && !response.data.status.success) {\n                const error = new Error(response.data.error.message)\n                error.code = response.data.error.code\n                error.response = response.data\n                throw error\n            }\n\n            statusLink = response.data.links.status\n        }\n        etag = response.headers['etag']\n        yield response.data\n    }\n\n    return response.data\n}\n\nasync function download(resultLink) {\n    return await axios.request({\n        url: resultLink.url,\n        method: resultLink.method,\n        headers: resultLink.headers,\n        maxContentLength: Math.max(20000, resultLink.fileSize),\n        responseType: 'arraybuffer'\n    })\n}\n"
+          },
+          {
+            "lang": "python",
+            "label": "Python3.6+",
+            "source": "import shutil\nimport time\n\nimport requests\n\n# SETUP:\n# This code sample requires the requests library,\n# install this using pip:-\n# > pip install requests\n#\n# USAGE:\n# start(\n#    '${URL}',\n#    'ABC----YOUR_APIKEY----789',\n#    'input.pdf',\n#    'output.pdf',\n#    'application/pdf'\n# )\n\n\ndef start(api_endpoint_base, api_key, filename, target_filename, mime_type, timeout=600, convert_from=None):\n    response = _initiate(api_endpoint_base, api_key, mime_type, convert_from)\n    response.raise_for_status()\n    init_data = response.json()\n\n    response = _upload(filename, init_data['links']['upload'])\n    response.raise_for_status()\n\n    result_link = _check_status_until_complete(init_data['links']['status'], timeout)\n\n    response = _download(result_link)\n    response.raise_for_status()\n\n    with open(target_filename, 'wb') as target_file:\n        shutil.copyfileobj(response.raw, target_file)\n\n\ndef _initiate(api_endpoint_base, api_key, mime_type, convert_from=None):\n    data = {'mime-type': mime_type}\n    headers = {'x-api-key': api_key, 'Content-Type': 'application/json'}\n    if convert_from:\n        data['options'] = {'conversion': {'from': {'mime-type': convert_from}}}\n\n    return requests.post(f'{api_endpoint_base}/initiate', json=data, headers=headers)\n\n\ndef _upload(filename, upload_link):\n    with open(filename, 'rb') as file:\n        return requests.request(\n            method=upload_link['method'], url=upload_link['url'], headers=upload_link['headers'], data=file\n        )\n\n\ndef _check_status(link):\n    return requests.request(method=link['method'], url=link['url'], headers=link['headers'])\n\n\ndef _check_status_until_complete(link, timeout):\n    for elapsed in range(1, timeout + 1):\n        response = _check_status(link)\n        if response.status_code not in [404, 304, 429]:\n            response.raise_for_status()\n            status_data = response.json()\n            if status_data['status']['complete']:\n                if status_data['status']['success']:\n                    result_link = status_data['links']['result']\n                    break\n                raise Exception(status_data.get('error', {}).get('name', 'Error during Everfox CDR'))\n\n            link = status_data['links']['status']\n            link['headers']['If-None-Match'] = response.headers.get('etag', None)\n        if elapsed >= timeout:\n            raise Exception('Timeout during Everfox CDR')\n        time.sleep(1)\n    return result_link\n\n\ndef _download(link):\n    return requests.request(method=link['method'], url=link['url'], headers=link['headers'], stream=True)\n"
+          }
+        ]
+      }
+    },
+    "/status/{id+}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "id+",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Accept",
+            "description": "Content types acceptable for the response",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "application/json"
+              ]
+            }
+          },
+          {
+            "name": "*",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "All of the query parameters from the status link should be maintained"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success (status)",
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Forbidden (authentication failure)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (authorisation failure)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests (try again later)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThrottleResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sigv4": []
+          }
+        ],
+        "tags": [
+          "Status"
+        ],
+        "summary": "Retrieve the current status of your operation",
+        "description": "Status calls are required, unless you use SNS integration.\n\nIf a further status request is required (`complete` is not `true`), the `links` property will contain `status`.\n> All requests should be constructed using the details in `links.status`\n",
+        "x-codeSamples": [
+          {
+            "lang": "Curl",
+            "source": "#!/bin/bash\ncurl \\\n--request GET \\\n--url 'https://example.com/v1/status/data/foo.json?AWSAccessKeyId=abc&Signature=def&x-amz-security-token=ghi&Expires=123' \\\n--fail"
+          }
+        ]
+      }
+    },
+    "/download/{id+}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "id+",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "*",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "All of the query parameters from the download link should be maintained"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Success",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {}
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Forbidden (authentication failure)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (authorisation failure)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "File already downloaded error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateDownloadResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests (try again later)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThrottleResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "sigv4": []
+          }
+        ],
+        "tags": [
+          "Download"
+        ],
+        "summary": "Download the result of your operation",
+        "description": "After successful processing, `links.result` will point to here. You may only download the result once.\n> All requests should be constructed using the details in `links.result`\n",
+        "x-codeSamples": [
+          {
+            "lang": "Curl",
+            "source": "#!/bin/bash\ncurl \\\n--request '[links.result.method]' \\\n--url '[links.result.url]' \\\n# recreate all headers from links.result.headers\n--header 'name1: value1' \\\n--output 'safe-document.pdf' \\\n--fail"
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "api-key": {
+        "type": "apiKey",
+        "name": "x-api-key",
+        "in": "header"
+      },
+      "sigv4": {
+        "type": "apiKey",
+        "name": "Authorization",
+        "in": "header",
+        "x-amazon-apigateway-authtype": "awsSigv4"
+      }
+    },
+    "schemas": {
+      "CreateUploadUrlsRequest": {
+        "type": "object",
+        "required": [
+          "mime-type"
+        ],
+        "properties": {
+          "mime-type": {
+            "type": "string",
+            "enum": [
+              "application/emf",
+              "application/json",
+              "application/mp4",
+              "application/ms-tnef",
+              "application/octet-stream",
+              "application/pdf",
+              "application/vnd.ms-excel.addin.macroEnabled.12",
+              "application/vnd.ms-excel.addin.macroenabled.12",
+              "application/vnd.ms-excel.sheet.macroEnabled.12",
+              "application/vnd.ms-excel.sheet.macroenabled.12",
+              "application/vnd.ms-excel.template.macroEnabled.12",
+              "application/vnd.ms-excel.template.macroenabled.12",
+              "application/vnd.ms-outlook",
+              "application/vnd.ms-powerpoint.addin.macroEnabled.12",
+              "application/vnd.ms-powerpoint.addin.macroenabled.12",
+              "application/vnd.ms-powerpoint.presentation.macroEnabled.12",
+              "application/vnd.ms-powerpoint.presentation.macroenabled.12",
+              "application/vnd.ms-powerpoint.slideshow.macroEnabled.12",
+              "application/vnd.ms-powerpoint.slideshow.macroenabled.12",
+              "application/vnd.ms-powerpoint.template.macroEnabled.12",
+              "application/vnd.ms-powerpoint.template.macroenabled.12",
+              "application/vnd.ms-visio.drawing",
+              "application/vnd.ms-visio.viewer",
+              "application/vnd.ms-word.document.macroEnabled.12",
+              "application/vnd.ms-word.document.macroenabled.12",
+              "application/vnd.ms-word.template.macroEnabled.12",
+              "application/vnd.ms-word.template.macroenabled.12",
+              "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+              "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+              "application/vnd.openxmlformats-officedocument.presentationml.template",
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.template",
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
+              "application/wmf",
+              "application/x-compressed",
+              "application/x-zip-compressed",
+              "application/xml",
+              "application/zip",
+              "audio/mp4",
+              "audio/mpeg",
+              "audio/x-m4a",
+              "audio/x-wav",
+              "image/bmp",
+              "image/gif",
+              "image/heic",
+              "image/heif",
+              "image/jp2",
+              "image/jpeg",
+              "image/jpg",
+              "image/jxr",
+              "image/png",
+              "image/tiff",
+              "image/vnd.ms-photo",
+              "image/webp",
+              "image/x-ms-bmp",
+              "message/rfc822",
+              "text/css",
+              "text/vcard",
+              "text/xml",
+              "video/mp4"
+            ],
+            "title": "the mime-type of the content",
+            "example": "application/pdf"
+          },
+          "options": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "$ref": "#/components/schemas/OptionStatus",
+                "title": "status options",
+                "properties": {
+                  "snsTopicArn": {
+                    "title": "publish status updates to this AWS SNS Topic",
+                    "example": "arn:aws:sns:{AWS REGION}:{AWS ACCOUNT}:{TOPIC NAME}"
+                  }
+                }
+              },
+              "risks": {
+                "type": "object",
+                "properties": {
+                  "allow": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "exe",
+                        "exe/macro",
+                        "exe/macro/ms",
+                        "exe/macro/ms/excel",
+                        "exe/macro/ms/powerpoint",
+                        "exe/macro/ms/word",
+                        "poly",
+                        "poly/text",
+                        "poly/text/json",
+                        "poly/text/xml",
+                        "steg",
+                        "steg/image",
+                        "steg/image/bmp",
+                        "steg/image/gif",
+                        "steg/image/jpeg",
+                        "steg/image/jpeg2k",
+                        "steg/image/jxr",
+                        "steg/image/pdf",
+                        "steg/image/png",
+                        "steg/image/webp",
+                        "structured",
+                        "structured/no-schema",
+                        "structured/no-schema/json",
+                        "structured/no-schema/xml"
+                      ]
+                    },
+                    "title": "list of risks to allow (care should be taken)",
+                    "example": [
+                      "exe/macro/ms"
+                    ]
+                  },
+                  "deny": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "exe",
+                        "exe/macro",
+                        "exe/macro/ms",
+                        "exe/macro/ms/excel",
+                        "exe/macro/ms/powerpoint",
+                        "exe/macro/ms/word",
+                        "poly",
+                        "poly/text",
+                        "poly/text/json",
+                        "poly/text/xml",
+                        "steg",
+                        "steg/image",
+                        "steg/image/bmp",
+                        "steg/image/gif",
+                        "steg/image/jpeg",
+                        "steg/image/jpeg2k",
+                        "steg/image/jxr",
+                        "steg/image/pdf",
+                        "steg/image/png",
+                        "steg/image/webp",
+                        "structured",
+                        "structured/no-schema",
+                        "structured/no-schema/json",
+                        "structured/no-schema/xml"
+                      ]
+                    },
+                    "title": "list of risks to deny",
+                    "example": [
+                      "exe/macro/ms/powerpoint"
+                    ]
+                  }
+                },
+                "title": "risk management options"
+              },
+              "conversion": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "object",
+                    "properties": {
+                      "mime-type": {
+                        "type": "string",
+                        "enum": [
+                          "application/emf",
+                          "application/json",
+                          "application/mp4",
+                          "application/msword",
+                          "application/pdf",
+                          "application/rtf",
+                          "application/vnd.ms-excel",
+                          "application/vnd.ms-excel.addin.macroEnabled.12",
+                          "application/vnd.ms-excel.addin.macroenabled.12",
+                          "application/vnd.ms-excel.sheet.binary.macroEnabled.12",
+                          "application/vnd.ms-excel.sheet.binary.macroenabled.12",
+                          "application/vnd.ms-excel.sheet.macroEnabled.12",
+                          "application/vnd.ms-excel.sheet.macroenabled.12",
+                          "application/vnd.ms-excel.template.macroEnabled.12",
+                          "application/vnd.ms-excel.template.macroenabled.12",
+                          "application/vnd.ms-outlook",
+                          "application/vnd.ms-powerpoint",
+                          "application/vnd.ms-powerpoint.addin.macroEnabled.12",
+                          "application/vnd.ms-powerpoint.addin.macroenabled.12",
+                          "application/vnd.ms-powerpoint.presentation.macroEnabled.12",
+                          "application/vnd.ms-powerpoint.presentation.macroenabled.12",
+                          "application/vnd.ms-powerpoint.slideshow.macroEnabled.12",
+                          "application/vnd.ms-powerpoint.slideshow.macroenabled.12",
+                          "application/vnd.ms-powerpoint.template.macroEnabled.12",
+                          "application/vnd.ms-powerpoint.template.macroenabled.12",
+                          "application/vnd.ms-visio.drawing",
+                          "application/vnd.ms-visio.viewer",
+                          "application/vnd.ms-word.document.macroEnabled.12",
+                          "application/vnd.ms-word.document.macroenabled.12",
+                          "application/vnd.ms-word.template.macroEnabled.12",
+                          "application/vnd.ms-word.template.macroenabled.12",
+                          "application/vnd.oasis.opendocument.presentation",
+                          "application/vnd.oasis.opendocument.spreadsheet",
+                          "application/vnd.oasis.opendocument.text",
+                          "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                          "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+                          "application/vnd.openxmlformats-officedocument.presentationml.template",
+                          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                          "application/vnd.openxmlformats-officedocument.spreadsheetml.template",
+                          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                          "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
+                          "application/wmf",
+                          "application/x-compressed",
+                          "application/x-zip-compressed",
+                          "application/xml",
+                          "application/zip",
+                          "audio/mp4",
+                          "audio/mpeg",
+                          "audio/x-m4a",
+                          "audio/x-wav",
+                          "image/bmp",
+                          "image/gif",
+                          "image/heic",
+                          "image/heif",
+                          "image/jp2",
+                          "image/jpeg",
+                          "image/jpg",
+                          "image/jxr",
+                          "image/png",
+                          "image/tiff",
+                          "image/vnd.ms-photo",
+                          "image/webp",
+                          "image/x-ms-bmp",
+                          "message/rfc822",
+                          "text/csv",
+                          "text/rtf",
+                          "text/vcard",
+                          "text/xml",
+                          "video/mp4"
+                        ],
+                        "title": "mime-type of the original file",
+                        "example": "application/vnd.ms-excel"
+                      }
+                    },
+                    "title": "original file format"
+                  },
+                  "methods": {
+                    "type": "object",
+                    "properties": {
+                      "disabled": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "default",
+                            "libreoffice",
+                            "report",
+                            "text-extraction"
+                          ]
+                        },
+                        "title": "list of conversion tools to disable, disable \"default\" to only allow tools explicitly enabled",
+                        "example": []
+                      },
+                      "enabled": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "default",
+                            "libreoffice",
+                            "report",
+                            "text-extraction"
+                          ]
+                        },
+                        "title": "list of conversion tools to enable / prioritize",
+                        "example": [
+                          "libreoffice"
+                        ]
+                      }
+                    },
+                    "title": "control which conversion tools to use"
+                  },
+                  "mime_types": {
+                    "type": "object",
+                    "properties": {
+                      "enabled": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "from": {
+                              "enum": [
+                                "application/octet-stream",
+                                "application/emf",
+                                "application/json",
+                                "application/mp4",
+                                "application/msword",
+                                "application/pdf",
+                                "application/rtf",
+                                "application/vnd.ms-excel",
+                                "application/vnd.ms-excel.addin.macroEnabled.12",
+                                "application/vnd.ms-excel.addin.macroenabled.12",
+                                "application/vnd.ms-excel.sheet.binary.macroEnabled.12",
+                                "application/vnd.ms-excel.sheet.binary.macroenabled.12",
+                                "application/vnd.ms-excel.sheet.macroEnabled.12",
+                                "application/vnd.ms-excel.sheet.macroenabled.12",
+                                "application/vnd.ms-excel.template.macroEnabled.12",
+                                "application/vnd.ms-excel.template.macroenabled.12",
+                                "application/vnd.ms-outlook",
+                                "application/vnd.ms-powerpoint",
+                                "application/vnd.ms-powerpoint.addin.macroEnabled.12",
+                                "application/vnd.ms-powerpoint.addin.macroenabled.12",
+                                "application/vnd.ms-powerpoint.presentation.macroEnabled.12",
+                                "application/vnd.ms-powerpoint.presentation.macroenabled.12",
+                                "application/vnd.ms-powerpoint.slideshow.macroEnabled.12",
+                                "application/vnd.ms-powerpoint.slideshow.macroenabled.12",
+                                "application/vnd.ms-powerpoint.template.macroEnabled.12",
+                                "application/vnd.ms-powerpoint.template.macroenabled.12",
+                                "application/vnd.ms-visio.drawing",
+                                "application/vnd.ms-visio.viewer",
+                                "application/vnd.ms-word.document.macroEnabled.12",
+                                "application/vnd.ms-word.document.macroenabled.12",
+                                "application/vnd.ms-word.template.macroEnabled.12",
+                                "application/vnd.ms-word.template.macroenabled.12",
+                                "application/vnd.oasis.opendocument.presentation",
+                                "application/vnd.oasis.opendocument.spreadsheet",
+                                "application/vnd.oasis.opendocument.text",
+                                "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                                "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+                                "application/vnd.openxmlformats-officedocument.presentationml.template",
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.template",
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
+                                "application/wmf",
+                                "application/x-compressed",
+                                "application/x-zip-compressed",
+                                "application/xml",
+                                "application/zip",
+                                "audio/mp4",
+                                "audio/mpeg",
+                                "audio/x-m4a",
+                                "audio/x-wav",
+                                "image/bmp",
+                                "image/gif",
+                                "image/heic",
+                                "image/heif",
+                                "image/jp2",
+                                "image/jpeg",
+                                "image/jpg",
+                                "image/jxr",
+                                "image/png",
+                                "image/tiff",
+                                "image/vnd.ms-photo",
+                                "image/webp",
+                                "image/x-ms-bmp",
+                                "message/rfc822",
+                                "text/csv",
+                                "text/rtf",
+                                "text/vcard",
+                                "text/xml",
+                                "video/mp4"
+                              ],
+                              "type": "string"
+                            },
+                            "to": {
+                              "type": "string"
+                            }
+                          },
+                          "title": "mime types which can be converted"
+                        }
+                      },
+                      "disabled": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "from": {
+                              "enum": [
+                                "application/octet-stream",
+                                "application/emf",
+                                "application/json",
+                                "application/mp4",
+                                "application/msword",
+                                "application/pdf",
+                                "application/rtf",
+                                "application/vnd.ms-excel",
+                                "application/vnd.ms-excel.addin.macroEnabled.12",
+                                "application/vnd.ms-excel.addin.macroenabled.12",
+                                "application/vnd.ms-excel.sheet.binary.macroEnabled.12",
+                                "application/vnd.ms-excel.sheet.binary.macroenabled.12",
+                                "application/vnd.ms-excel.sheet.macroEnabled.12",
+                                "application/vnd.ms-excel.sheet.macroenabled.12",
+                                "application/vnd.ms-excel.template.macroEnabled.12",
+                                "application/vnd.ms-excel.template.macroenabled.12",
+                                "application/vnd.ms-outlook",
+                                "application/vnd.ms-powerpoint",
+                                "application/vnd.ms-powerpoint.addin.macroEnabled.12",
+                                "application/vnd.ms-powerpoint.addin.macroenabled.12",
+                                "application/vnd.ms-powerpoint.presentation.macroEnabled.12",
+                                "application/vnd.ms-powerpoint.presentation.macroenabled.12",
+                                "application/vnd.ms-powerpoint.slideshow.macroEnabled.12",
+                                "application/vnd.ms-powerpoint.slideshow.macroenabled.12",
+                                "application/vnd.ms-powerpoint.template.macroEnabled.12",
+                                "application/vnd.ms-powerpoint.template.macroenabled.12",
+                                "application/vnd.ms-visio.drawing",
+                                "application/vnd.ms-visio.viewer",
+                                "application/vnd.ms-word.document.macroEnabled.12",
+                                "application/vnd.ms-word.document.macroenabled.12",
+                                "application/vnd.ms-word.template.macroEnabled.12",
+                                "application/vnd.ms-word.template.macroenabled.12",
+                                "application/vnd.oasis.opendocument.presentation",
+                                "application/vnd.oasis.opendocument.spreadsheet",
+                                "application/vnd.oasis.opendocument.text",
+                                "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                                "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+                                "application/vnd.openxmlformats-officedocument.presentationml.template",
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.template",
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
+                                "application/wmf",
+                                "application/x-compressed",
+                                "application/x-zip-compressed",
+                                "application/xml",
+                                "application/zip",
+                                "audio/mp4",
+                                "audio/mpeg",
+                                "audio/x-m4a",
+                                "audio/x-wav",
+                                "image/bmp",
+                                "image/gif",
+                                "image/heic",
+                                "image/heif",
+                                "image/jp2",
+                                "image/jpeg",
+                                "image/jpg",
+                                "image/jxr",
+                                "image/png",
+                                "image/tiff",
+                                "image/vnd.ms-photo",
+                                "image/webp",
+                                "image/x-ms-bmp",
+                                "message/rfc822",
+                                "text/csv",
+                                "text/rtf",
+                                "text/vcard",
+                                "text/xml",
+                                "video/mp4"
+                              ],
+                              "type": "string"
+                            },
+                            "to": {
+                              "type": "string"
+                            }
+                          },
+                          "title": "mime types which won't be converted"
+                        }
+                      }
+                    },
+                    "title": "control which mime types can be converted"
+                  }
+                },
+                "title": "format conversion options"
+              },
+              "costs": {
+                "type": "object",
+                "properties": {
+                  "environment": {
+                    "type": "object",
+                    "properties": {
+                      "large": {
+                        "type": "object",
+                        "required": [
+                          "enabled"
+                        ],
+                        "properties": {
+                          "enabled": {
+                            "type": "boolean",
+                            "title": "activate large file environment automatically for files over 250 MB",
+                            "default": false
+                          }
+                        },
+                        "title": "increase quota usage rate by enabling support for larger files"
+                      }
+                    },
+                    "title": "file processing environment options"
+                  }
+                },
+                "title": "options that effect the quota usage"
+              },
+              "images": {
+                "type": "object",
+                "properties": {
+                  "quality": {
+                    "type": "object",
+                    "properties": {
+                      "preserve": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "*",
+                            "image/jpeg",
+                            "image/jpg",
+                            "image/jp2",
+                            "image/bmp",
+                            "image/gif",
+                            "image/png",
+                            "image/vnd.ms-photo",
+                            "image/jxr",
+                            "image/tiff",
+                            "image/webp",
+                            "application/pdf"
+                          ]
+                        },
+                        "title": "list of image formats to preserve quality for, increasing the risk of steganography"
+                      }
+                    },
+                    "title": "image quality options"
+                  }
+                },
+                "title": "image handling options"
+              },
+              "redactions": {
+                "type": "object",
+                "properties": {
+                  "mime": {
+                    "type": "string",
+                    "minLength": 0,
+                    "maxLength": 100,
+                    "title": "the mime type to give a redacted file replacement",
+                    "example": [
+                      "text/plain",
+                      "application/json"
+                    ]
+                  },
+                  "extension": {
+                    "type": "string",
+                    "minLength": 0,
+                    "maxLength": 100,
+                    "title": "the extension to give a redacted file replacement",
+                    "example": [
+                      "txt",
+                      "json"
+                    ]
+                  },
+                  "text": {
+                    "type": "string",
+                    "minLength": 0,
+                    "maxLength": 1000000,
+                    "title": "the text content to put in a redacted file replacement"
+                  }
+                },
+                "title": "redaction options"
+              },
+              "report": {
+                "type": "object",
+                "properties": {
+                  "format": {
+                    "type": "string",
+                    "enum": [
+                      "changed",
+                      "default",
+                      "full",
+                      "none"
+                    ],
+                    "title": "options that specify the format"
+                  }
+                },
+                "title": "format of returned report"
+              }
+            },
+            "title": "configuration options for the transform"
+          }
+        }
+      },
+      "ResultResponse": {
+        "type": "object"
+      },
+      "StatusResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "links"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "risks": {
+            "$ref": "#/components/schemas/Risks"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status",
+            "title": "the current status"
+          },
+          "links": {
+            "properties": {
+              "status": {
+                "$ref": "#/components/schemas/StatusLink"
+              },
+              "upload": {
+                "$ref": "#/components/schemas/UploadLink"
+              },
+              "result": {
+                "$ref": "#/components/schemas/ResultLink"
+              }
+            },
+            "title": "details of the available actions"
+          },
+          "error": {
+            "$ref": "#/components/schemas/ErrorState"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "message",
+              "code"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "BadRequest",
+                "title": "category of the error"
+              },
+              "message": {
+                "type": "string",
+                "example": "[instance value ('application/bad: ') not found in enum (possible values: ['application/pdf: '])]",
+                "title": "human readable description of the error"
+              },
+              "code": {
+                "type": "integer",
+                "example": 6010,
+                "title": "error code - see error glossary"
+              },
+              "name": {
+                "type": "string",
+                "example": "APIGATEWAY_BAD_REQUEST_BODY",
+                "title": "name of the error"
+              },
+              "subType": {
+                "example": "ValidationFailure",
+                "title": "sub category of the error"
+              }
+            }
+          }
+        },
+        "title": "populated only if processing is complete and unsuccessful"
+      },
+      "ForbiddenResponse": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "message"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "BadRequest",
+                "title": "category of the error"
+              },
+              "message": {
+                "type": "string",
+                "example": "Forbidden",
+                "title": "human readable description of the error"
+              },
+              "code": {
+                "type": "integer",
+                "example": 6070,
+                "title": "error code - see error glossary"
+              },
+              "name": {
+                "type": "string",
+                "example": "APIGATEWAY_INVALID_API_KEY",
+                "title": "name of the error"
+              }
+            }
+          }
+        }
+      },
+      "DuplicateDownloadResponse": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "message",
+              "type",
+              "code"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "title": "category of the error"
+              },
+              "message": {
+                "type": "string",
+                "title": "human readable description of the error"
+              },
+              "code": {
+                "type": "integer",
+                "title": "error code - see error glossary"
+              },
+              "name": {
+                "type": "string",
+                "title": "name of the error"
+              }
+            }
+          }
+        }
+      },
+      "ThrottleResponse": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "message"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "BadRequest",
+                "title": "category of the error"
+              },
+              "message": {
+                "type": "string",
+                "example": "Waiting too long for processing resources",
+                "title": "human readable description of the error"
+              },
+              "code": {
+                "type": "integer",
+                "example": 3080,
+                "title": "error code - see error glossary"
+              },
+              "name": {
+                "type": "string",
+                "example": "PROCESSING_WAIT_TIMEOUT",
+                "title": "name of the error"
+              }
+            }
+          }
+        }
+      },
+      "InternalErrorResponse": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "message"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "UnknownError",
+                "title": "category of the error"
+              },
+              "message": {
+                "type": "string",
+                "example": "Something unexpected went wrong",
+                "title": "human readable description of the error"
+              },
+              "code": {
+                "type": "integer",
+                "example": 5000,
+                "title": "error code - see error glossary"
+              },
+              "name": {
+                "type": "string",
+                "example": "UNKNOWN_FAILURE",
+                "title": "name of the error"
+              }
+            }
+          }
+        }
+      },
+      "Expiry": {
+        "type": "string",
+        "format": "date-time",
+        "title": "when the link will expire",
+        "example": "2018-03-04T12:35:56Z"
+      },
+      "HttpHeaders": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string"
+        },
+        "title": "any http headers that need to be sent with the request",
+        "description": "These may vary over time so please copy them from the response"
+      },
+      "HttpMethodGet": {
+        "type": "string",
+        "enum": [
+          "GET"
+        ],
+        "title": "http method for the request"
+      },
+      "HttpMethodUpload": {
+        "type": "string",
+        "enum": [
+          "PUT",
+          "POST"
+        ],
+        "title": "http method for the request"
+      },
+      "Url": {
+        "type": "string",
+        "title": "location for the request",
+        "example": "https://somewhere.example/path/to/content"
+      },
+      "UserData": {
+        "type": "string",
+        "maxLength": 16384,
+        "title": "purely for your usage, particularly useful in combination with SNS",
+        "example": "this can be whatever you like, even a json string"
+      },
+      "SnsTopicArn": {
+        "type": "string",
+        "title": "publish status updates to this AWS SNS Topic",
+        "example": "arn:aws:sns:us-west-2:123456789:my-StatusTopic-123"
+      },
+      "RoleArn": {
+        "type": "string",
+        "pattern": "^arn:aws:iam::[0-9]{12}:role/?[a-zA-Z_0-9+=,.@_/-]+$",
+        "title": "arn of a role to assume to perform this action in your AWS account",
+        "example": "arn:aws:iam::123456789:role/abcdef-MyExternalRole-123"
+      },
+      "ResultLink": {
+        "type": "object",
+        "required": [
+          "url",
+          "method",
+          "fileSize"
+        ],
+        "properties": {
+          "url": {
+            "$ref": "#/components/schemas/Url"
+          },
+          "method": {
+            "$ref": "#/components/schemas/HttpMethodGet"
+          },
+          "headers": {
+            "$ref": "#/components/schemas/HttpHeaders"
+          },
+          "expiry": {
+            "$ref": "#/components/schemas/Expiry"
+          },
+          "fileSize": {
+            "type": "integer",
+            "title": "size in bytes of the new file",
+            "example": 123456
+          }
+        },
+        "title": "all the information about your finished file result"
+      },
+      "StatusLink": {
+        "type": "object",
+        "required": [
+          "url",
+          "method"
+        ],
+        "properties": {
+          "url": {
+            "$ref": "#/components/schemas/Url"
+          },
+          "method": {
+            "$ref": "#/components/schemas/HttpMethodGet"
+          },
+          "headers": {
+            "$ref": "#/components/schemas/HttpHeaders"
+          },
+          "expiry": {
+            "$ref": "#/components/schemas/Expiry"
+          }
+        },
+        "title": "all the information you need to monitor the status"
+      },
+      "UploadLink": {
+        "type": "object",
+        "required": [
+          "url",
+          "method"
+        ],
+        "properties": {
+          "url": {
+            "$ref": "#/components/schemas/Url"
+          },
+          "method": {
+            "$ref": "#/components/schemas/HttpMethodUpload"
+          },
+          "headers": {
+            "$ref": "#/components/schemas/HttpHeaders"
+          },
+          "expiry": {
+            "$ref": "#/components/schemas/Expiry"
+          }
+        },
+        "title": "all the information you need to upload your content"
+      },
+      "Risks": {
+        "type": "object",
+        "properties": {
+          "taken": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "exe/macro/ms/word",
+                "exe/macro/ms/powerpoint",
+                "exe/macro/ms/excel",
+                "poly/text/xml",
+                "poly/text/json",
+                "structured/no-schema/xml",
+                "structured/no-schema/json"
+              ]
+            },
+            "title": "the risks taken during transformation",
+            "example": [
+              "exe/macro/ms/powerpoint"
+            ]
+          }
+        }
+      },
+      "Status": {
+        "type": "object",
+        "required": [
+          "state",
+          "complete"
+        ],
+        "properties": {
+          "state": {
+            "type": "string",
+            "title": "text description of what is currently happening",
+            "example": "WAITING_FOR_UPLOAD"
+          },
+          "complete": {
+            "type": "boolean",
+            "title": "set to true after success or failure",
+            "example": false
+          },
+          "success": {
+            "type": "boolean",
+            "title": "only populated once COMPLETE"
+          }
+        },
+        "title": "the current status of the processing"
+      },
+      "ErrorState": {
+        "type": "object",
+        "required": [
+          "message",
+          "type",
+          "code"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "title": "category of the error"
+          },
+          "message": {
+            "type": "string",
+            "title": "human readable description of the error"
+          },
+          "subType": {
+            "type": "string",
+            "title": "sub category of the error"
+          },
+          "code": {
+            "type": "integer",
+            "title": "error code - see error glossary"
+          },
+          "name": {
+            "type": "string",
+            "title": "name of the error"
+          }
+        },
+        "title": "populated only if processing is complete and unsuccessful"
+      },
+      "OptionStatus": {
+        "type": "object",
+        "properties": {
+          "sns": {
+            "type": "object",
+            "required": [
+              "roleArn",
+              "topicArn"
+            ],
+            "properties": {
+              "roleArn": {
+                "$ref": "#/components/schemas/RoleArn"
+              },
+              "topicArn": {
+                "$ref": "#/components/schemas/SnsTopicArn"
+              }
+            }
+          },
+          "userData": {
+            "$ref": "#/components/schemas/UserData"
+          }
+        }
+      }
+    }
+  },
+  "externalDocs": {
+    "description": "View error codes in the error glossary",
+    "url": "#/api/errors"
+  },
+  "servers": [
+    {
+      "description": "URL for the eu-west-1 region",
+      "url": "https://eu-west-1.aws.async.cdr.everfox.com/v1"
+    },
+    {
+      "description": "URL for the eu-west-2 region",
+      "url": "https://eu-west-2.aws.async.cdr.everfox.com/v1"
+    },
+    {
+      "description": "URL for the us-west-2 region",
+      "url": "https://us-west-2.aws.async.cdr.everfox.com/v1"
+    }
+  ]
+}

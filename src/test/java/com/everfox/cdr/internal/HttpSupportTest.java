@@ -14,8 +14,8 @@
 package com.everfox.cdr.internal;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
+import com.everfox.cdr.MockHttp;
 import com.everfox.cdr.instant.InstantApiConfig;
 import com.everfox.cdr.instant.InstantApiException;
 import java.net.URI;
@@ -46,11 +46,7 @@ class HttpSupportTest {
      * @return the mock response
      */
     private static HttpResponse<byte[]> response(int statusCode) {
-        @SuppressWarnings("unchecked") // unavoidable when mocking due to HttpResponse being generic
-        HttpResponse<byte[]> httpResponse = mock(HttpResponse.class);
-        when(httpResponse.statusCode()).thenReturn(statusCode);
-        when(httpResponse.body()).thenReturn("{\"error\":{\"code\":42}}".getBytes());
-        return httpResponse;
+        return MockHttp.response(statusCode, "{\"error\":{\"code\":42}}");
     }
 
     /** Tests that the client uses the connection timeout and never follows redirects. */

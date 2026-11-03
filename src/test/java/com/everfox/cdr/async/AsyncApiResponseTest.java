@@ -14,9 +14,8 @@
 package com.everfox.cdr.async;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
-import java.net.http.HttpHeaders;
+import com.everfox.cdr.MockHttp;
 import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Map;
@@ -42,13 +41,7 @@ class AsyncApiResponseTest {
      * @return the mock response
      */
     private static HttpResponse<byte[]> response(int statusCode, byte[] body) {
-        @SuppressWarnings("unchecked") // unavoidable when mocking due to HttpResponse being generic
-        HttpResponse<byte[]> httpResponse = mock(HttpResponse.class);
-        when(httpResponse.statusCode()).thenReturn(statusCode);
-        when(httpResponse.body()).thenReturn(body);
-        when(httpResponse.headers())
-                .thenReturn(HttpHeaders.of(Map.of("X-Custom-Header", List.of("value1", "value2")), (k, v) -> true));
-        return httpResponse;
+        return MockHttp.response(statusCode, body, Map.of("X-Custom-Header", List.of("value1", "value2")));
     }
 
     /**

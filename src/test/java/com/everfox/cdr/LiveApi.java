@@ -14,7 +14,11 @@
 package com.everfox.cdr;
 
 import java.net.URI;
+import java.util.LinkedHashSet;
 import java.util.Locale;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Resolves the live API endpoint and key for integration tests from environment variables.
@@ -29,6 +33,9 @@ public final class LiveApi {
     public static final String INSTANT_KEY_ENV = "CDR_INSTANT_API_KEY";
     /** Environment variable holding the Async API key. */
     public static final String ASYNC_KEY_ENV = "CDR_ASYNC_API_KEY";
+
+    /** A media type in single or double quotes. */
+    private static final Pattern QUOTED_MEDIA_TYPE = Pattern.compile("['\"]([^'\"\\s]+/[^'\"\\s]+)['\"]");
 
     /** Not instantiable. */
     private LiveApi() {}
@@ -61,6 +68,28 @@ public final class LiveApi {
         }
         String url = env(api, "URL");
         return url != null ? URI.create(url) : Region.US_WEST_2.getBaseUrl(api);
+    }
+
+    /**
+     * Returns the media types listed in an API error message after a marker, such as the allowed types in a rejection.
+     * This depends on the wording of the API's error messages, so a change there fails the tests that use it.
+     *
+     * @param message the error message
+     * @param marker the text that comes before the list
+     * @return the quoted media types after the marker, as spelled in the message
+     * @throws IllegalStateException if the marker is not in the message
+     */
+    public static Set<String> mediaTypesAfter(String message, String marker) {
+        int start = message.indexOf(marker);
+        if (start < 0) {
+            throw new IllegalStateException("Marker '" + marker + "' not in message: " + message);
+        }
+        Set<String> mediaTypes = new LinkedHashSet<>();
+        Matcher matcher = QUOTED_MEDIA_TYPE.matcher(message.substring(start + marker.length()));
+        while (matcher.find()) {
+            mediaTypes.add(matcher.group(1));
+        }
+        return mediaTypes;
     }
 
     /**

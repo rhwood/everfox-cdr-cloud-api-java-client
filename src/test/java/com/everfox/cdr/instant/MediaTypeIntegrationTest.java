@@ -16,6 +16,7 @@ package com.everfox.cdr.instant;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.everfox.cdr.Api;
+import com.everfox.cdr.ApiSpec;
 import com.everfox.cdr.ConvertibleFormat;
 import com.everfox.cdr.LiveApi;
 import com.everfox.cdr.MediaType;
@@ -109,6 +110,23 @@ class MediaTypeIntegrationTest {
         assertEquals(400, exception.getHttpStatusCode());
         assertEquals(1000, exception.getApiStatusCode());
         assertEquals("CONTENT_TYPE_UNSUPPORTED", exception.getName());
+    }
+
+    /**
+     * Tests that the allowed {@code Content-Type} values listed in the rejection message are exactly the Async spec's
+     * {@code mime-type} list, and not the Instant spec's own {@code Content-Type} list.
+     */
+    @Test
+    void testAllowedContentTypesMatchAsyncSpec() {
+        InstantApiException exception = assertThrows(
+                InstantApiException.class,
+                () -> client.upload(InstantApiRequest.create(
+                        ConvertibleFormat.DOC.load(),
+                        ConvertibleFormat.DOC.getMediaType(),
+                        MediaType.ALL.getMediaType())));
+
+        assertEquals(
+                ApiSpec.ASYNC.contentTypes(), LiveApi.mediaTypesAfter(exception.getApiMessage(), "must be one of"));
     }
 
     /**
