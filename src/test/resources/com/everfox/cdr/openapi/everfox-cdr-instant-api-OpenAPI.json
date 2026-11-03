@@ -1,0 +1,2255 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "The Instant API",
+    "version": "latest",
+    "description": "",
+    "x-logo": {
+      "url": "https://cdr.everfox.com/static/content-threat-removal.png"
+    }
+  },
+  "servers": [
+    {
+      "description": "URL for the eu-west-1 region",
+      "url": "https://eu-west-1.aws.instant.cdr.everfox.com/v1"
+    },
+    {
+      "description": "URL for the eu-west-2 region",
+      "url": "https://eu-west-2.aws.instant.cdr.everfox.com/v1"
+    },
+    {
+      "description": "URL for the us-west-2 region",
+      "url": "https://us-west-2.aws.instant.cdr.everfox.com/v1"
+    }
+  ],
+  "paths": {
+    "/upload": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Success (binary)",
+            "content": {
+              "application/emf": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/mp4": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/ms-tnef": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/pdf": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-excel.addin.macroEnabled.12": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-excel.addin.macroenabled.12": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-excel.sheet.macroEnabled.12": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-excel.sheet.macroenabled.12": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-excel.template.macroEnabled.12": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-excel.template.macroenabled.12": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-outlook": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-powerpoint.addin.macroEnabled.12": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-powerpoint.addin.macroenabled.12": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-powerpoint.presentation.macroEnabled.12": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-powerpoint.presentation.macroenabled.12": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-powerpoint.slideshow.macroEnabled.12": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-powerpoint.slideshow.macroenabled.12": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-powerpoint.template.macroEnabled.12": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-powerpoint.template.macroenabled.12": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-visio.drawing": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-visio.viewer": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-word.document.macroEnabled.12": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-word.document.macroenabled.12": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-word.template.macroEnabled.12": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.ms-word.template.macroenabled.12": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.openxmlformats-officedocument.presentationml.presentation": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.openxmlformats-officedocument.presentationml.slideshow": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.openxmlformats-officedocument.presentationml.template": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.template": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.template": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/wmf": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/x-compressed": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/x-zip-compressed": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "application/zip": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "audio/mp4": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "audio/mpeg": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "audio/x-m4a": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "audio/x-wav": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "image/bmp": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "image/gif": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "image/heic": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "image/heif": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "image/jp2": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "image/jpg": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "image/jxr": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "image/tiff": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "image/vnd.ms-photo": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "image/x-ms-bmp": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "message/rfc822": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "text/css": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "text/vcard": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              },
+              "video/mp4": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultResponse"
+                },
+                "examples": {
+                  "response": {
+                    "value": "BINARY DATA"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Risks-Taken": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Report": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Forbidden (authentication failure)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (authorisation failure)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests (try again later)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThrottleResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "application/emf",
+                "application/json",
+                "application/mp4",
+                "application/msword",
+                "application/pdf",
+                "application/rtf",
+                "application/vnd.ms-excel",
+                "application/vnd.ms-excel.addin.macroEnabled.12",
+                "application/vnd.ms-excel.addin.macroenabled.12",
+                "application/vnd.ms-excel.sheet.binary.macroEnabled.12",
+                "application/vnd.ms-excel.sheet.binary.macroenabled.12",
+                "application/vnd.ms-excel.sheet.macroEnabled.12",
+                "application/vnd.ms-excel.sheet.macroenabled.12",
+                "application/vnd.ms-excel.template.macroEnabled.12",
+                "application/vnd.ms-excel.template.macroenabled.12",
+                "application/vnd.ms-outlook",
+                "application/vnd.ms-powerpoint",
+                "application/vnd.ms-powerpoint.addin.macroEnabled.12",
+                "application/vnd.ms-powerpoint.addin.macroenabled.12",
+                "application/vnd.ms-powerpoint.presentation.macroEnabled.12",
+                "application/vnd.ms-powerpoint.presentation.macroenabled.12",
+                "application/vnd.ms-powerpoint.slideshow.macroEnabled.12",
+                "application/vnd.ms-powerpoint.slideshow.macroenabled.12",
+                "application/vnd.ms-powerpoint.template.macroEnabled.12",
+                "application/vnd.ms-powerpoint.template.macroenabled.12",
+                "application/vnd.ms-visio.drawing",
+                "application/vnd.ms-visio.viewer",
+                "application/vnd.ms-word.document.macroEnabled.12",
+                "application/vnd.ms-word.document.macroenabled.12",
+                "application/vnd.ms-word.template.macroEnabled.12",
+                "application/vnd.ms-word.template.macroenabled.12",
+                "application/vnd.oasis.opendocument.presentation",
+                "application/vnd.oasis.opendocument.spreadsheet",
+                "application/vnd.oasis.opendocument.text",
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+                "application/vnd.openxmlformats-officedocument.presentationml.template",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.template",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
+                "application/wmf",
+                "application/x-compressed",
+                "application/x-zip-compressed",
+                "application/xml",
+                "application/zip",
+                "audio/mp4",
+                "audio/mpeg",
+                "audio/x-m4a",
+                "audio/x-wav",
+                "image/bmp",
+                "image/gif",
+                "image/heic",
+                "image/heif",
+                "image/jp2",
+                "image/jpeg",
+                "image/jpg",
+                "image/jxr",
+                "image/png",
+                "image/tiff",
+                "image/vnd.ms-photo",
+                "image/webp",
+                "image/x-ms-bmp",
+                "message/rfc822",
+                "text/csv",
+                "text/rtf",
+                "text/vcard",
+                "text/xml",
+                "video/mp4"
+              ]
+            },
+            "example": "application/pdf"
+          },
+          {
+            "name": "X-Options",
+            "in": "header",
+            "schema": {
+              "$ref": "#/components/schemas/OptionsHeader"
+            },
+            "required": false
+          },
+          {
+            "name": "Accept",
+            "description": "A comma separated list of content types acceptable for the response, this should include the content type being transformed and application/json so the response can describe errors",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "everything": {
+                "value": "*/*, application/json",
+                "summary": "accept any file type output, and JSON for feedback such as errors"
+              },
+              "pdf": {
+                "value": "application/pdf, application/json",
+                "summary": "only accept PDF output, or JSON"
+              }
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "abc123def456fed789cba"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/emf": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/mp4": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/msword": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/pdf": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/rtf": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-excel": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-excel.addin.macroEnabled.12": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-excel.addin.macroenabled.12": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-excel.sheet.binary.macroEnabled.12": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-excel.sheet.binary.macroenabled.12": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-excel.sheet.macroEnabled.12": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-excel.sheet.macroenabled.12": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-excel.template.macroEnabled.12": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-excel.template.macroenabled.12": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-outlook": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-powerpoint": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-powerpoint.addin.macroEnabled.12": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-powerpoint.addin.macroenabled.12": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-powerpoint.presentation.macroEnabled.12": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-powerpoint.presentation.macroenabled.12": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-powerpoint.slideshow.macroEnabled.12": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-powerpoint.slideshow.macroenabled.12": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-powerpoint.template.macroEnabled.12": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-powerpoint.template.macroenabled.12": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-visio.drawing": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-visio.viewer": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-word.document.macroEnabled.12": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-word.document.macroenabled.12": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-word.template.macroEnabled.12": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.ms-word.template.macroenabled.12": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.oasis.opendocument.presentation": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.oasis.opendocument.spreadsheet": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.oasis.opendocument.text": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.openxmlformats-officedocument.presentationml.slideshow": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.openxmlformats-officedocument.presentationml.template": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.template": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.template": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/wmf": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/x-compressed": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/x-zip-compressed": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "application/zip": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "audio/mp4": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "audio/mpeg": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "audio/x-m4a": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "audio/x-wav": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "image/bmp": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "image/gif": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "image/heic": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "image/heif": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "image/jp2": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "image/jpeg": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "image/jpg": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "image/jxr": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "image/png": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "image/tiff": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "image/vnd.ms-photo": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "image/webp": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "image/x-ms-bmp": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "message/rfc822": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "text/csv": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "text/rtf": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "text/vcard": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "text/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            },
+            "video/mp4": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              },
+              "examples": {
+                "response": {
+                  "value": "BINARY DATA"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "api-key": []
+          }
+        ],
+        "tags": [
+          "Upload"
+        ],
+        "summary": "Directly upload files of up to 4.5 MB",
+        "description": "This endpoint supports file sizes up to 4.5 MB.\n\n### Steps required\n1. To use `POST` a file to this endpoint and set the `Content-Type` and `Accept` headers\n    * RECOMMENDED: Enable automatic conversion\n2. Save the response as required 3. Examine the report\n\nDue to the file size limits the processing will usually complete very quickly, but in some cases a response may take up to 30 seconds. Any processing that takes longer than this will result in an error response.\n",
+        "x-codeSamples": [
+          {
+            "lang": "Curl (recommended)",
+            "source": "\n#!/bin/bash\n# sadly for this example curl doesn't handle unexpected conversions well\n# the report will say what the output file extension should be\ncurl \\\n--request POST \\\n--url '${URL}/upload' \\\n--header 'accept: */*, application/json' \\\n--header 'content-type: application/octet-stream' \\\n--header 'x-api-key: ABC----YOUR_APIKEY----789' \\\n--header 'X-Options: { \"conversion\": { \"from\": { \"mime-type\": \"application/pdf\" } } }' \\\n--output '/path/to/output/newfile.get-ext-from-report' \\\n--upload-file '/path/to/file.pdf' \\\n--fail"
+          },
+          {
+            "lang": "Curl (basic)",
+            "source": "#!/bin/bash\ncurl \\\n--request POST \\\n--url '${URL}/upload' \\\n--header 'accept: application/pdf, application/json' \\\n--header 'content-type: application/pdf' \\\n--header 'x-api-key: ABC----YOUR_APIKEY----789' \\\n--output '/path/to/output/newfile.pdf' \\\n--upload-file '/path/to/file.pdf' \\\n--fail"
+          },
+          {
+            "lang": "Curl (conversion)",
+            "source": "\n#!/bin/bash\ncurl \\\n--request POST \\\n--url '${URL}/upload' \\\n--header 'accept: application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/json' \\\n--header 'content-type: application/octet-stream' \\\n--header 'x-api-key: ABC----YOUR_APIKEY----789' \\\n--header 'X-Options: { \"conversion\": { \"from\": { \"mime-type\": \"application/msword\" } } }' \\\n--output '/path/to/output/newfile.doc' \\\n--upload-file '/path/to/file.docx' \\\n--fail"
+          },
+          {
+            "lang": "Curl (risks)",
+            "source": "\n#!/bin/bash\ncurl \\\n--request POST \\\n--url '${URL}/upload' \\\n--header 'accept: application/vnd.ms-word.document.macroEnabled.12, application/json' \\\n--header 'content-type: application/octet-stream' \\\n--header 'x-api-key: ABC----YOUR_APIKEY----789' \\\n--header 'X-Options: { \"risks\": { \"allow\": [ \"exe/macro/ms/word\" ] } }' \\\n--output '/path/to/output/newfile.docm' \\\n--upload-file '/path/to/file.docm' \\\n--fail"
+          },
+          {
+            "lang": "javascript",
+            "label": "JavaScript",
+            "source": "const axios = require('axios')\nconst fs = require('fs').promises\n\n/*********************************************************\n *\n * SETUP:\n *\n * Create a new directory e.g. code-samples\n * Copy this whole file and save to code-samples/threat_removal_instant.js\n * Copy 'USAGE:' code to code-samples/instant.js\n * Update code-samples/instant.js with your API KEY and paths for input and output\n * > cd code-samples\n * > npm install axios\n * > node instant.js\n *\n * USAGE:\n *\n * const threat_removal_instant = require('./threat_removal_instant')\n * threat_removal_instant.start('${URL}',\n *     'ABC----YOUR_APIKEY----789',\n *     'input.doc',\n *     'output.docx',\n *     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',\n *     false,\n *     'application/msword')\n * .then(({filename, responseHeaders}) => {\n *     console.log(`Success: ${filename}`)\n *     console.log(responseHeaders)\n * })\n * .catch(err => {\n *     if (!err.response || !err.response.data) {\n *         console.error(err.message)\n *     } else console.error('Response data:', err.response.data);\n * });\n *\n ********************************************************/\n\nexports.start = async (apiEndpointBase, apiKey, inputFilename, targetFilename, mimeType, convertFrom) => {\n\n    const uploadResponse = await upload(apiEndpointBase, apiKey, inputFilename, mimeType, convertFrom)\n\n    await fs.writeFile(targetFilename, uploadResponse.data)\n\n    const responseHeaders = Object.keys(uploadResponse.headers)\n        .filter(headerName => headerName.startsWith('content') || headerName.startsWith('x-'))\n        .reduce((headers, headerName) => {\n            headers[headerName] = uploadResponse.headers[headerName]\n            return headers\n        }, {})\n\n    return { filename: targetFilename, responseHeaders }\n}\n\nasync function upload(apiEndpointBase, apiKey, inputFilename, mimeType, convertFrom) {\n    try {\n        const data = await fs.readFile(inputFilename)\n        headers =  {\n            'Accept': [mimeType, 'application/json'].join(', '),\n            'Content-Type': mimeType,\n            'x-api-key': apiKey\n        }\n        if (convertFrom) headers['X-Options'] = JSON.stringify({ conversion: { from: { \"mime-type\": convertFrom }}})\n        const response = await axios({\n            method: 'POST', headers,\n            responseType: 'arraybuffer',\n            url: apiEndpointBase + '/upload',\n            maxContentLength: Math.max(20000, data.length * 2), // output could be larger than input\n            data: data\n        })\n\n        return response\n    }\n    catch (err) {\n        if (err.response && err.response.data) err.response.data = JSON.parse(err.response.data)\n        throw err\n    }\n}\n"
+          },
+          {
+            "lang": "powershell",
+            "label": "PowerShell",
+            "source": "Invoke-RestMethod `\n    -Method 'POST' `\n    -Uri '${URL}/upload' `\n    -Headers @{\n        'accept'='application/pdf, application/json';\n        'content-type'='application/pdf';\n        'x-api-key'='ABC----YOUR_APIKEY----789';\n    } `\n    -OutFile './transformed.pdf' `\n    -InFile './input.pdf'"
+          },
+          {
+            "lang": "python",
+            "label": "Python3.6+",
+            "source": "import io\nimport json\nimport requests\n\n# SETUP:\n# This code sample requires the requests library,\n# install this using pip:-\n# > pip install requests\n#\n# USAGE:\n# start(\n#    '${URL}',\n#    'ABC----YOUR_APIKEY----789',\n#    'input.pdf',\n#    'output.pdf',\n#    'application/pdf'\n# )\n\ndef start(api_endpoint_base, api_key, filename, target_filename, mime_type, convert_from=None):\n    response = upload(api_endpoint_base, api_key, filename, mime_type, convert_from)\n\n    response.raise_for_status()\n\n    save(target_filename, response)\n\ndef upload(api_endpoint_base, api_key, filename, mime_type, convert_from=None):\n    headers={\n        'Accept': f'{mime_type}, application/json',\n        'Content-Type': mime_type,\n        'x-api-key': api_key\n    }\n    if convert_from is not None:\n        options = {'conversion': {'from': {'mime-type': convert_from}}}\n        headers['X-Options'] = json.dumps(options)\n\n    with open(filename, 'rb') as source_file:\n        return requests.post(\n            url='{}/upload'.format(api_endpoint_base),\n            headers=headers,\n            data=source_file\n        )\n\ndef save(target_filename, response):\n    with open(target_filename, 'wb') as target_file:\n        with io.BytesIO(response.content) as response_bytes:\n            target_file.write(response_bytes.read())\n"
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "api-key": {
+        "type": "apiKey",
+        "name": "x-api-key",
+        "in": "header"
+      }
+    },
+    "schemas": {
+      "RequestBody": {
+        "type": "string",
+        "format": "binary"
+      },
+      "OptionsHeader": {
+        "type": "object",
+        "properties": {
+          "risks": {
+            "type": "object",
+            "properties": {
+              "allow": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "exe",
+                    "exe/macro",
+                    "exe/macro/ms",
+                    "exe/macro/ms/excel",
+                    "exe/macro/ms/powerpoint",
+                    "exe/macro/ms/word",
+                    "poly",
+                    "poly/text",
+                    "poly/text/json",
+                    "poly/text/xml",
+                    "steg",
+                    "steg/image",
+                    "steg/image/bmp",
+                    "steg/image/gif",
+                    "steg/image/jpeg",
+                    "steg/image/jpeg2k",
+                    "steg/image/jxr",
+                    "steg/image/pdf",
+                    "steg/image/png",
+                    "steg/image/webp",
+                    "structured",
+                    "structured/no-schema",
+                    "structured/no-schema/json",
+                    "structured/no-schema/xml"
+                  ]
+                },
+                "title": "list of risks to allow (care should be taken)",
+                "example": [
+                  "exe/macro/ms"
+                ]
+              },
+              "deny": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "exe",
+                    "exe/macro",
+                    "exe/macro/ms",
+                    "exe/macro/ms/excel",
+                    "exe/macro/ms/powerpoint",
+                    "exe/macro/ms/word",
+                    "poly",
+                    "poly/text",
+                    "poly/text/json",
+                    "poly/text/xml",
+                    "steg",
+                    "steg/image",
+                    "steg/image/bmp",
+                    "steg/image/gif",
+                    "steg/image/jpeg",
+                    "steg/image/jpeg2k",
+                    "steg/image/jxr",
+                    "steg/image/pdf",
+                    "steg/image/png",
+                    "steg/image/webp",
+                    "structured",
+                    "structured/no-schema",
+                    "structured/no-schema/json",
+                    "structured/no-schema/xml"
+                  ]
+                },
+                "title": "list of risks to deny",
+                "example": [
+                  "exe/macro/ms/powerpoint"
+                ]
+              }
+            },
+            "title": "risk management options"
+          },
+          "report": {
+            "type": "object",
+            "properties": {
+              "format": {
+                "type": "string",
+                "enum": [
+                  "changed",
+                  "default",
+                  "full",
+                  "none"
+                ],
+                "title": "options that specify the format"
+              }
+            },
+            "title": "format of returned report"
+          },
+          "conversion": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "object",
+                "properties": {
+                  "mime-type": {
+                    "type": "string",
+                    "enum": [
+                      "application/emf",
+                      "application/json",
+                      "application/mp4",
+                      "application/msword",
+                      "application/pdf",
+                      "application/rtf",
+                      "application/vnd.ms-excel",
+                      "application/vnd.ms-excel.addin.macroEnabled.12",
+                      "application/vnd.ms-excel.addin.macroenabled.12",
+                      "application/vnd.ms-excel.sheet.binary.macroEnabled.12",
+                      "application/vnd.ms-excel.sheet.binary.macroenabled.12",
+                      "application/vnd.ms-excel.sheet.macroEnabled.12",
+                      "application/vnd.ms-excel.sheet.macroenabled.12",
+                      "application/vnd.ms-excel.template.macroEnabled.12",
+                      "application/vnd.ms-excel.template.macroenabled.12",
+                      "application/vnd.ms-outlook",
+                      "application/vnd.ms-powerpoint",
+                      "application/vnd.ms-powerpoint.addin.macroEnabled.12",
+                      "application/vnd.ms-powerpoint.addin.macroenabled.12",
+                      "application/vnd.ms-powerpoint.presentation.macroEnabled.12",
+                      "application/vnd.ms-powerpoint.presentation.macroenabled.12",
+                      "application/vnd.ms-powerpoint.slideshow.macroEnabled.12",
+                      "application/vnd.ms-powerpoint.slideshow.macroenabled.12",
+                      "application/vnd.ms-powerpoint.template.macroEnabled.12",
+                      "application/vnd.ms-powerpoint.template.macroenabled.12",
+                      "application/vnd.ms-visio.drawing",
+                      "application/vnd.ms-visio.viewer",
+                      "application/vnd.ms-word.document.macroEnabled.12",
+                      "application/vnd.ms-word.document.macroenabled.12",
+                      "application/vnd.ms-word.template.macroEnabled.12",
+                      "application/vnd.ms-word.template.macroenabled.12",
+                      "application/vnd.oasis.opendocument.presentation",
+                      "application/vnd.oasis.opendocument.spreadsheet",
+                      "application/vnd.oasis.opendocument.text",
+                      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                      "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+                      "application/vnd.openxmlformats-officedocument.presentationml.template",
+                      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                      "application/vnd.openxmlformats-officedocument.spreadsheetml.template",
+                      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                      "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
+                      "application/wmf",
+                      "application/x-compressed",
+                      "application/x-zip-compressed",
+                      "application/xml",
+                      "application/zip",
+                      "audio/mp4",
+                      "audio/mpeg",
+                      "audio/x-m4a",
+                      "audio/x-wav",
+                      "image/bmp",
+                      "image/gif",
+                      "image/heic",
+                      "image/heif",
+                      "image/jp2",
+                      "image/jpeg",
+                      "image/jpg",
+                      "image/jxr",
+                      "image/png",
+                      "image/tiff",
+                      "image/vnd.ms-photo",
+                      "image/webp",
+                      "image/x-ms-bmp",
+                      "message/rfc822",
+                      "text/csv",
+                      "text/rtf",
+                      "text/vcard",
+                      "text/xml",
+                      "video/mp4"
+                    ],
+                    "title": "mime-type of the original file"
+                  },
+                  "methods": {
+                    "type": "object",
+                    "properties": {
+                      "disabled": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "enabled": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "mime_types": {
+                    "type": "object",
+                    "properties": {
+                      "enabled": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "from": {
+                              "enum": [
+                                "application/octet-stream",
+                                "application/emf",
+                                "application/json",
+                                "application/mp4",
+                                "application/msword",
+                                "application/pdf",
+                                "application/rtf",
+                                "application/vnd.ms-excel",
+                                "application/vnd.ms-excel.addin.macroEnabled.12",
+                                "application/vnd.ms-excel.addin.macroenabled.12",
+                                "application/vnd.ms-excel.sheet.binary.macroEnabled.12",
+                                "application/vnd.ms-excel.sheet.binary.macroenabled.12",
+                                "application/vnd.ms-excel.sheet.macroEnabled.12",
+                                "application/vnd.ms-excel.sheet.macroenabled.12",
+                                "application/vnd.ms-excel.template.macroEnabled.12",
+                                "application/vnd.ms-excel.template.macroenabled.12",
+                                "application/vnd.ms-outlook",
+                                "application/vnd.ms-powerpoint",
+                                "application/vnd.ms-powerpoint.addin.macroEnabled.12",
+                                "application/vnd.ms-powerpoint.addin.macroenabled.12",
+                                "application/vnd.ms-powerpoint.presentation.macroEnabled.12",
+                                "application/vnd.ms-powerpoint.presentation.macroenabled.12",
+                                "application/vnd.ms-powerpoint.slideshow.macroEnabled.12",
+                                "application/vnd.ms-powerpoint.slideshow.macroenabled.12",
+                                "application/vnd.ms-powerpoint.template.macroEnabled.12",
+                                "application/vnd.ms-powerpoint.template.macroenabled.12",
+                                "application/vnd.ms-visio.drawing",
+                                "application/vnd.ms-visio.viewer",
+                                "application/vnd.ms-word.document.macroEnabled.12",
+                                "application/vnd.ms-word.document.macroenabled.12",
+                                "application/vnd.ms-word.template.macroEnabled.12",
+                                "application/vnd.ms-word.template.macroenabled.12",
+                                "application/vnd.oasis.opendocument.presentation",
+                                "application/vnd.oasis.opendocument.spreadsheet",
+                                "application/vnd.oasis.opendocument.text",
+                                "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                                "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+                                "application/vnd.openxmlformats-officedocument.presentationml.template",
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.template",
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
+                                "application/wmf",
+                                "application/x-compressed",
+                                "application/x-zip-compressed",
+                                "application/xml",
+                                "application/zip",
+                                "audio/mp4",
+                                "audio/mpeg",
+                                "audio/x-m4a",
+                                "audio/x-wav",
+                                "image/bmp",
+                                "image/gif",
+                                "image/heic",
+                                "image/heif",
+                                "image/jp2",
+                                "image/jpeg",
+                                "image/jpg",
+                                "image/jxr",
+                                "image/png",
+                                "image/tiff",
+                                "image/vnd.ms-photo",
+                                "image/webp",
+                                "image/x-ms-bmp",
+                                "message/rfc822",
+                                "text/csv",
+                                "text/rtf",
+                                "text/vcard",
+                                "text/xml",
+                                "video/mp4"
+                              ]
+                            },
+                            "to": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "disabled": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "from": {
+                              "enum": [
+                                "application/octet-stream",
+                                "application/emf",
+                                "application/json",
+                                "application/mp4",
+                                "application/msword",
+                                "application/pdf",
+                                "application/rtf",
+                                "application/vnd.ms-excel",
+                                "application/vnd.ms-excel.addin.macroEnabled.12",
+                                "application/vnd.ms-excel.addin.macroenabled.12",
+                                "application/vnd.ms-excel.sheet.binary.macroEnabled.12",
+                                "application/vnd.ms-excel.sheet.binary.macroenabled.12",
+                                "application/vnd.ms-excel.sheet.macroEnabled.12",
+                                "application/vnd.ms-excel.sheet.macroenabled.12",
+                                "application/vnd.ms-excel.template.macroEnabled.12",
+                                "application/vnd.ms-excel.template.macroenabled.12",
+                                "application/vnd.ms-outlook",
+                                "application/vnd.ms-powerpoint",
+                                "application/vnd.ms-powerpoint.addin.macroEnabled.12",
+                                "application/vnd.ms-powerpoint.addin.macroenabled.12",
+                                "application/vnd.ms-powerpoint.presentation.macroEnabled.12",
+                                "application/vnd.ms-powerpoint.presentation.macroenabled.12",
+                                "application/vnd.ms-powerpoint.slideshow.macroEnabled.12",
+                                "application/vnd.ms-powerpoint.slideshow.macroenabled.12",
+                                "application/vnd.ms-powerpoint.template.macroEnabled.12",
+                                "application/vnd.ms-powerpoint.template.macroenabled.12",
+                                "application/vnd.ms-visio.drawing",
+                                "application/vnd.ms-visio.viewer",
+                                "application/vnd.ms-word.document.macroEnabled.12",
+                                "application/vnd.ms-word.document.macroenabled.12",
+                                "application/vnd.ms-word.template.macroEnabled.12",
+                                "application/vnd.ms-word.template.macroenabled.12",
+                                "application/vnd.oasis.opendocument.presentation",
+                                "application/vnd.oasis.opendocument.spreadsheet",
+                                "application/vnd.oasis.opendocument.text",
+                                "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                                "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+                                "application/vnd.openxmlformats-officedocument.presentationml.template",
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.template",
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
+                                "application/wmf",
+                                "application/x-compressed",
+                                "application/x-zip-compressed",
+                                "application/xml",
+                                "application/zip",
+                                "audio/mp4",
+                                "audio/mpeg",
+                                "audio/x-m4a",
+                                "audio/x-wav",
+                                "image/bmp",
+                                "image/gif",
+                                "image/heic",
+                                "image/heif",
+                                "image/jp2",
+                                "image/jpeg",
+                                "image/jpg",
+                                "image/jxr",
+                                "image/png",
+                                "image/tiff",
+                                "image/vnd.ms-photo",
+                                "image/webp",
+                                "image/x-ms-bmp",
+                                "message/rfc822",
+                                "text/csv",
+                                "text/rtf",
+                                "text/vcard",
+                                "text/xml",
+                                "video/mp4"
+                              ]
+                            },
+                            "to": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "title": "original file format"
+              },
+              "methods": {
+                "type": "object",
+                "properties": {
+                  "disabled": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "default",
+                        "libreoffice",
+                        "report",
+                        "text-extraction"
+                      ]
+                    },
+                    "title": "list of conversion tools to disable, disable \"default\" to only allow tools explicitly enabled",
+                    "example": []
+                  },
+                  "enabled": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "default",
+                        "libreoffice",
+                        "report",
+                        "text-extraction"
+                      ]
+                    },
+                    "title": "list of conversion tools to enable / prioritize",
+                    "example": [
+                      "libreoffice"
+                    ]
+                  }
+                },
+                "title": "control which conversion tools to use"
+              },
+              "mime_types": {
+                "type": "object",
+                "properties": {
+                  "disabled": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "to": {
+                          "type": "string"
+                        },
+                        "from": {
+                          "type": "string"
+                        }
+                      },
+                      "title": "mime types which won't be converted"
+                    }
+                  },
+                  "enabled": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "to": {
+                          "type": "string"
+                        },
+                        "from": {
+                          "type": "string"
+                        }
+                      },
+                      "title": "mime types which can be converted"
+                    }
+                  }
+                },
+                "title": "control which mime types can be converted"
+              }
+            },
+            "title": "format conversion options",
+            "example": "{ \"conversion\": { \"from\": { \"mime-type\": \"application/vnd.ms-excel\" } } }"
+          },
+          "images": {
+            "type": "object",
+            "properties": {
+              "quality": {
+                "type": "object",
+                "properties": {
+                  "preserve": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "*",
+                        "image/jpeg",
+                        "image/jpg",
+                        "image/jp2",
+                        "image/bmp",
+                        "image/gif",
+                        "image/png",
+                        "image/vnd.ms-photo",
+                        "image/jxr",
+                        "image/tiff",
+                        "image/webp",
+                        "application/pdf",
+                        "*",
+                        "image/jpeg",
+                        "image/jpg",
+                        "image/jp2",
+                        "image/bmp",
+                        "image/gif",
+                        "image/png",
+                        "image/jxr",
+                        "image/webp",
+                        "application/pdf"
+                      ]
+                    },
+                    "title": "list of image formats to preserve quality for, increasing the risk of steganography",
+                    "example": "{ \"images\": { \"quality\": { \"preserve\": [ \"image/jpeg\", \"image/gif\" ] } } }"
+                  }
+                },
+                "title": "image quality options"
+              }
+            },
+            "title": "image handling options"
+          },
+          "redactions": {
+            "type": "object",
+            "properties": {
+              "extension": {
+                "maxLength": 100,
+                "minLength": 0,
+                "type": "string",
+                "title": "the extension to give a redacted file replacement",
+                "example": [
+                  "txt",
+                  "json"
+                ]
+              },
+              "mime": {
+                "maxLength": 100,
+                "minLength": 0,
+                "type": "string",
+                "title": "the mime type to give a redacted file replacement",
+                "example": [
+                  "text/plain",
+                  "application/json"
+                ]
+              },
+              "text": {
+                "maxLength": 1000000,
+                "minLength": 0,
+                "type": "string",
+                "title": "the text content to put in a redacted file replacement"
+              }
+            },
+            "title": "redaction options"
+          }
+        },
+        "title": "configuration options for the transform"
+      },
+      "OptionsResponse": {
+        "type": "object"
+      },
+      "ResultResponse": {
+        "type": "string",
+        "format": "binary"
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "message"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "BadRequest",
+                "title": "category of the error"
+              },
+              "message": {
+                "type": "string",
+                "example": "This file could not be processed: the file content isn't recognised as 'application/pdf' (detected 'image/png')",
+                "title": "human readable description of the error"
+              },
+              "code": {
+                "type": "integer",
+                "example": 3020,
+                "title": "error code - see error glossary"
+              },
+              "name": {
+                "type": "string",
+                "example": "APIGATEWAY_BAD_REQUEST_BODY",
+                "title": "name of the error"
+              }
+            }
+          }
+        },
+        "title": "populated only if processing is complete and unsuccessful"
+      },
+      "ThrottleResponse": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "message"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "BadRequest",
+                "title": "category of the error"
+              },
+              "message": {
+                "type": "string",
+                "example": "Waiting too long for processing resources",
+                "title": "human readable description of the error"
+              },
+              "code": {
+                "type": "integer",
+                "example": 3080,
+                "title": "error code - see error glossary"
+              },
+              "name": {
+                "type": "string",
+                "example": "PROCESSING_WAIT_TIMEOUT",
+                "title": "name of the error"
+              }
+            }
+          }
+        }
+      },
+      "InternalErrorResponse": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "message"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "UnknownError",
+                "title": "category of the error"
+              },
+              "message": {
+                "type": "string",
+                "example": "Something unexpected went wrong",
+                "title": "human readable description of the error"
+              },
+              "code": {
+                "type": "integer",
+                "example": 5000,
+                "title": "error code - see error glossary"
+              },
+              "name": {
+                "type": "string",
+                "example": "UNKNOWN_FAILURE",
+                "title": "name of the error"
+              }
+            }
+          }
+        }
+      },
+      "ForbiddenResponse": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "message"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "BadRequest",
+                "title": "category of the error"
+              },
+              "message": {
+                "type": "string",
+                "example": "Forbidden",
+                "title": "human readable description of the error"
+              },
+              "code": {
+                "type": "integer",
+                "example": 6070,
+                "title": "error code - see error glossary"
+              },
+              "name": {
+                "type": "string",
+                "example": "APIGATEWAY_INVALID_API_KEY",
+                "title": "name of the error"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "externalDocs": {
+    "description": "View error codes in the error glossary",
+    "url": "#/api/errors"
+  }
+}

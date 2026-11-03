@@ -15,15 +15,21 @@ package com.everfox.cdr.instant;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.everfox.cdr.Api;
+import com.everfox.cdr.LiveApi;
 import com.everfox.cdr.MediaType;
 import com.everfox.cdr.Region;
 import com.everfox.cdr.Risk;
+import com.everfox.cdr.TestResources;
+import com.everfox.cdr.options.ConversionMethod;
+import com.everfox.cdr.options.ConversionOptions;
+import com.everfox.cdr.options.ImagesOptions;
+import com.everfox.cdr.options.RedactionOptions;
+import com.everfox.cdr.options.ReportFormat;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,19 +64,17 @@ class IntegrationTest {
     /** JSON object mapper for parsing API responses. */
     private static final ObjectMapper MAPPER = new ObjectMapper();
     /** Environment variable name for the API key. */
-    private static final String API_KEY_ENV = "CDR_INSTANT_API_KEY";
-    /** Environment variable name for the API URL. */
-    private static final String API_URL_ENV = "CDR_INSTANT_API_URL";
+    private static final String API_KEY_ENV = LiveApi.INSTANT_KEY_ENV;
     /** Environment variable name for the API region. */
     private static final String API_REGION_ENV = "CDR_INSTANT_API_REGION";
     /** Simple PDF content for testing (minimal valid PDF) */
-    private static final byte[] PDF_TEST_DATA = loadResource("test.pdf");
+    private static final byte[] PDF_TEST_DATA = TestResources.load("test.pdf");
     /** Simple DOCX content for testing (minimal valid Word document containing "This is a test.") */
-    private static final byte[] DOCX_TEST_DATA = loadResource("test.docx");
+    private static final byte[] DOCX_TEST_DATA = TestResources.load("test.docx");
     /** Simple JPEG content for testing (minimal valid JPEG) */
-    private static final byte[] JPEG_TEST_DATA = loadResource("test.jpg");
+    private static final byte[] JPEG_TEST_DATA = TestResources.load("test.jpg");
     /** ZIP archive for testing that cannot be processed unless unsupported content is redacted */
-    private static final byte[] ZIP_TEST_DATA = loadResource("test.zip");
+    private static final byte[] ZIP_TEST_DATA = TestResources.load("test.zip");
     /** Minimal valid JSON content for testing */
     private static final byte[] JSON_TEST_DATA = "[]".getBytes();
     /** Minimal invalid JSON content for testing */
@@ -82,46 +86,14 @@ class IntegrationTest {
     }
 
     /**
-     * Loads a test resource from the classpath.
-     *
-     * @param name the name of the resource, relative to this class's package
-     * @return the contents of the resource
-     * @throws IllegalStateException if the resource is not found
-     * @throws UncheckedIOException if the resource cannot be read
-     */
-    private static byte[] loadResource(String name) {
-        try (InputStream in = IntegrationTest.class.getResourceAsStream(name)) {
-            if (in == null) {
-                throw new IllegalStateException("Test resource not found: " + name);
-            }
-            return in.readAllBytes();
-        } catch (IOException e) {
-            throw new UncheckedIOException("Unable to read test resource: " + name, e);
-        }
-    }
-
-    /**
      * Creates a client configured for testing using the API key and optional API URL from environment variables.
      *
      * @return a configured Instant API client
      */
     private InstantApiClient createClient() {
-        URI apiUri = Region.US_WEST_2.getBaseUrl();
-        String apiKey = System.getenv(API_KEY_ENV);
-        assertNotNull(apiKey, "CDR_INSTANT_API_KEY environment variable must be set");
-
-        String apiUrl = System.getenv(API_URL_ENV);
-        if (apiUrl != null && !apiUrl.isEmpty()) {
-            apiUri = assertDoesNotThrow(() -> new URI(apiUrl), "Invalid API URL");
-        }
-        String apiRegion = System.getenv(API_REGION_ENV);
-        if (apiRegion != null && !apiRegion.isEmpty()) {
-            Region region = Region.fromString(apiRegion);
-            apiUri = region.getBaseUrl();
-        }
-        InstantApiConfig config = InstantApiConfig.create(apiKey, apiUri);
-
-        return InstantApiClient.create(config);
+        return InstantApiClient.create(
+                InstantApiConfig.builder(LiveApi.apiKey(Api.INSTANT), LiveApi.baseUrl(Api.INSTANT))
+                        .build());
     }
 
     /**
@@ -280,7 +252,8 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadWithOptions() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            RequestOptions options = new RequestOptions(RequestOptions.ReportFormat.FULL, null, null, null, null, null);
+            RequestOptions options =
+                    RequestOptions.builder().reportFormat(ReportFormat.FULL).build();
 
             InstantApiRequest request =
                     InstantApiRequest.create(PDF_TEST_DATA, "application/pdf", "application/pdf", options);
@@ -312,7 +285,7 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadWithImageQualityPreserveJpeg() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            RequestOptions.ImagesOptions imagesOptions = new RequestOptions.ImagesOptions(MediaType.IMAGE_JPEG);
+            ImagesOptions imagesOptions = new ImagesOptions(MediaType.IMAGE_JPEG);
             RequestOptions options = RequestOptions.builder()
                     .imagesOptions(imagesOptions)
                     .allowRisks(Risk.STEG_IMAGE_JPEG)
@@ -341,8 +314,9 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testUploadWithImageQualityPreserveEmptyArray() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            RequestOptions.ImagesOptions imagesOptions = new RequestOptions.ImagesOptions(new String[0]);
-            RequestOptions options = new RequestOptions(null, null, imagesOptions, null, null, null);
+            ImagesOptions imagesOptions = new ImagesOptions(new String[0]);
+            RequestOptions options =
+                    RequestOptions.builder().imagesOptions(imagesOptions).build();
 
             InstantApiRequest request =
                     InstantApiRequest.create(JPEG_TEST_DATA, MediaType.IMAGE_JPEG, MediaType.IMAGE_JPEG, options);
@@ -390,8 +364,9 @@ class IntegrationTest {
     @Test
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testInvalidApiKey() {
-        InstantApiConfig config = InstantApiConfig.create(
-                "invalid-api-key-12345", this.createClient().getConfig().getBaseUrl());
+        InstantApiConfig config = InstantApiConfig.builder(
+                        "invalid-api-key-12345", this.createClient().getConfig().getBaseUrl())
+                .build();
 
         try (InstantApiClient client = InstantApiClient.create(config)) {
             InstantApiRequest request = InstantApiRequest.create(PDF_TEST_DATA, "application/pdf", "application/pdf");
@@ -472,7 +447,10 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testCustomTimeouts() throws IOException, InterruptedException, InstantApiException {
         String apiKey = System.getenv(API_KEY_ENV);
-        InstantApiConfig config = InstantApiConfig.create(apiKey, Region.US_WEST_2, 5, 120); // Custom timeouts
+        InstantApiConfig config = InstantApiConfig.builder(apiKey, Region.US_WEST_2)
+                .connectTimeout(Duration.ofSeconds(5))
+                .requestTimeout(Duration.ofSeconds(120))
+                .build();
 
         try (InstantApiClient client = InstantApiClient.create(config)) {
             InstantApiRequest request = InstantApiRequest.create(PDF_TEST_DATA, "application/pdf", "application/pdf");
@@ -495,12 +473,11 @@ class IntegrationTest {
     @EnabledIfEnvironmentVariable(named = API_KEY_ENV, matches = ".+")
     void testAllRequestOptions() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
-            RequestOptions.ImagesOptions images =
-                    new RequestOptions.ImagesOptions(MediaType.IMAGE_JPEG, MediaType.IMAGE_PNG);
+            ImagesOptions images = new ImagesOptions(MediaType.IMAGE_JPEG, MediaType.IMAGE_PNG);
             RequestOptions options = RequestOptions.builder()
                     .allowRisks(Risk.EXE, Risk.EXE_MACRO, Risk.STEG, Risk.POLY)
                     // Configure reporting
-                    .reportFormat(RequestOptions.ReportFormat.FULL)
+                    .reportFormat(ReportFormat.FULL)
                     // Configure image quality
                     .imagesOptions(images)
                     .build();
@@ -517,7 +494,7 @@ class IntegrationTest {
             JsonNode report = MAPPER.readTree(response.getReport());
             assertEquals(2, report.size());
             assertEquals(
-                    RequestOptions.ReportFormat.FULL.getFormat(),
+                    ReportFormat.FULL.getFormat(),
                     report.get("settings").get("format").asString());
             JsonNode structure = report.get("structure").asArray();
             assertEquals(1, structure.size());
@@ -567,7 +544,7 @@ class IntegrationTest {
     void testUploadZipFileWithRedaction() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
             RequestOptions options = RequestOptions.builder()
-                    .redactionOptions(new RequestOptions.RedactionOptions(".txt", MediaType.TEXT_PLAIN, "Redacted"))
+                    .redactionOptions(new RedactionOptions(".txt", MediaType.TEXT_PLAIN, "Redacted"))
                     .build();
             InstantApiRequest request = InstantApiRequest.create(ZIP_TEST_DATA, MediaType.ZIP, MediaType.ZIP, options);
 
@@ -593,9 +570,8 @@ class IntegrationTest {
     void testUploadPdfFileWithAutomaticConversion() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
             RequestOptions options = RequestOptions.builder()
-                    .conversionOptions(RequestOptions.ConversionOptions.builder()
-                            .from(MediaType.PDF)
-                            .build())
+                    .conversionOptions(
+                            ConversionOptions.builder().from(MediaType.PDF).build())
                     .build();
             InstantApiRequest request =
                     InstantApiRequest.create(PDF_TEST_DATA, MediaType.OCTET_STREAM, MediaType.PDF, options);
@@ -630,10 +606,8 @@ class IntegrationTest {
     void testUploadDocxFileWithTextExtraction() throws IOException, InterruptedException, InstantApiException {
         try (InstantApiClient client = createClient()) {
             RequestOptions options = RequestOptions.builder()
-                    .conversionOptions(RequestOptions.ConversionOptions.builder()
-                            .enableMethods(
-                                    RequestOptions.ConversionMethod.TEXT_EXTRACTION,
-                                    RequestOptions.ConversionMethod.REPORT)
+                    .conversionOptions(ConversionOptions.builder()
+                            .enableMethods(ConversionMethod.TEXT_EXTRACTION, ConversionMethod.REPORT)
                             .build())
                     .build();
             InstantApiRequest request = InstantApiRequest.create(

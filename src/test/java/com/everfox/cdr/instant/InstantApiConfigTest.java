@@ -15,67 +15,60 @@ package com.everfox.cdr.instant;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.everfox.cdr.Api;
+import com.everfox.cdr.CdrApiConfig;
 import com.everfox.cdr.Region;
 import java.net.URI;
+import java.time.Duration;
 import org.junit.jupiter.api.Test;
 
-/** Unit tests for {@link InstantApiConfig}. */
+/** Unit tests for {@link InstantApiConfig} and the shared {@link CdrApiConfig} settings. */
 class InstantApiConfigTest {
+
+    /** A custom base URL for testing. */
+    private static final URI BASE_URL = URI.create("https://custom.example.com");
 
     /** Default constructor for the test class. */
     InstantApiConfigTest() {
         // Nothing to do here
     }
 
-    /** Tests that creating an InstantApiConfig with a region sets the correct base URL. */
+    /** Tests that creating a configuration with a region uses its Instant endpoint and the default timeouts. */
     @Test
-    void testConfigWithRegion() {
+    void testCreateWithRegion() {
         InstantApiConfig config = InstantApiConfig.create("test-key", Region.US_WEST_2);
 
         assertEquals("test-key", config.getApiKey());
+        assertEquals(Region.US_WEST_2.getBaseUrl(Api.INSTANT), config.getBaseUrl());
+        assertEquals(CdrApiConfig.DEFAULT_CONNECT_TIMEOUT, config.getConnectTimeout());
+        assertEquals(CdrApiConfig.DEFAULT_REQUEST_TIMEOUT, config.getRequestTimeout());
+    }
+
+    /** Tests that builder settings can be chained in any order and are used. */
+    @Test
+    void testBuilderWithCustomUrlAndTimeouts() {
+        InstantApiConfig config = InstantApiConfig.builder("test-key", BASE_URL)
+                .requestTimeout(Duration.ofSeconds(30))
+                .connectTimeout(Duration.ofMillis(500))
+                .build();
+
+        assertEquals(BASE_URL, config.getBaseUrl());
+        assertEquals(Duration.ofMillis(500), config.getConnectTimeout());
+        assertEquals(Duration.ofSeconds(30), config.getRequestTimeout());
         assertEquals(
-                "https://us-west-2.aws.instant.cdr.everfox.com/v1",
-                config.getBaseUrl().toString());
-        assertEquals(10, config.getConnectTimeoutSeconds());
-        assertEquals(60, config.getRequestTimeoutSeconds());
+                Region.EU_WEST_1.getBaseUrl(Api.INSTANT),
+                InstantApiConfig.builder("test-key", Region.EU_WEST_1).build().getBaseUrl());
     }
 
-    /**
-     * Tests that creating an InstantApiConfig with a region and custom timeouts sets the correct base URL and timeouts.
-     */
+    /** Tests that required arguments and timeouts are validated. */
     @Test
-    void testConfigWithRegionCustomTimeouts() {
-        InstantApiConfig config = InstantApiConfig.create("test-key", Region.US_WEST_2, 5, 30);
-
-        assertEquals("test-key", config.getApiKey());
-        assertEquals(
-                "https://us-west-2.aws.instant.cdr.everfox.com/v1",
-                config.getBaseUrl().toString());
-        assertEquals(5, config.getConnectTimeoutSeconds());
-        assertEquals(30, config.getRequestTimeoutSeconds());
-    }
-
-    /** Tests that creating an InstantApiConfig with a custom URL sets the correct base URL. */
-    @Test
-    void testConfigWithCustomUrl() {
-        InstantApiConfig config = InstantApiConfig.create("test-key", URI.create("https://custom.example.com"));
-
-        assertEquals("test-key", config.getApiKey());
-        assertEquals("https://custom.example.com", config.getBaseUrl().toString());
-        assertEquals(10, config.getConnectTimeoutSeconds());
-        assertEquals(60, config.getRequestTimeoutSeconds());
-    }
-    /**
-     * Tests that creating an InstantApiConfig with a custom URL and custom timeouts sets the correct base URL and
-     * timeouts.
-     */
-    @Test
-    void testConfigWithCustomUrlCustomTimeouts() {
-        InstantApiConfig config = InstantApiConfig.create("test-key", URI.create("https://custom.example.com"), 5, 30);
-
-        assertEquals("test-key", config.getApiKey());
-        assertEquals("https://custom.example.com", config.getBaseUrl().toString());
-        assertEquals(5, config.getConnectTimeoutSeconds());
-        assertEquals(30, config.getRequestTimeoutSeconds());
+    void testValidation() {
+        assertThrows(NullPointerException.class, () -> InstantApiConfig.create(null, Region.US_WEST_2));
+        assertThrows(NullPointerException.class, () -> InstantApiConfig.create("key", null));
+        assertThrows(NullPointerException.class, () -> InstantApiConfig.builder("key", (URI) null));
+        InstantApiConfig.Builder builder = InstantApiConfig.builder("key", BASE_URL);
+        assertThrows(NullPointerException.class, () -> builder.connectTimeout(null));
+        assertThrows(IllegalArgumentException.class, () -> builder.connectTimeout(Duration.ZERO));
+        assertThrows(IllegalArgumentException.class, () -> builder.requestTimeout(Duration.ofSeconds(-1)));
     }
 }

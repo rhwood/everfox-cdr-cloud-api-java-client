@@ -15,7 +15,11 @@ package com.everfox.cdr;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.net.URI;
+import java.util.Locale;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 /** Unit tests for the {@link Region} enum. */
 class RegionTest {
@@ -32,13 +36,29 @@ class RegionTest {
         assertEquals("EU_WEST_1", region.toString());
     }
 
-    /** Tests that the {@link Region#getBaseUrl()} method returns the correct base URL for the region. */
-    @Test
-    void testGetBaseUrl() {
-        Region region = Region.EU_WEST_1;
+    /**
+     * Tests that {@link Region#getBaseUrl(Api)} returns the host of each API in each region.
+     *
+     * @param region the region
+     */
+    @ParameterizedTest
+    @EnumSource(Region.class)
+    void testGetBaseUrl(Region region) {
+        String awsRegion = region.name().toLowerCase(Locale.ROOT).replace('_', '-');
+        for (Api api : Api.values()) {
+            assertEquals(
+                    URI.create("https://" + awsRegion + ".aws." + api.getSubdomain() + ".cdr.everfox.com/v1"),
+                    region.getBaseUrl(api));
+        }
         assertEquals(
-                "https://eu-west-1.aws.instant.cdr.everfox.com/v1",
-                region.getBaseUrl().toString());
+                "https://eu-west-1.aws.async.cdr.everfox.com/v1",
+                Region.EU_WEST_1.getBaseUrl(Api.ASYNC).toString());
+    }
+
+    /** Tests that {@link Region#getBaseUrl(Api)} rejects a null API. */
+    @Test
+    void testGetBaseUrlNullApi() {
+        assertThrows(NullPointerException.class, () -> Region.US_WEST_2.getBaseUrl(null));
     }
 
     /** Tests that the {@link Region#fromString(String)} method returns the correct region for a valid string. */

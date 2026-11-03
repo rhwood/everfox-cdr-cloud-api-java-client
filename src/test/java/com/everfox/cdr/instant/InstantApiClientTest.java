@@ -15,21 +15,16 @@ package com.everfox.cdr.instant;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.everfox.cdr.FakeServer;
 import com.everfox.cdr.MediaType;
 import com.everfox.cdr.Region;
 import com.everfox.cdr.Risk;
-import com.sun.net.httpserver.Headers;
-import com.sun.net.httpserver.HttpServer;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,20 +32,11 @@ import org.junit.jupiter.api.Test;
 /** Unit tests for {@link InstantApiClient}. */
 class InstantApiClientTest {
 
+    /** The body the local server replies with by default. */
+    private static final String RESPONSE_BODY = "sanitized";
+
     /** Local HTTP server standing in for the Instant API. */
-    private HttpServer server;
-    /** Headers of the most recent request received by the server. */
-    private final AtomicReference<Headers> requestHeaders = new AtomicReference<>();
-    /** Body of the most recent request received by the server. */
-    private final AtomicReference<byte[]> requestBody = new AtomicReference<>();
-    /** Path of the most recent request received by the server. */
-    private final AtomicReference<String> requestPath = new AtomicReference<>();
-    /** Method of the most recent request received by the server. */
-    private final AtomicReference<String> requestMethod = new AtomicReference<>();
-    /** HTTP status the server responds with. */
-    private int responseStatus;
-    /** Body the server responds with. */
-    private byte[] responseBody;
+    private FakeServer server;
 
     /** Default constructor for the test class. */
     InstantApiClientTest() {
@@ -58,34 +44,24 @@ class InstantApiClientTest {
     }
 
     /**
-     * Starts a local HTTP server that records requests and replies with {@link #responseStatus} and
-     * {@link #responseBody}.
+     * Starts a local HTTP server that records requests and replies with {@link #RESPONSE_BODY} and the CDR headers.
      *
      * @throws IOException if the server cannot be started
      */
     @BeforeEach
     void startServer() throws IOException {
-        responseStatus = 200;
-        responseBody = "sanitized".getBytes(StandardCharsets.UTF_8);
-        server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
-        server.createContext("/", exchange -> {
-            requestMethod.set(exchange.getRequestMethod());
-            requestPath.set(exchange.getRequestURI().getPath());
-            requestHeaders.set(exchange.getRequestHeaders());
-            requestBody.set(exchange.getRequestBody().readAllBytes());
-            exchange.getResponseHeaders().add("X-Risks-Taken", "exe");
-            exchange.getResponseHeaders().add("X-Report", "report");
-            exchange.sendResponseHeaders(responseStatus, responseBody.length);
-            exchange.getResponseBody().write(responseBody);
-            exchange.close();
-        });
-        server.start();
+        server = FakeServer.start()
+                .route(
+                        "/",
+                        FakeServer.Reply.of(200, RESPONSE_BODY)
+                                .withHeader("X-Risks-Taken", "exe")
+                                .withHeader("X-Report", "report"));
     }
 
     /** Stops the local HTTP server. */
     @AfterEach
     void stopServer() {
-        server.stop(0);
+        server.close();
     }
 
     /**
@@ -94,9 +70,8 @@ class InstantApiClientTest {
      * @return the client
      */
     private InstantApiClient createLocalClient() {
-        URI baseUrl = URI.create("http://" + server.getAddress().getHostString() + ":"
-                + server.getAddress().getPort());
-        return InstantApiClient.create(InstantApiConfig.create("test-key", baseUrl));
+        return InstantApiClient.create(
+                InstantApiConfig.builder("test-key", server.baseUrl()).build());
     }
 
     /**
@@ -106,7 +81,7 @@ class InstantApiClientTest {
      */
     private Set<String> acceptedTypes() {
         return new HashSet<>(
-                Arrays.asList(requestHeaders.get().getFirst("Accept").split(",\\s*")));
+                Arrays.asList(server.lastRequest().headers().getFirst("Accept").split(",\\s*")));
     }
 
     /** Tests that creating an InstantApiClient with a null configuration throws a NullPointerException. */
@@ -145,17 +120,17 @@ class InstantApiClientTest {
         try (InstantApiClient client = createLocalClient()) {
             InstantApiResponse response = client.upload(InstantApiRequest.create(data, MediaType.PDF, MediaType.PDF));
 
-            assertEquals("POST", requestMethod.get());
-            assertEquals("/upload", requestPath.get());
-            assertEquals("test-key", requestHeaders.get().getFirst("x-api-key"));
-            assertEquals("application/pdf", requestHeaders.get().getFirst("Content-Type"));
+            assertEquals("POST", server.lastRequest().method());
+            assertEquals("/upload", server.lastRequest().path());
+            assertEquals("test-key", server.lastRequest().headers().getFirst("x-api-key"));
+            assertEquals("application/pdf", server.lastRequest().headers().getFirst("Content-Type"));
             assertEquals(Set.of("application/pdf", "application/json"), acceptedTypes());
-            assertNull(requestHeaders.get().getFirst("X-Options"));
-            assertArrayEquals(data, requestBody.get());
+            assertNull(server.lastRequest().headers().getFirst("X-Options"));
+            assertArrayEquals(data, server.lastRequest().body());
 
             assertEquals(200, response.getStatusCode());
             assertTrue(response.isSuccess());
-            assertArrayEquals(responseBody, response.getBody());
+            assertArrayEquals(RESPONSE_BODY.getBytes(StandardCharsets.UTF_8), response.getBody());
             assertEquals("exe", response.getRisksTaken());
             assertEquals("report", response.getReport());
             assertEquals("exe", response.getHeaders().get("x-risks-taken"));
@@ -173,7 +148,7 @@ class InstantApiClientTest {
         try (InstantApiClient client = createLocalClient()) {
             client.upload(InstantApiRequest.create(new byte[] {1, 2, 3}, MediaType.PDF, MediaType.PDF, options));
 
-            assertEquals(options.toJson(), requestHeaders.get().getFirst("X-Options"));
+            assertEquals(options.toJson(), server.lastRequest().headers().getFirst("X-Options"));
         }
     }
 
@@ -202,8 +177,8 @@ class InstantApiClientTest {
         try (InstantApiClient client = createLocalClient()) {
             InstantApiResponse response = client.upload(new ByteArrayInputStream(data), "text/plain", "text/plain");
 
-            assertArrayEquals(data, requestBody.get());
-            assertEquals("text/plain", requestHeaders.get().getFirst("Content-Type"));
+            assertArrayEquals(data, server.lastRequest().body());
+            assertEquals("text/plain", server.lastRequest().headers().getFirst("Content-Type"));
             assertEquals(Set.of("text/plain", "application/json"), acceptedTypes());
             assertTrue(response.isSuccess());
         }
@@ -212,9 +187,11 @@ class InstantApiClientTest {
     /** Tests that an error response from the API is thrown as an {@link InstantApiException}. */
     @Test
     void testUploadErrorResponse() {
-        responseStatus = 400;
-        responseBody = "{\"error\":{\"code\":1001,\"message\":\"Bad file\",\"name\":\"BadFile\",\"type\":\"client\"}}"
-                .getBytes(StandardCharsets.UTF_8);
+        server.route(
+                "/",
+                FakeServer.Reply.of(
+                        400,
+                        "{\"error\":{\"code\":1001,\"message\":\"Bad file\",\"name\":\"BadFile\",\"type\":\"client\"}}"));
         try (InstantApiClient client = createLocalClient()) {
             InstantApiException exception = assertThrows(
                     InstantApiException.class,

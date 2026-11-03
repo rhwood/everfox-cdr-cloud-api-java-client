@@ -14,9 +14,8 @@
 package com.everfox.cdr.instant;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
-import java.net.http.HttpHeaders;
+import com.everfox.cdr.MockHttp;
 import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Map;
@@ -25,9 +24,23 @@ import org.junit.jupiter.api.Test;
 /** Unit tests for {@link InstantApiResponse}. */
 class InstantApiResponseTest {
 
+    /** Headers used by responses whose headers don't matter to the test. */
+    private static final Map<String, List<String>> HEADERS =
+            Map.of("Content-Type", List.of("application/json"), "X-Custom-Header", List.of("value1", "value2"));
+
     /** Default constructor for the test class. */
     InstantApiResponseTest() {
         // Nothing to do here
+    }
+
+    /**
+     * Creates a mock HTTP response with no body.
+     *
+     * @param statusCode the HTTP status code
+     * @return the mock response
+     */
+    private static HttpResponse<byte[]> response(int statusCode) {
+        return MockHttp.response(statusCode, (byte[]) null, HEADERS);
     }
 
     /**
@@ -37,22 +50,10 @@ class InstantApiResponseTest {
      */
     @Test
     void testResponseIsSuccess() throws InstantApiException {
-        @SuppressWarnings("unchecked") // unavoidable when mocking due to HttpResponse being generic
-        HttpResponse<byte[]> httpResponse = mock(HttpResponse.class);
-        when(httpResponse.statusCode()).thenReturn(200);
-        when(httpResponse.headers())
-                .thenReturn(HttpHeaders.of(
-                        Map.of(
-                                "Content-Type", List.of("application/json"),
-                                "X-Custom-Header", List.of("value1", "value2")),
-                        (k, v) -> true));
-        InstantApiResponse apiResponse = InstantApiResponse.fromHttpResponse(httpResponse);
+        InstantApiResponse apiResponse = InstantApiResponse.fromHttpResponse(response(200));
+
         assertEquals(200, apiResponse.getStatusCode());
         assertTrue(apiResponse.isSuccess());
-        when(httpResponse.statusCode()).thenReturn(100);
-        apiResponse = InstantApiResponse.fromHttpResponse(httpResponse);
-        assertEquals(100, apiResponse.getStatusCode());
-        assertFalse(apiResponse.isSuccess());
     }
 
     /**
@@ -62,16 +63,8 @@ class InstantApiResponseTest {
      */
     @Test
     void testResponseHttpRedirectionIsNotSuccess() throws InstantApiException {
-        @SuppressWarnings("unchecked") // unavoidable when mocking due to HttpResponse being generic
-        HttpResponse<byte[]> httpResponse = mock(HttpResponse.class);
-        when(httpResponse.statusCode()).thenReturn(300);
-        when(httpResponse.headers())
-                .thenReturn(HttpHeaders.of(
-                        Map.of(
-                                "Content-Type", List.of("application/json"),
-                                "X-Custom-Header", List.of("value1", "value2")),
-                        (k, v) -> true));
-        InstantApiResponse apiResponse = InstantApiResponse.fromHttpResponse(httpResponse);
+        InstantApiResponse apiResponse = InstantApiResponse.fromHttpResponse(response(300));
+
         assertEquals(300, apiResponse.getStatusCode());
         assertFalse(apiResponse.isSuccess());
     }
@@ -83,17 +76,8 @@ class InstantApiResponseTest {
      */
     @Test
     void testResponseHttpInformationalIsNotSuccess() throws InstantApiException {
-        @SuppressWarnings("unchecked") // unavoidable when mocking due to HttpResponse being generic
-        HttpResponse<byte[]> httpResponse = mock(HttpResponse.class);
-        when(httpResponse.statusCode()).thenReturn(100);
-        when(httpResponse.headers())
-                .thenReturn(HttpHeaders.of(
-                        Map.of(
-                                "Content-Type", List.of("application/json"),
-                                "X-Custom-Header", List.of("value1", "value2")),
-                        (k, v) -> true));
-        InstantApiResponse apiResponse = InstantApiResponse.fromHttpResponse(httpResponse);
-        apiResponse = InstantApiResponse.fromHttpResponse(httpResponse);
+        InstantApiResponse apiResponse = InstantApiResponse.fromHttpResponse(response(100));
+
         assertEquals(100, apiResponse.getStatusCode());
         assertFalse(apiResponse.isSuccess());
     }
@@ -106,17 +90,8 @@ class InstantApiResponseTest {
     @Test
     void testResponseAccessors() throws InstantApiException {
         byte[] body = "body".getBytes();
-        @SuppressWarnings("unchecked") // unavoidable when mocking due to HttpResponse being generic
-        HttpResponse<byte[]> httpResponse = mock(HttpResponse.class);
-        when(httpResponse.statusCode()).thenReturn(200);
-        when(httpResponse.body()).thenReturn(body);
-        when(httpResponse.headers())
-                .thenReturn(HttpHeaders.of(
-                        Map.of(
-                                "x-risks-taken", List.of("exe", "poly"),
-                                "x-report", List.of("report")),
-                        (k, v) -> true));
-        InstantApiResponse apiResponse = InstantApiResponse.fromHttpResponse(httpResponse);
+        InstantApiResponse apiResponse = InstantApiResponse.fromHttpResponse(MockHttp.response(
+                200, body, Map.of("x-risks-taken", List.of("exe", "poly"), "x-report", List.of("report"))));
 
         assertArrayEquals(body, apiResponse.getBody());
         assertEquals("exe, poly", apiResponse.getRisksTaken());
@@ -127,14 +102,9 @@ class InstantApiResponseTest {
     /** Tests that creating an InstantApiResponse with HTTP code 4xx throws an {@link InstantApiException}. */
     @Test
     void testResponseHttpErrorThrows() {
-        @SuppressWarnings("unchecked") // unavoidable when mocking due to HttpResponse being generic
-        HttpResponse<byte[]> httpResponse = mock(HttpResponse.class);
-        when(httpResponse.statusCode()).thenReturn(404);
-        when(httpResponse.body()).thenReturn(null);
-        when(httpResponse.headers()).thenReturn(HttpHeaders.of(Map.of(), (k, v) -> true));
+        InstantApiException exception = assertThrows(
+                InstantApiException.class, () -> InstantApiResponse.fromHttpResponse(MockHttp.response(404, null)));
 
-        InstantApiException exception =
-                assertThrows(InstantApiException.class, () -> InstantApiResponse.fromHttpResponse(httpResponse));
         assertEquals(404, exception.getHttpStatusCode());
     }
 }

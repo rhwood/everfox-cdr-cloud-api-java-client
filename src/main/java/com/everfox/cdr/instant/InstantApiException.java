@@ -13,101 +13,24 @@
  */
 package com.everfox.cdr.instant;
 
-import java.util.Map;
-import tools.jackson.databind.ObjectMapper;
+import com.everfox.cdr.CdrApiError;
+import com.everfox.cdr.CdrApiException;
 
 /** Exception thrown when the Instant API returns an error response. */
-public class InstantApiException extends Exception {
+public class InstantApiException extends CdrApiException {
 
-    /** The Jackson object mapper used to parse the error response. */
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-
-    /** The API status code returned by the API. This is -1 is the API did not return a valid error response. */
-    private final int apiStatusCode;
-    /** The HTTP status code returned by the server. */
-    private final int httpStatusCode;
-    /**
-     * The API error message returned by the API. This is "Unknown error" if the API did not return a valid error
-     * response.
-     */
-    private final String apiMessage;
-    /**
-     * The name of the error returned by the API. This is "Unknown" if the API did not return a valid error response.
-     */
-    private final String name;
-    /**
-     * The type of the error returned by the API. This is "Unknown" if the API did not return a valid error response.
-     */
-    private final String type;
+    /** The serialization version. */
+    private static final long serialVersionUID = 1L;
 
     /**
-     * Creates a new exception from the JSON error response returned by the API.
+     * Creates a new exception.
      *
-     * @param apiStatusCode the API status code
      * @param httpStatusCode the HTTP status code
-     * @param message the API error message
-     * @param name the name of the error
-     * @param type the type of the error
+     * @param error the error returned by the API
      */
-    // This is private because the constructor must call super() first, so we can't parse the body in the constructor
-    private InstantApiException(int apiStatusCode, int httpStatusCode, String message, String name, String type) {
-        super();
-        this.apiStatusCode = apiStatusCode;
-        this.httpStatusCode = httpStatusCode;
-        this.apiMessage = message;
-        this.name = name;
-        this.type = type;
-    }
-
-    /**
-     * Returns the API status code.
-     *
-     * @return the status code
-     */
-    public int getApiStatusCode() {
-        return apiStatusCode;
-    }
-
-    /**
-     * Returns the HTTP status code.
-     *
-     * @return the HTTP status code
-     */
-    public int getHttpStatusCode() {
-        return httpStatusCode;
-    }
-
-    /**
-     * Returns the API error message.
-     *
-     * @return the API error message
-     */
-    public String getApiMessage() {
-        return apiMessage;
-    }
-
-    /**
-     * Returns the name of the error.
-     *
-     * @return the error name
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * Returns the type of the error.
-     *
-     * @return the error type
-     */
-    public String getType() {
-        return type;
-    }
-
-    @Override
-    public String getMessage() {
-        return String.format(
-                "API Error: %s (code: %d, HTTP status: %d, type: %s)", apiMessage, apiStatusCode, httpStatusCode, type);
+    // private to force use of the static factory method
+    private InstantApiException(int httpStatusCode, CdrApiError error) {
+        super(httpStatusCode, error);
     }
 
     /**
@@ -117,26 +40,7 @@ public class InstantApiException extends Exception {
      * @param body the response body
      * @return an InstantApiException representing the error
      */
-    // This is needed because the constructor must call super() first, so we can't parse the body in the constructor
     public static InstantApiException create(int httpStatusCode, byte[] body) {
-        try {
-            if (body != null && body.length > 0) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> bodyObj = MAPPER.readValue(body, Map.class);
-                if (bodyObj.containsKey("error")) {
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> errorObj = (Map<String, Object>) bodyObj.get("error");
-                    return new InstantApiException(
-                            (int) errorObj.get("code"),
-                            httpStatusCode,
-                            (String) errorObj.get("message"),
-                            (String) errorObj.get("name"),
-                            (String) errorObj.get("type"));
-                }
-            }
-        } catch (Exception e) {
-            // Fall through to default execption creation
-        }
-        return new InstantApiException(-1, httpStatusCode, "Unknown error", "Unknown", "Unknown");
+        return new InstantApiException(httpStatusCode, CdrApiError.fromJson(body));
     }
 }
