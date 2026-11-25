@@ -79,7 +79,8 @@ public enum ApiSpec {
      *
      * @return the parsed spec
      */
-    public JsonNode json() {
+    // Package-private so Jackson types stay out of the module's exported API
+    JsonNode json() {
         return spec;
     }
 
